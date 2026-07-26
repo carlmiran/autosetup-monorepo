@@ -1,0 +1,11 @@
+{
+  "name": "@autosetup/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node src/placeholder.js",
+    "build": "echo 'PENDENTE: scaffold real do Next.js 16 — ver docs/traceability.md'",
+    "lint": "echo 'PENDENTE: scaffold real do Next.js 16'",
+    "typecheck": "echo 'PENDENTE: scaffold real do Next.js 16'"
+  }
+}

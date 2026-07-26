@@ -1,0 +1,35 @@
+// AUTOSETUP — prisma/schema.prisma
+// Multi-tenant desde o schema 1, conforme decisão de stack (SPR-CORE-001).
+// Só as entidades do HUB (8º componente do Core) nesta fase — entidades de
+// vertical (Agro, Hospedagem, RH) entram em migrations próprias, nunca aqui.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id            String         @id @default(uuid())
+  name          String
+  createdAt     DateTime       @default(now())
+  organizations Organization[]
+}
+
+model Organization {
+  id       String   @id @default(uuid())
+  tenantId String
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  name     String
+  partners Partner[]
+}
+
+model Partner {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  capabilities   String[]
+}
