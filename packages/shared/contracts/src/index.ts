@@ -6,7 +6,6 @@
 
 import type { DomainEvent } from "@autosetup/events";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WorkerDefinition<TInput = any, TOutput = any> {
   /** Identificador único e estável do worker, usado no registry. */
   name: string;
