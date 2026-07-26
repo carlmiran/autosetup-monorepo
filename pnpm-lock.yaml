@@ -67,6 +67,9 @@ importers:
 
   apps/core/web:
     dependencies:
+      '@autosetup/adapter-llm':
+        specifier: workspace:*
+        version: link:../../../packages/adapters/llm
       next:
         specifier: 16.2.12
         version: 16.2.12(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
