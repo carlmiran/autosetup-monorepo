@@ -2,7 +2,7 @@
   "name": "autosetup",
   "private": true,
   "version": "0.1.0",
-  "description": "AutoSetup OS — Cognitive Operating System monorepo. EBK Task 0.1: ambiente base.",
+  "description": "AutoSetup OS \u2014 Cognitive Operating System monorepo. EBK Task 0.1: ambiente base.",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
@@ -14,7 +14,10 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:apply": "psql \"$DATABASE_URL\" -f prisma/migrations/20260726000000_init/migration.sql"
   },
   "devDependencies": {
     "@types/node": "^20.16.0",
@@ -23,6 +26,10 @@
     "eslint": "^9.12.0",
     "eslint-plugin-boundaries": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^8.8.0",
-    "@typescript-eslint/parser": "^8.8.0"
+    "@typescript-eslint/parser": "^8.8.0",
+    "prisma": "^5.20.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0"
   }
 }

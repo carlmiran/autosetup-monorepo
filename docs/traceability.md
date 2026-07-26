@@ -62,3 +62,58 @@ fica classificada como Horizonte H4 — arquivada como inspiração de longo
 prazo, não implementada nesta fase. Esta reconciliação foi comunicada e
 não vetada antes desta execução; se precisar ser revista formalmente como
 ADR-CORE-004, isso ainda está em aberto.
+
+---
+
+## Continuação (26/07/2026, mesma data) — fecha 4 das 5 pendências acima
+
+**Fonte arquitetural**: mesma do EBK 0.1, mais ADR-CORE-004 (novo).
+
+**Motivação**: Carlos autorizou Claude a decidir a ordem e construir "da
+forma mais robusta e completa possível" sem check-ins intermediários.
+
+**O que foi feito e validado de verdade nesta continuação**:
+
+1. **ADR-CORE-004** (`docs/adr/ADR-CORE-004-reconciliacao-kernel-vs-core.md`)
+   — formaliza por escrito a reconciliação arquitetural (Core de 8
+   componentes = oficial; Kernel/Business DNA = Horizonte H4), com mapa
+   explícito de equivalência para não perder o valor conceitual do
+   documento mais amplo.
+
+2. **Postgres real instalado e rodando neste sandbox** (PostgreSQL 16.14,
+   não simulado) — migration inicial (`prisma/migrations/20260726000000_init/`)
+   escrita manualmente (espelha `schema.prisma` exatamente) e **aplicada
+   de verdade** via `psql`. Inserção e JOIN reais validados: Tenant →
+   Organization → Partner, com foreign keys funcionando.
+   - **Limitação honesta**: o Prisma CLI (`prisma generate`/`migrate dev`)
+     não roda neste sandbox — a rede bloqueia `binaries.prisma.sh` (403),
+     necessário para baixar o engine binário. A migration foi validada
+     via SQL direto contra Postgres real, não via Prisma CLI. Rodar
+     `pnpm db:generate`/`db:migrate` numa máquina com rede normal deve
+     funcionar sem esse bloqueio.
+
+3. **Adapter `spreadsheet` implementado de verdade** (não é mais stub)
+   — parsing real de CSV via `csv-parse`, validado lendo um CSV real de
+   3 linhas (fixture em `apps/core/worker-runner/fixtures/leads-teste.csv`)
+   através do `worker-runner`, com output real impresso no console.
+
+4. **CI estendido** (`ci.yml`) — agora sobe um Postgres real como
+   `service` do GitHub Actions e aplica a migration a cada push/PR, sem
+   depender de Docker local.
+
+5. **Scaffold real do Next.js 16.2.12** em `apps/core/web` via
+   `create-next-app` — **build de produção real rodou e passou**
+   (`next build`, Turbopack, 4 páginas estáticas geradas). Ajuste feito:
+   removidas as fontes Google (`next/font/google`) porque
+   `fonts.googleapis.com` é bloqueado nesta rede sandbox — substituídas
+   por system font stack; trocar pela fonte real da marca (preto/dourado)
+   é pendência de IMP separada, não desta task.
+
+**Pendências que restam, agora só 2**:
+- Implementação real do adapter `whatsapp` (bloqueado por decisão
+  consciente — precisa de chave de provider real, ex. WhatsApp Business
+  API/Twilio, ainda não obtida)
+- Decisão IMP: Next API routes vs. NestJS para `apps/core/api`
+- Rodar `prisma generate`/`migrate dev` via CLI numa máquina sem o
+  bloqueio de rede deste sandbox (a migration em si já está correta e
+  validada — falta só o CLI conseguir baixar seu engine binário)

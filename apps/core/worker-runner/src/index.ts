@@ -35,3 +35,20 @@ main().catch((err) => {
   console.error("[worker-runner] falhou:", err);
   process.exitCode = 1;
 });
+
+// --- Smoke test adicional: adapter de planilha real (CSV) ---
+import { spreadsheetAdapter, getRows } from "@autosetup/adapter-spreadsheet";
+import { join } from "node:path";
+
+async function smokeTestSpreadsheet() {
+  const filePath = join(__dirname, "..", "fixtures", "leads-teste.csv");
+  await spreadsheetAdapter.connect({ filePath });
+  const rows = getRows();
+  console.log(`[worker-runner] adapter-spreadsheet leu ${rows.length} linhas reais de CSV:`, rows);
+  await spreadsheetAdapter.disconnect();
+}
+
+smokeTestSpreadsheet().catch((err) => {
+  console.error("[worker-runner] smoke test do spreadsheet falhou:", err);
+  process.exitCode = 1;
+});

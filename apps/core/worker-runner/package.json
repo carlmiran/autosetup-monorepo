@@ -13,7 +13,8 @@
     "@autosetup/events": "workspace:*",
     "@autosetup/contracts": "workspace:*",
     "@autosetup/workers-registry": "workspace:*",
-    "@autosetup/workers-runtime": "workspace:*"
+    "@autosetup/workers-runtime": "workspace:*",
+    "@autosetup/adapter-spreadsheet": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.0",

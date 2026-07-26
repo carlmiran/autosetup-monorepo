@@ -9,6 +9,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: autosetup
+          POSTGRES_PASSWORD: autosetup_dev_only
+          POSTGRES_DB: autosetup_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://autosetup:autosetup_dev_only@localhost:5432/autosetup_dev
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +45,9 @@ jobs:
 
       - name: Lint (boundaries — ADR-CORE-003)
         run: pnpm lint
+
+      - name: Apply migration against real Postgres
+        run: psql "$DATABASE_URL" -f prisma/migrations/20260726000000_init/migration.sql
 
       - name: Test
         run: pnpm test
