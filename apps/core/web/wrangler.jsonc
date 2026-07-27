@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "autosetup-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  }
+  // Segredos (OPENAI_API_KEY, etc.) NÃO vão aqui — são cadastrados
+  // direto no painel da Cloudflare (Workers & Pages > este projeto >
+  // Settings > Variables and Secrets), nunca neste arquivo commitado.
+  // Ver docs/secrets-registry.md.
+}

@@ -117,3 +117,51 @@ forma mais robusta e completa possível" sem check-ins intermediários.
 - Rodar `prisma generate`/`migrate dev` via CLI numa máquina sem o
   bloqueio de rede deste sandbox (a migration em si já está correta e
   validada — falta só o CLI conseguir baixar seu engine binário)
+
+---
+
+## Decisão operacional sobre o LLM Gateway (27/07/2026)
+
+O commit `32b2fc1` (LLM Gateway multi-provider) veio de uma sessão
+paralela, instruída a partir de uma sugestão do ChatGPT que Carlos colou
+lá depois de compartilhar esta conversa com ele — não foi uma decisão
+tomada dentro do processo normal desta sessão. Carlos confirmou
+explicitamente que **não quer gerenciar múltiplos providers** — só
+OpenAI, por enquanto.
+
+**Decisão**: manter o código do Gateway (é real, testado — 6/6 testes
+passando — e não atrapalha), mas a operação é OpenAI-only: só
+`OPENAI_API_KEY` deve ser configurada em produção. O Gateway já filtra
+para só tentar providers com chave configurada
+(`packages/adapters/llm/src/index.ts`, linha ~158), então isso não exige
+nenhuma mudança de código — só a decisão de não preencher as outras 5
+chaves em `.env`/Cloudflare Secrets.
+
+**Nota de processo para sessões futuras**: se uma sugestão chegar via
+outra IA (ChatGPT, Gemini, DeepSeek) colada numa conversa com Claude,
+isso deve ser sinalizado explicitamente antes da execução — não
+executado como se fosse uma decisão interna do processo AutoSetup. Duas
+vezes já aconteceu de uma decisão arquitetural chegar por esse caminho
+sem aviso prévio.
+
+## Deploy real no Cloudflare Workers — preparado, não publicado (27/07/2026)
+
+Fonte: decisão de stack (Cloudflare Pages/Workers, ver PROGRESS_LOG
+12/07), documentação oficial da Cloudflare (Pages está sendo substituído
+por Workers + Assets como caminho recomendado).
+
+- `apps/core/web/wrangler.jsonc` + `open-next.config.ts`: config real via
+  `@opennextjs/cloudflare` (adapter atual recomendado pela Cloudflare
+  para Next.js em Workers)
+- **Validado de verdade neste sandbox**: `opennextjs-cloudflare build`
+  rodou e gerou `.open-next/worker.js` com sucesso; `wrangler deploy
+  --dry-run` confirmou a configuração válida (binding `env.ASSETS`
+  correto, 24 arquivos de assets, 4.5MB de upload)
+- **Não publicado** — dry-run não publica nada, e este sandbox não tem
+  (nem deveria ter) credencial de escrita na conta Cloudflare de
+  produção
+- **Pendência real, ação de Carlos**: conectar o repositório
+  `carlmiran/autosetup-monorepo` via painel da Cloudflare (Workers &
+  Pages → Create → Import a Git repository), e só depois disso existir,
+  cadastrar `OPENAI_API_KEY` em Settings → Variables and Secrets desse
+  projeto — nunca através de uma IA
