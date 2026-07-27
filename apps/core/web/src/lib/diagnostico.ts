@@ -9,7 +9,7 @@
 // usuário. O prompt abaixo instrui o modelo explicitamente a não
 // inventar fatos — e o parser rejeita resposta se o modelo tentar.
 
-import { getActiveLLMProvider } from "@autosetup/adapter-llm";
+import { completeViaGateway } from "@autosetup/adapter-llm";
 
 export interface DiagnosticoInput {
   nomeNegocio: string;
@@ -28,6 +28,9 @@ export interface DiagnosticoResultado {
   pontosFavoraveis: string[];
   oportunidades: string[];
   proximoPasso: string;
+  /** Qual provider do Gateway respondeu de verdade — observabilidade
+   * real do fallback, não é exibido ao prospect, mas fica no log. */
+  geradoPor: string;
 }
 
 function montarPrompt(input: DiagnosticoInput): string {
@@ -56,8 +59,8 @@ Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (e
 }
 
 export async function gerarDiagnostico(input: DiagnosticoInput): Promise<DiagnosticoResultado> {
-  const provider = getActiveLLMProvider();
-  const raw = await provider.complete(montarPrompt(input));
+  const gatewayResult = await completeViaGateway(montarPrompt(input));
+  const raw = gatewayResult.text;
 
   let parsed: unknown;
   try {
@@ -77,5 +80,5 @@ export async function gerarDiagnostico(input: DiagnosticoInput): Promise<Diagnos
     throw new Error("JSON retornado não tem o formato esperado de DiagnosticoResultado.");
   }
 
-  return parsed as DiagnosticoResultado;
+  return { ...(parsed as Omit<DiagnosticoResultado, "geradoPor">), geradoPor: gatewayResult.usedProvider };
 }

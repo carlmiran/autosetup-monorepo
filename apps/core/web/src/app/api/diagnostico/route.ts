@@ -1,9 +1,18 @@
 // AUTOSETUP — apps/core/web/src/app/api/diagnostico/route.ts
-// Fonte: LENS (Core), IMP-LLM-001 (camada de abstração de provider).
+// Fonte: LENS (Core), IMP-LLM-001 (Gateway multi-provider).
 
 import { NextResponse } from "next/server";
 import { llmAdapter } from "@autosetup/adapter-llm";
 import { gerarDiagnostico, type DiagnosticoInput } from "@/lib/diagnostico";
+
+const SUPPORTED_KEYS = [
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "GEMINI_API_KEY",
+  "GROQ_API_KEY",
+  "DEEPSEEK_API_KEY",
+  "CEREBRAS_API_KEY",
+] as const;
 
 export async function POST(request: Request) {
   const body = (await request.json()) as Partial<DiagnosticoInput>;
@@ -16,12 +25,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  // Gateway: basta UM provider configurado, não depende de nenhum específico.
+  const hasAnyProvider = SUPPORTED_KEYS.some((key) => Boolean(process.env[key]));
+  if (!hasAnyProvider) {
     return NextResponse.json(
       {
         error:
-          "OPENAI_API_KEY não configurada neste ambiente. O diagnóstico real precisa dessa chave — ver .env.example.",
+          "Nenhum provider de LLM configurado neste ambiente. Configure ao menos uma das chaves: " +
+          SUPPORTED_KEYS.join(", ") +
+          " — ver .env.example.",
       },
       { status: 503 },
     );
@@ -41,7 +53,7 @@ export async function POST(request: Request) {
   };
 
   try {
-    await llmAdapter.connect({ apiKey });
+    await llmAdapter.connect(process.env);
     const resultado = await gerarDiagnostico(input);
     return NextResponse.json(resultado);
   } catch (err) {
