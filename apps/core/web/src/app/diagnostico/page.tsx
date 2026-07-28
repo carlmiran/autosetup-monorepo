@@ -11,6 +11,7 @@ import { useState } from "react";
 interface DiagnosticoResultado {
   resumo: string;
   pontosFavoraveis: string[];
+  achadosNaPesquisa: string[];
   oportunidades: string[];
   proximoPasso: string;
 }
@@ -25,6 +26,8 @@ const initialForm = {
   numeroAvaliacoesGoogle: "",
   notaMediaGoogle: "",
   maiorDificuldade: "",
+  linkInstagram: "",
+  linkGoogleBusiness: "",
 };
 
 export default function DiagnosticoPage() {
@@ -130,6 +133,35 @@ export default function DiagnosticoPage() {
           </label>
         </div>
 
+        <div className="border rounded p-3 flex flex-col gap-3 bg-neutral-50">
+          <p className="text-xs text-neutral-500">
+            Opcional: cole o link do seu Instagram e/ou do seu Google Business.
+            Com isso, fazemos uma pesquisa real na web pra comparar o que você
+            disse com o que está publicamente visível — o diagnóstico fica
+            mais preciso.
+          </p>
+          <label className="flex flex-col gap-1 text-sm">
+            Link do Instagram (opcional)
+            <input
+              type="url"
+              placeholder="https://instagram.com/seunegocio"
+              className="border rounded px-3 py-2"
+              value={form.linkInstagram}
+              onChange={(e) => setForm({ ...form, linkInstagram: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Link do Google Business / Google Maps (opcional)
+            <input
+              type="url"
+              placeholder="https://maps.app.goo.gl/..."
+              className="border rounded px-3 py-2"
+              value={form.linkGoogleBusiness}
+              onChange={(e) => setForm({ ...form, linkGoogleBusiness: e.target.value })}
+            />
+          </label>
+        </div>
+
         <div className="flex gap-4">
           <label className="flex flex-col gap-1 text-sm flex-1">
             Nº de avaliações no Google (se souber)
@@ -195,6 +227,16 @@ export default function DiagnosticoPage() {
               ))}
             </ul>
           </div>
+          {resultado.achadosNaPesquisa && resultado.achadosNaPesquisa.length > 0 && (
+            <div>
+              <h2 className="font-semibold">O que encontramos pesquisando</h2>
+              <ul className="list-disc pl-5 text-sm">
+                {resultado.achadosNaPesquisa.map((a, i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div>
             <h2 className="font-semibold">Oportunidades</h2>
             <ul className="list-disc pl-5 text-sm">
