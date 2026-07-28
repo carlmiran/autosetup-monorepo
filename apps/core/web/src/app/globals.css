@@ -1,26 +1,68 @@
 @import "tailwindcss";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/fraunces/wght-italic.css";
+@import "@fontsource-variable/public-sans";
+
+/* AUTOSETUP — sistema de cor e tipografia
+ *
+ * Paleta pensada com psicodinâmica das cores para negócio/decisão:
+ * - ink (quase-preto quente): autoridade, seriedade de "sistema operacional"
+ * - parchment (creme quente): acolhimento, espaço seguro pra responder
+ *   perguntas pessoais sobre dinheiro/rotina
+ * - brass (dourado envelhecido, não amarelo-ouro brilhante): valor,
+ *   oportunidade, decisão — cor de ação (CTAs)
+ * - forest (verde escuro): crescimento, achado positivo
+ * - clay (terracota escurecida/dessaturada — deliberadamente NÃO o
+ *   terracota #D97757 clichê de IA): atenção, ponto de dor
+ *
+ * Arco de cor pela página: ink (autoridade) → parchment (conversa) →
+ * ink de novo no fechamento (decisão séria) — a cor de fundo narra a
+ * jornada emocional, não é só decoração.
+ */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #16140f;
+  --ink-soft: #221f18;
+  --parchment: #f6f1e4;
+  --parchment-soft: #efe8d4;
+  --brass: #b8863b;
+  --brass-light: #e4c77e;
+  --forest: #2f4f3e;
+  --forest-soft: #dde8e1;
+  --clay: #9c4a34;
+  --clay-soft: #f1e0da;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-parchment: var(--parchment);
+  --color-parchment-soft: var(--parchment-soft);
+  --color-brass: var(--brass);
+  --color-brass-light: var(--brass-light);
+  --color-forest: var(--forest);
+  --color-forest-soft: var(--forest-soft);
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-sans: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Foco de teclado visível — acessibilidade não é opcional */
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

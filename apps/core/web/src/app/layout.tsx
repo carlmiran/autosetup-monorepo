@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 // AUTOSETUP — apps/core/web
-// Nota: next/font/google foi removido — a rede deste sandbox bloqueia
-// fonts.googleapis.com. Usando system font stack por enquanto; trocar
-// por fonte real da marca (preto/dourado, ver brand-system.css do
-// autosetup-demo.html) é pendência de IMP, não desta task.
+// Fontes reais via @fontsource (self-hosted, sem depender de rede
+// externa em build/produção): Fraunces (display, autoridade+calor) e
+// Public Sans (corpo, legibilidade em formulário longo no celular).
+// Paleta preto-quente/dourado/verde — ver globals.css para o
+// racional completo de psicodinâmica das cores.
 
 export const metadata: Metadata = {
   title: "AutoSetup OS",
@@ -19,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans bg-parchment text-ink">{children}</body>
     </html>
   );
 }
