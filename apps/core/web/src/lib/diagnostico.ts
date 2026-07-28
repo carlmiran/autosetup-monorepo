@@ -33,6 +33,15 @@ export interface DiagnosticoInput {
    * quer chegar, o que é o que realmente vende. */
   visaoNegocio?: string;
   metaFinanceira?: string;
+  /** Sugeridos por análise externa, incorporados após avaliação
+   * (28/07/2026): tamanho real da operação, canais de atendimento,
+   * ferramentas já usadas, e a dor financeira concreta (perda de
+   * vendas por demora/desorganização) — evita a IA sugerir solução
+   * desproporcional ao tamanho real do negócio. */
+  tamanhoEquipe?: string;
+  canaisAtendimento?: string;
+  ferramentasAtuais?: string;
+  perdaFinanceira?: string;
   /** Opcionais — se informados, habilitam a pesquisa real na web (ver
    * gerarDiagnosticoComPesquisa). Nunca obrigatórios. */
   linkInstagram?: string;
@@ -69,6 +78,16 @@ function linhasContextoProfundo(input: DiagnosticoInput): string {
     input.metaFinanceira
       ? `- Meta de ganhos/estrutura quando o negócio estiver plenamente desenvolvido (relato do dono): "${input.metaFinanceira}"`
       : null,
+    input.tamanhoEquipe ? `- Tamanho da equipe / volume de atendimento (relato do dono): "${input.tamanhoEquipe}"` : null,
+    input.canaisAtendimento
+      ? `- Canais por onde os clientes chegam hoje (relato do dono): "${input.canaisAtendimento}"`
+      : null,
+    input.ferramentasAtuais
+      ? `- Ferramentas/sistemas que já usa hoje (relato do dono): "${input.ferramentasAtuais}"`
+      : null,
+    input.perdaFinanceira
+      ? `- Sente que perde vendas/clientes por demora ou desorganização (relato do dono): "${input.perdaFinanceira}"`
+      : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -88,7 +107,7 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 - Nota média no Google: ${input.notaMediaGoogle ?? "não informado"}
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
-Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos.
+Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos. Se houver "tamanho da equipe" informado, calibre as oportunidades sugeridas ao tamanho real do negócio — nunca sugira solução desproporcional (ex: não recomende automação complexa de nível empresarial pra quem trabalha sozinho).
 
 Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
 
@@ -128,7 +147,7 @@ DADOS INFORMADOS PELO DONO DO NEGÓCIO (trate como ponto de partida, não como v
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) : ""}
 ${linhasLinks ? "\n" + linhasLinks : ""}
 
-Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para identificar dores reais — eles revelam mais que presença digital sozinha.
+Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para identificar dores reais — eles revelam mais que presença digital sozinha. Se houver "tamanho da equipe" informado, calibre as oportunidades sugeridas ao tamanho real do negócio — nunca sugira solução desproporcional (ex: não recomende automação complexa de nível empresarial pra quem trabalha sozinho).
 
 TAREFA:
 1. Pesquise na web pelo nome "${input.nomeNegocio}" em "${input.cidade}" — e pelos links informados acima, se houver — para encontrar presença real (Google Business, Instagram, site, avaliações, reclamações públicas).

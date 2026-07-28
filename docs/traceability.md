@@ -165,3 +165,36 @@ por Workers + Assets como caminho recomendado).
   Pages → Create → Import a Git repository), e só depois disso existir,
   cadastrar `OPENAI_API_KEY` em Settings → Variables and Secrets desse
   projeto — nunca através de uma IA
+
+## Captura real de lead + perguntas operacionais adicionais (28/07/2026)
+
+Fonte: sugestão externa avaliada e incorporada por Claude (dev master),
+mais pedido direto de Carlos (2 perguntas de satisfação/meta).
+
+- **Cloudflare D1 real criado**: banco `autosetup-leads`
+  (uuid `6020ad64-35e8-4e90-a0b1-46020eb4b53b`), tabela `leads` criada e
+  testada com INSERT/SELECT/DELETE reais via API antes de qualquer
+  código — não é suposição, foi verificado.
+- Binding `DB` adicionado em `wrangler.jsonc` (`d1_databases`)
+- `apps/core/web/cloudflare-env.d.ts` gerado via `wrangler types` —
+  arquivo real, não escrito à mão, garante tipo `D1Database` correto
+- Campos de contato (nome, WhatsApp) capturados no topo do formulário,
+  com texto explícito de que só servem pra enviar o diagnóstico/contato
+  futuro — nunca prometemos envio por e-mail (não implementado, evitado
+  para não mentir sobre capacidade que não existe)
+- 4 perguntas operacionais novas (todas com áudio): tamanho de
+  equipe/volume, canais de atendimento, ferramentas já usadas, perda
+  financeira por demora/desorganização — usadas pela IA pra calibrar
+  oportunidades ao tamanho real do negócio (nunca sugerir solução
+  desproporcional)
+- `api/diagnostico`: salva o lead completo no D1 (best-effort — falha de
+  persistência nunca derruba a resposta do diagnóstico) e retorna
+  `leadId`
+- `api/interesse`: nova rota, atualiza `interesse_final` do lead quando a
+  pessoa clica Sim/Não no fechamento
+- Botão de fechamento usa `NEXT_PUBLIC_WHATSAPP_NUMERO` (env pública, não
+  secret) — **ainda pendente**, Carlos vai comprar um chip novo pra não
+  misturar com o WhatsApp Business pessoal
+
+Testado: typecheck 11/11 limpo, build de produção com 4 rotas de API,
+D1 verificado com query real antes do código ser escrito.

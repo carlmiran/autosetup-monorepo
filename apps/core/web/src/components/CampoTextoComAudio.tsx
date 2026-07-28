@@ -69,11 +69,11 @@ export function CampoTextoComAudio({
       const formData = new FormData();
       formData.append("audio", blob);
       const res = await fetch("/api/transcrever", { method: "POST", body: formData });
-      const data = await res.json();
+      const data = (await res.json()) as { texto?: string; error?: string };
       if (!res.ok) {
         setErro(data.error ?? "Erro ao transcrever o áudio.");
       } else {
-        const novoTexto = value ? `${value}\n${data.texto}` : data.texto;
+        const novoTexto = value ? `${value}\n${data.texto}` : data.texto ?? "";
         onChange(novoTexto);
       }
     } catch {

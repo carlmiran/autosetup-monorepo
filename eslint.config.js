@@ -21,7 +21,14 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["**/dist/**", "**/.next/**", "**/node_modules/**", "**/*.config.*"],
+    ignores: [
+      "**/dist/**",
+      "**/.next/**",
+      "**/node_modules/**",
+      "**/*.config.*",
+      "**/cloudflare-env.d.ts",
+      "cloudflare-env.d.ts",
+    ],
   },
   js.configs.recommended,
   {

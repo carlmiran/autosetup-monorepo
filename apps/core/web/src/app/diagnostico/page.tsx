@@ -20,9 +20,12 @@ interface DiagnosticoResultado {
   oportunidades: string[];
   proximoPasso: string;
   distanciaAteAMeta?: string;
+  leadId?: number | null;
 }
 
 const initialForm = {
+  nomeContato: "",
+  whatsappContato: "",
   nomeNegocio: "",
   cidade: "",
   nicho: "",
@@ -37,6 +40,10 @@ const initialForm = {
   sobrecarga: "",
   visaoNegocio: "",
   metaFinanceira: "",
+  tamanhoEquipe: "",
+  canaisAtendimento: "",
+  ferramentasAtuais: "",
+  perdaFinanceira: "",
   linkInstagram: "",
   linkGoogleBusiness: "",
 };
@@ -65,7 +72,7 @@ export default function DiagnosticoPage() {
           notaMediaGoogle: form.notaMediaGoogle ? Number(form.notaMediaGoogle) : null,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as DiagnosticoResultado & { error?: string };
       if (!res.ok) {
         setErro(data.error ?? "Erro ao gerar diagnóstico.");
       } else {
@@ -88,6 +95,31 @@ export default function DiagnosticoPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="border rounded p-3 flex flex-col gap-3 bg-neutral-50">
+          <p className="text-xs text-neutral-500">
+            Pra te enviar o resultado e, se fizer sentido, tirar dúvidas
+            depois. Nunca usamos esses dados pra outra coisa.
+          </p>
+          <label className="flex flex-col gap-1 text-sm">
+            Seu nome
+            <input
+              className="border rounded px-3 py-2"
+              value={form.nomeContato}
+              onChange={(e) => setForm({ ...form, nomeContato: e.target.value })}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Seu WhatsApp (com DDD)
+            <input
+              type="tel"
+              placeholder="(35) 99999-0000"
+              className="border rounded px-3 py-2"
+              value={form.whatsappContato}
+              onChange={(e) => setForm({ ...form, whatsappContato: e.target.value })}
+            />
+          </label>
+        </div>
+
         <label className="flex flex-col gap-1 text-sm">
           Nome do negócio
           <span className="text-xs text-neutral-500">
@@ -270,6 +302,34 @@ export default function DiagnosticoPage() {
           onChange={(v) => setForm({ ...form, metaFinanceira: v })}
         />
 
+        <CampoTextoComAudio
+          label="Quantas pessoas trabalham com você hoje, e quantos clientes/pedidos você atende por mês, mais ou menos?"
+          ajuda='Ex: "Somos em 4 pessoas e atendemos cerca de 30 clientes por dia."'
+          value={form.tamanhoEquipe}
+          onChange={(v) => setForm({ ...form, tamanhoEquipe: v })}
+        />
+
+        <CampoTextoComAudio
+          label="Por onde os seus clientes chegam e conversam com você hoje?"
+          ajuda="Ex: WhatsApp, Instagram Direct, telefone, balcão/presencial, e-mail, site. Se souber, diga qual consome mais tempo da sua equipe."
+          value={form.canaisAtendimento}
+          onChange={(v) => setForm({ ...form, canaisAtendimento: v })}
+        />
+
+        <CampoTextoComAudio
+          label="Quais ferramentas ou sistemas você já usa hoje pra organizar o negócio?"
+          ajuda="Ex: Bling, Conta Azul, Excel, caderno, Trello, ou só WhatsApp mesmo — não tem certo ou errado."
+          value={form.ferramentasAtuais}
+          onChange={(v) => setForm({ ...form, ferramentasAtuais: v })}
+        />
+
+        <CampoTextoComAudio
+          label="Você sente que está perdendo vendas ou clientes por demorar a atender ou por falta de organização?"
+          ajuda="Seja sincero — já aconteceu de esquecer de retornar um orçamento, ou o cliente esperar demais?"
+          value={form.perdaFinanceira}
+          onChange={(v) => setForm({ ...form, perdaFinanceira: v })}
+        />
+
         <button
           type="submit"
           disabled={loading}
@@ -327,16 +387,29 @@ export default function DiagnosticoPage() {
               <p className="text-sm">{resultado.distanciaAteAMeta}</p>
             </div>
           )}
-          <BlocoFechamento />
+          <BlocoFechamento leadId={resultado.leadId ?? null} />
         </div>
       )}
     </main>
   );
 }
 
-function BlocoFechamento() {
+function BlocoFechamento({ leadId }: { leadId: number | null }) {
   const [interesse, setInteresse] = useState<"sim" | "nao" | null>(null);
   const numeroWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMERO;
+
+  function registrarInteresse(valor: "sim" | "nao") {
+    setInteresse(valor);
+    if (leadId) {
+      fetch("/api/interesse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId, interesse: valor }),
+      }).catch(() => {
+        // best-effort — não bloqueia a experiência se falhar
+      });
+    }
+  }
 
   return (
     <div className="border-t pt-4 mt-2 flex flex-col gap-3">
@@ -352,14 +425,14 @@ function BlocoFechamento() {
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => setInteresse("sim")}
+          onClick={() => registrarInteresse("sim")}
           className="border rounded px-4 py-2 text-sm bg-black text-white"
         >
           Sim, quero saber mais
         </button>
         <button
           type="button"
-          onClick={() => setInteresse("nao")}
+          onClick={() => registrarInteresse("nao")}
           className="border rounded px-4 py-2 text-sm"
         >
           Ainda não
