@@ -24,6 +24,7 @@ interface DiagnosticoResultado {
   oportunidades: string[];
   proximoPasso: string;
   distanciaAteAMeta?: string;
+  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string | null }[];
   leadId?: number | null;
 }
 
@@ -466,6 +467,27 @@ function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }
         </div>
       )}
 
+      {resultado.planoSeteDias && resultado.planoSeteDias.length > 0 && (
+        <div>
+          <h2 className="font-display text-lg text-ink mb-2">Plano de 7 dias</h2>
+          <ol className="flex flex-col gap-3">
+            {resultado.planoSeteDias.map((item) => (
+              <li key={item.dia} className="border border-ink/10 rounded-lg p-3">
+                <p className="text-xs font-sans tracking-widest uppercase text-brass mb-1">
+                  Dia {item.dia}
+                </p>
+                <p className="text-sm">{item.acao}</p>
+                {item.conteudoSugerido && (
+                  <p className="text-sm mt-2 italic text-ink/70 border-t border-ink/10 pt-2">
+                    Ideia de conteúdo: {item.conteudoSugerido}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <BlocoFechamento leadId={resultado.leadId ?? null} />
     </div>
   );
@@ -491,10 +513,12 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
   return (
     <div className="-mx-6 -mb-6 mt-2 bg-ink text-parchment rounded-b-2xl p-6 flex flex-col gap-3">
       <p className="text-sm">
-        Esse diagnóstico é só o começo. O AutoSetup pode transformar isso num{" "}
-        <strong className="text-brass-light">cronograma de desenvolvimento</strong> — um
-        passo a passo com acompanhamento contínuo pra sua empresa sair de
-        onde está hoje e chegar mais perto da meta que você descreveu.
+        Esse plano de 7 dias é só o começo — o AutoSetup pode ir além do
+        texto: nossa equipe produz as artes dos posts/carrosséis com base
+        no seu plano, você aprova (ou já manda materiais/fotos que quiser
+        usar), e a gente organiza tudo pra você publicar. Isso faz parte
+        da consultoria/parceria contratada — hoje é acompanhado por
+        gente de verdade, não é automático.
       </p>
       <p className="text-sm font-medium">
         Isso faz sentido pro seu dia a dia e pro seu negócio?

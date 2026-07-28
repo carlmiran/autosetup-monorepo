@@ -60,6 +60,12 @@ export interface DiagnosticoResultado {
   /** Só preenchido se visaoNegocio e/ou metaFinanceira foram informados
    * — a distância entre "onde está" e "onde quer chegar", em texto. */
   distanciaAteAMeta?: string;
+  /** Plano de 7 dias — sempre gerado, ação concreta por dia, calibrada
+   * aos dados reais respondidos (nicho, dificuldade, canais, ferramentas).
+   * "conteudoSugerido" só aparece nos dias que envolvem post/conteúdo —
+   * é roteiro/legenda em TEXTO, nunca uma imagem pronta (isso é serviço
+   * pago, mediado por humano — ver PainelServicoPago no front). */
+  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string }[];
   /** Qual provider/modo respondeu de verdade — observabilidade real,
    * não é exibido ao prospect, mas fica no log. */
   geradoPor: string;
@@ -111,6 +117,16 @@ Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRIN
 
 Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
 
+Monte também um PLANO DE 7 DIAS, com uma ação concreta por dia, calibrada
+especificamente aos dados que essa pessoa informou (nicho, dificuldade,
+canais que já usa, ferramentas, o que sobrecarrega) — nunca genérico tipo
+"poste mais nas redes". Pelo menos 2 dos 7 dias devem envolver produção de
+conteúdo (post ou carrossel); nesses dias, preencha "conteudoSugerido" com
+um roteiro em TEXTO (tema + ideia de legenda, 2-3 frases) — nunca uma
+imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
+fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
+dia do plano.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases resumindo a situação atual, só com base no que foi informado",
@@ -118,7 +134,16 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "achadosNaPesquisa": [],
   "oportunidades": ["2 a 3 oportunidades concretas de melhoria de presença digital, específicas para o nicho e a dificuldade relatada — não genéricas"],
   "proximoPasso": "uma ação prática e específica que o dono poderia tomar essa semana",
-  "distanciaAteAMeta": null
+  "distanciaAteAMeta": null,
+  "planoSeteDias": [
+    { "dia": 1, "acao": "...", "conteudoSugerido": null },
+    { "dia": 2, "acao": "...", "conteudoSugerido": null },
+    { "dia": 3, "acao": "...", "conteudoSugerido": null },
+    { "dia": 4, "acao": "...", "conteudoSugerido": null },
+    { "dia": 5, "acao": "...", "conteudoSugerido": null },
+    { "dia": 6, "acao": "...", "conteudoSugerido": null },
+    { "dia": 7, "acao": "...", "conteudoSugerido": null }
+  ]
 }
 
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (ex: nunca diga "vai triplicar suas vendas" — diga algo como "pode aumentar a chance de conversão de quem já busca por você").`;
@@ -158,6 +183,16 @@ REGRA INEGOCIÁVEL: tudo em "achadosNaPesquisa" precisa vir de uma busca real qu
 
 Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
 
+Monte também um PLANO DE 7 DIAS, com uma ação concreta por dia, calibrada
+especificamente aos dados que essa pessoa informou (nicho, dificuldade,
+canais que já usa, ferramentas, o que sobrecarrega) — nunca genérico tipo
+"poste mais nas redes". Pelo menos 2 dos 7 dias devem envolver produção de
+conteúdo (post ou carrossel); nesses dias, preencha "conteudoSugerido" com
+um roteiro em TEXTO (tema + ideia de legenda, 2-3 frases) — nunca uma
+imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
+fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
+dia do plano.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases sobre a situação atual, combinando o que foi informado com o que a pesquisa confirmou",
@@ -165,7 +200,16 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "achadosNaPesquisa": ["o que a pesquisa real encontrou, incluindo divergências com o que foi informado, se houver"],
   "oportunidades": ["2 a 3 oportunidades concretas, informadas pelas tendências reais do nicho que você pesquisou"],
   "proximoPasso": "uma ação prática e específica pra essa semana",
-  "distanciaAteAMeta": null
+  "distanciaAteAMeta": null,
+  "planoSeteDias": [
+    { "dia": 1, "acao": "...", "conteudoSugerido": null },
+    { "dia": 2, "acao": "...", "conteudoSugerido": null },
+    { "dia": 3, "acao": "...", "conteudoSugerido": null },
+    { "dia": 4, "acao": "...", "conteudoSugerido": null },
+    { "dia": 5, "acao": "...", "conteudoSugerido": null },
+    { "dia": 6, "acao": "...", "conteudoSugerido": null },
+    { "dia": 7, "acao": "...", "conteudoSugerido": null }
+  ]
 }
 
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.`;
@@ -250,6 +294,7 @@ function parsearResultado(raw: string, geradoPor: string): DiagnosticoResultado 
     oportunidades: p.oportunidades ?? [],
     proximoPasso: p.proximoPasso ?? "",
     distanciaAteAMeta: p.distanciaAteAMeta || undefined,
+    planoSeteDias: Array.isArray(p.planoSeteDias) ? p.planoSeteDias : [],
     geradoPor,
   };
 }
