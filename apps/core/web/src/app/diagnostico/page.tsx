@@ -4,9 +4,14 @@
 // Página real de diagnóstico self-service (LENS). Fonte: Constitutional
 // Principle #24-25 — nenhum dado de exemplo é mostrado como se fosse
 // real; tudo que aparece no resultado vem do que a própria pessoa
-// digitou aqui, processado por IA real via /api/diagnostico.
+// digitou/falou aqui, processado por IA real via /api/diagnostico.
+//
+// Pedido de Carlos (27/07/2026): microcopy explicando cada campo, opção
+// de responder por áudio (a voz carrega a parte emocional que texto não
+// carrega), e perguntas mais profundas sobre rotina/dores/sobrecarga.
 
 import { useState } from "react";
+import { CampoTextoComAudio } from "@/components/CampoTextoComAudio";
 
 interface DiagnosticoResultado {
   resumo: string;
@@ -26,6 +31,9 @@ const initialForm = {
   numeroAvaliacoesGoogle: "",
   notaMediaGoogle: "",
   maiorDificuldade: "",
+  rotinaDiaria: "",
+  oQueAtrapalha: "",
+  sobrecarga: "",
   linkInstagram: "",
   linkGoogleBusiness: "",
 };
@@ -71,13 +79,19 @@ export default function DiagnosticoPage() {
     <main className="mx-auto max-w-xl p-8">
       <h1 className="text-2xl font-semibold mb-2">Diagnóstico gratuito do seu negócio</h1>
       <p className="text-sm text-neutral-500 mb-6">
-        Responda com os dados reais do seu negócio. A análise abaixo é gerada
-        a partir exatamente do que você informar aqui — nada é inventado.
+        Responda com os dados reais do seu negócio — digitando ou falando,
+        você escolhe. A análise abaixo é gerada a partir exatamente do que
+        você informar aqui — nada é inventado.
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-1 text-sm">
           Nome do negócio
+          <span className="text-xs text-neutral-500">
+            Digite o nome da sua empresa. Mesmo que ela ainda não exista
+            formalmente, mesmo que seja só um projeto no papel — pode
+            colocar o nome que você já tem em mente.
+          </span>
           <input
             required
             className="border rounded px-3 py-2"
@@ -88,6 +102,10 @@ export default function DiagnosticoPage() {
 
         <label className="flex flex-col gap-1 text-sm">
           Cidade
+          <span className="text-xs text-neutral-500">
+            A cidade onde o negócio atua (ou vai atuar). Ajuda a entender a
+            concorrência e o público local.
+          </span>
           <input
             required
             className="border rounded px-3 py-2"
@@ -97,40 +115,52 @@ export default function DiagnosticoPage() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Nicho (ex: barbearia, estética, oficina mecânica)
+          Nicho
+          <span className="text-xs text-neutral-500">
+            O tipo de negócio, em poucas palavras — ex: barbearia, clínica de
+            estética, oficina mecânica, salão de beleza.
+          </span>
           <input
             required
+            placeholder="ex: barbearia, estética, oficina mecânica"
             className="border rounded px-3 py-2"
             value={form.nicho}
             onChange={(e) => setForm({ ...form, nicho: e.target.value })}
           />
         </label>
 
-        <div className="flex gap-4 flex-wrap text-sm">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.temSite}
-              onChange={(e) => setForm({ ...form, temSite: e.target.checked })}
-            />
-            Tenho site próprio
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.temInstagram}
-              onChange={(e) => setForm({ ...form, temInstagram: e.target.checked })}
-            />
-            Tenho Instagram ativo
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.temGoogleBusiness}
-              onChange={(e) => setForm({ ...form, temGoogleBusiness: e.target.checked })}
-            />
-            Tenho Google Business
-          </label>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm">Presença digital hoje</span>
+          <span className="text-xs text-neutral-500">
+            Marque o que você já tem — não tem problema nenhum não ter
+            nada ainda, isso também é um dado útil pro diagnóstico.
+          </span>
+          <div className="flex gap-4 flex-wrap text-sm mt-1">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.temSite}
+                onChange={(e) => setForm({ ...form, temSite: e.target.checked })}
+              />
+              Tenho site próprio
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.temInstagram}
+                onChange={(e) => setForm({ ...form, temInstagram: e.target.checked })}
+              />
+              Tenho Instagram ativo
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.temGoogleBusiness}
+                onChange={(e) => setForm({ ...form, temGoogleBusiness: e.target.checked })}
+              />
+              Tenho Google Business
+            </label>
+          </div>
         </div>
 
         <div className="border rounded p-3 flex flex-col gap-3 bg-neutral-50">
@@ -187,16 +217,41 @@ export default function DiagnosticoPage() {
           </label>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Qual sua maior dificuldade hoje pra atrair ou converter clientes?
-          <textarea
-            required
-            className="border rounded px-3 py-2"
-            rows={3}
-            value={form.maiorDificuldade}
-            onChange={(e) => setForm({ ...form, maiorDificuldade: e.target.value })}
-          />
-        </label>
+        <hr className="border-neutral-200" />
+        <p className="text-xs text-neutral-500 -mt-2">
+          As perguntas abaixo são as mais importantes — quanto mais real e
+          detalhada a resposta, melhor o diagnóstico. Pode digitar ou apertar
+          o botão de gravar e responder falando, do seu jeito.
+        </p>
+
+        <CampoTextoComAudio
+          label="Qual sua maior dificuldade hoje pra atrair ou converter clientes?"
+          ajuda="Pense em algo concreto que aconteceu recentemente — não precisa ser bonito, precisa ser real."
+          required
+          value={form.maiorDificuldade}
+          onChange={(v) => setForm({ ...form, maiorDificuldade: v })}
+        />
+
+        <CampoTextoComAudio
+          label="Como é o seu dia a dia no negócio?"
+          ajuda='Ex: quando você começa o dia, quais são as primeiras ações que você toma? Com quem você fala primeiro? Conte como se estivesse explicando pra alguém que nunca viu seu negócio funcionando.'
+          value={form.rotinaDiaria}
+          onChange={(v) => setForm({ ...form, rotinaDiaria: v })}
+        />
+
+        <CampoTextoComAudio
+          label="O que atrapalha o bom fluxo do seu dia?"
+          ajuda="Aquela coisa que te tira do sério, que trava tudo, que te faz perder tempo toda semana."
+          value={form.oQueAtrapalha}
+          onChange={(v) => setForm({ ...form, oQueAtrapalha: v })}
+        />
+
+        <CampoTextoComAudio
+          label="O que sobrecarrega você? O que te faz pensar 'preciso de mais uma pessoa pra me ajudar'?"
+          ajuda="Não precisa ter resposta pronta — só descreva o que pesa mais no seu dia hoje."
+          value={form.sobrecarga}
+          onChange={(v) => setForm({ ...form, sobrecarga: v })}
+        />
 
         <button
           type="submit"

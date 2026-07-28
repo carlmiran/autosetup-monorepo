@@ -21,6 +21,12 @@ export interface DiagnosticoInput {
   numeroAvaliacoesGoogle: number | null;
   notaMediaGoogle: number | null;
   maiorDificuldade: string;
+  /** Perguntas mais profundas — opcionais, texto digitado OU transcrito
+   * de áudio (a pessoa pode ter respondido por voz). Pedido de Carlos:
+   * revelar dores reais do dia a dia, não só presença digital. */
+  rotinaDiaria?: string;
+  oQueAtrapalha?: string;
+  sobrecarga?: string;
   /** Opcionais — se informados, habilitam a pesquisa real na web (ver
    * gerarDiagnosticoComPesquisa). Nunca obrigatórios. */
   linkInstagram?: string;
@@ -41,6 +47,18 @@ export interface DiagnosticoResultado {
   geradoPor: string;
 }
 
+function linhasContextoProfundo(input: DiagnosticoInput): string {
+  return [
+    input.rotinaDiaria ? `- Como é a rotina/dia a dia (relato do dono): "${input.rotinaDiaria}"` : null,
+    input.oQueAtrapalha ? `- O que atrapalha o bom fluxo do dia (relato do dono): "${input.oQueAtrapalha}"` : null,
+    input.sobrecarga
+      ? `- O que sobrecarrega / o que faz pensar que precisa de mais uma pessoa ajudando (relato do dono): "${input.sobrecarga}"`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 function montarPrompt(input: DiagnosticoInput): string {
   return `Você é um consultor de presença digital analisando UM negócio real, a partir SOMENTE dos dados que o dono informou abaixo. Nunca invente números, avaliações, seguidores ou fatos que não estejam listados aqui. Se um dado não foi informado, não presuma nada sobre ele — apenas não o mencione ou diga explicitamente "não informado".
 
@@ -54,6 +72,8 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 - Número de avaliações no Google: ${input.numeroAvaliacoesGoogle ?? "não informado"}
 - Nota média no Google: ${input.notaMediaGoogle ?? "não informado"}
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
+${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
+Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos.
 
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
@@ -87,7 +107,10 @@ DADOS INFORMADOS PELO DONO DO NEGÓCIO (trate como ponto de partida, não como v
 - Número de avaliações no Google (segundo o dono): ${input.numeroAvaliacoesGoogle ?? "não informado"}
 - Nota média no Google (segundo o dono): ${input.notaMediaGoogle ?? "não informado"}
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
+${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) : ""}
 ${linhasLinks ? "\n" + linhasLinks : ""}
+
+Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para identificar dores reais — eles revelam mais que presença digital sozinha.
 
 TAREFA:
 1. Pesquise na web pelo nome "${input.nomeNegocio}" em "${input.cidade}" — e pelos links informados acima, se houver — para encontrar presença real (Google Business, Instagram, site, avaliações, reclamações públicas).

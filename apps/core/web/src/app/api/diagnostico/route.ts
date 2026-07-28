@@ -42,6 +42,9 @@ export async function POST(request: Request) {
       typeof body.numeroAvaliacoesGoogle === "number" ? body.numeroAvaliacoesGoogle : null,
     notaMediaGoogle: typeof body.notaMediaGoogle === "number" ? body.notaMediaGoogle : null,
     maiorDificuldade: body.maiorDificuldade,
+    rotinaDiaria: body.rotinaDiaria || undefined,
+    oQueAtrapalha: body.oQueAtrapalha || undefined,
+    sobrecarga: body.sobrecarga || undefined,
     linkInstagram: body.linkInstagram || undefined,
     linkGoogleBusiness: body.linkGoogleBusiness || undefined,
   };
