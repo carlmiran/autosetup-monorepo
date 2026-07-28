@@ -19,6 +19,7 @@ interface DiagnosticoResultado {
   achadosNaPesquisa: string[];
   oportunidades: string[];
   proximoPasso: string;
+  distanciaAteAMeta?: string;
 }
 
 const initialForm = {
@@ -34,6 +35,8 @@ const initialForm = {
   rotinaDiaria: "",
   oQueAtrapalha: "",
   sobrecarga: "",
+  visaoNegocio: "",
+  metaFinanceira: "",
   linkInstagram: "",
   linkGoogleBusiness: "",
 };
@@ -253,6 +256,20 @@ export default function DiagnosticoPage() {
           onChange={(v) => setForm({ ...form, sobrecarga: v })}
         />
 
+        <CampoTextoComAudio
+          label="Você acha que seu negócio está indo bem? Está satisfeito com os rendimentos hoje?"
+          ajuda="Seja sincero — isso não vai contra você, ajuda a gente a entender de onde você está partindo."
+          value={form.visaoNegocio}
+          onChange={(v) => setForm({ ...form, visaoNegocio: v })}
+        />
+
+        <CampoTextoComAudio
+          label="Qual valor você gostaria de ganhar com o negócio quando ele estiver plenamente desenvolvido?"
+          ajuda="Pode ser um número aproximado, ou descrever como seria sua vida financeira e a estrutura da empresa nesse cenário ideal."
+          value={form.metaFinanceira}
+          onChange={(v) => setForm({ ...form, metaFinanceira: v })}
+        />
+
         <button
           type="submit"
           disabled={loading}
@@ -304,8 +321,74 @@ export default function DiagnosticoPage() {
             <h2 className="font-semibold">Próximo passo</h2>
             <p className="text-sm">{resultado.proximoPasso}</p>
           </div>
+          {resultado.distanciaAteAMeta && (
+            <div>
+              <h2 className="font-semibold">Distância até sua meta</h2>
+              <p className="text-sm">{resultado.distanciaAteAMeta}</p>
+            </div>
+          )}
+          <BlocoFechamento />
         </div>
       )}
     </main>
+  );
+}
+
+function BlocoFechamento() {
+  const [interesse, setInteresse] = useState<"sim" | "nao" | null>(null);
+  const numeroWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMERO;
+
+  return (
+    <div className="border-t pt-4 mt-2 flex flex-col gap-3">
+      <p className="text-sm">
+        Esse diagnóstico é só o começo. O AutoSetup pode transformar isso num{" "}
+        <strong>cronograma de desenvolvimento</strong> — um passo a passo com
+        acompanhamento contínuo pra sua empresa sair de onde está hoje e
+        chegar mais perto da meta que você descreveu.
+      </p>
+      <p className="text-sm font-medium">
+        Isso faz sentido pro seu dia a dia e pro seu negócio?
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setInteresse("sim")}
+          className="border rounded px-4 py-2 text-sm bg-black text-white"
+        >
+          Sim, quero saber mais
+        </button>
+        <button
+          type="button"
+          onClick={() => setInteresse("nao")}
+          className="border rounded px-4 py-2 text-sm"
+        >
+          Ainda não
+        </button>
+      </div>
+      {interesse === "sim" &&
+        (numeroWhatsApp ? (
+          <a
+            href={`https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(
+              "Vi meu diagnóstico no AutoSetup e quero saber mais sobre o cronograma de desenvolvimento.",
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm underline text-blue-700"
+          >
+            Continuar conversa no WhatsApp →
+          </a>
+        ) : (
+          <p className="text-xs text-neutral-500">
+            Contato ainda não configurado neste ambiente — fale com quem te
+            enviou este link.
+          </p>
+        ))}
+      {interesse === "nao" && (
+        <p className="text-xs text-neutral-500">
+          Sem problema — o diagnóstico acima já é seu, fique à vontade pra
+          voltar quando fizer sentido.
+        </p>
+      )}
+    </div>
   );
 }

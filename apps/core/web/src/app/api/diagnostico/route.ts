@@ -45,6 +45,8 @@ export async function POST(request: Request) {
     rotinaDiaria: body.rotinaDiaria || undefined,
     oQueAtrapalha: body.oQueAtrapalha || undefined,
     sobrecarga: body.sobrecarga || undefined,
+    visaoNegocio: body.visaoNegocio || undefined,
+    metaFinanceira: body.metaFinanceira || undefined,
     linkInstagram: body.linkInstagram || undefined,
     linkGoogleBusiness: body.linkGoogleBusiness || undefined,
   };

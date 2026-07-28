@@ -27,6 +27,12 @@ export interface DiagnosticoInput {
   rotinaDiaria?: string;
   oQueAtrapalha?: string;
   sobrecarga?: string;
+  /** Pedido de Carlos (28/07/2026): visão do dono sobre como o negócio
+   * está indo hoje, e a meta de ganhos/estrutura quando "plenamente
+   * desenvolvido" — dá pra medir a distância entre onde está e onde
+   * quer chegar, o que é o que realmente vende. */
+  visaoNegocio?: string;
+  metaFinanceira?: string;
   /** Opcionais — se informados, habilitam a pesquisa real na web (ver
    * gerarDiagnosticoComPesquisa). Nunca obrigatórios. */
   linkInstagram?: string;
@@ -42,6 +48,9 @@ export interface DiagnosticoResultado {
   achadosNaPesquisa: string[];
   oportunidades: string[];
   proximoPasso: string;
+  /** Só preenchido se visaoNegocio e/ou metaFinanceira foram informados
+   * — a distância entre "onde está" e "onde quer chegar", em texto. */
+  distanciaAteAMeta?: string;
   /** Qual provider/modo respondeu de verdade — observabilidade real,
    * não é exibido ao prospect, mas fica no log. */
   geradoPor: string;
@@ -53,6 +62,12 @@ function linhasContextoProfundo(input: DiagnosticoInput): string {
     input.oQueAtrapalha ? `- O que atrapalha o bom fluxo do dia (relato do dono): "${input.oQueAtrapalha}"` : null,
     input.sobrecarga
       ? `- O que sobrecarrega / o que faz pensar que precisa de mais uma pessoa ajudando (relato do dono): "${input.sobrecarga}"`
+      : null,
+    input.visaoNegocio
+      ? `- Visão do dono sobre como o negócio está indo hoje / satisfação com os rendimentos: "${input.visaoNegocio}"`
+      : null,
+    input.metaFinanceira
+      ? `- Meta de ganhos/estrutura quando o negócio estiver plenamente desenvolvido (relato do dono): "${input.metaFinanceira}"`
       : null,
   ]
     .filter(Boolean)
@@ -75,13 +90,16 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
 Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos.
 
+Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases resumindo a situação atual, só com base no que foi informado",
   "pontosFavoraveis": ["1 a 3 pontos reais e específicos, baseados só nos dados acima"],
   "achadosNaPesquisa": [],
   "oportunidades": ["2 a 3 oportunidades concretas de melhoria de presença digital, específicas para o nicho e a dificuldade relatada — não genéricas"],
-  "proximoPasso": "uma ação prática e específica que o dono poderia tomar essa semana"
+  "proximoPasso": "uma ação prática e específica que o dono poderia tomar essa semana",
+  "distanciaAteAMeta": null
 }
 
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (ex: nunca diga "vai triplicar suas vendas" — diga algo como "pode aumentar a chance de conversão de quem já busca por você").`;
@@ -119,13 +137,16 @@ TAREFA:
 
 REGRA INEGOCIÁVEL: tudo em "achadosNaPesquisa" precisa vir de uma busca real que você de fato fez — nunca invente um número ou avaliação que não veio da pesquisa. Se a pesquisa não encontrar nada verificável sobre o negócio específico, "achadosNaPesquisa" deve conter uma única entrada dizendo isso explicitamente (ex: "Não foi possível confirmar presença online própria com o nome informado — comum para negócios locais pequenos"), nunca fique em branco silenciosamente nem invente um achado para preencher.
 
+Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases sobre a situação atual, combinando o que foi informado com o que a pesquisa confirmou",
   "pontosFavoraveis": ["1 a 3 pontos reais, baseados no que foi informado E/OU confirmado na pesquisa"],
   "achadosNaPesquisa": ["o que a pesquisa real encontrou, incluindo divergências com o que foi informado, se houver"],
   "oportunidades": ["2 a 3 oportunidades concretas, informadas pelas tendências reais do nicho que você pesquisou"],
-  "proximoPasso": "uma ação prática e específica pra essa semana"
+  "proximoPasso": "uma ação prática e específica pra essa semana",
+  "distanciaAteAMeta": null
 }
 
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.`;
@@ -209,6 +230,7 @@ function parsearResultado(raw: string, geradoPor: string): DiagnosticoResultado 
     achadosNaPesquisa: p.achadosNaPesquisa ?? [],
     oportunidades: p.oportunidades ?? [],
     proximoPasso: p.proximoPasso ?? "",
+    distanciaAteAMeta: p.distanciaAteAMeta || undefined,
     geradoPor,
   };
 }
