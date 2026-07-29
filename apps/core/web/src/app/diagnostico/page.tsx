@@ -593,11 +593,13 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
   return (
     <div className="-mx-6 -mb-6 mt-2 bg-ink border-t border-panel-line rounded-b-xl p-6 flex flex-col gap-3">
       <p className="text-sm">
-        Esse plano de 7 dias é só o começo — o AutoSetup pode ir além do
-        texto: nossa equipe produz as artes dos posts/carrosséis com base
-        no seu plano, você aprova (ou já manda materiais/fotos que quiser
-        usar), e a gente organiza tudo pra você publicar. Isso faz parte
-        da consultoria/parceria contratada — hoje é acompanhado por
+        Esse plano de 7 dias é só o começo — o AutoSetup constrói soluções
+        sob medida pra cada negócio, com uma equipe de verdade apoiada por
+        IA, evoluindo pra fazer cada vez mais desse trabalho de forma
+        automatizada. Nossa equipe produz as artes dos posts/carrosséis com
+        base no seu plano, você aprova (ou já manda materiais/fotos que
+        quiser usar), e a gente organiza tudo pra você publicar. Isso faz
+        parte da consultoria/parceria contratada — hoje é acompanhado por
         gente de verdade, não é automático.
       </p>
       <p className="text-sm font-medium">

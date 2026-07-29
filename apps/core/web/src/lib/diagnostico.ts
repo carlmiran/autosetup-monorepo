@@ -172,6 +172,8 @@ Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (e
 
 SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente. Cada frase precisa carregar informação nova.
 
+UNIÃO/PARCERIA: em pelo menos um ponto do texto (no resumo ou no próximo passo, onde soar natural), mencione o nome do negócio "${input.nomeNegocio}" junto com "AutoSetup" na mesma frase — reforça a sensação de time, de estar junto, não de robô falando sozinho. Só quando soar natural, nunca forçado.
+
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): sempre que fizer sentido, conecte um achado a como o AutoSetup resolveria aquilo especificamente — não como propaganda genérica ("nossa solução é incrível"), mas mostrando o caminho concreto (ex: "isso é exatamente o tipo de gargalo que some quando alguém organiza esse fluxo pra você"). NUNCA invente urgência falsa, número fabricado, ou prova social que não existe — isso quebra a confiança e derruba a venda em vez de ajudar.`;
 }
 
@@ -253,6 +255,8 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.
 
 SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente.
+
+UNIÃO/PARCERIA: em pelo menos um ponto do texto, mencione o nome do negócio "${input.nomeNegocio}" junto com "AutoSetup" na mesma frase — reforça sensação de time. Só quando soar natural.
 
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): conecte achados a como o AutoSetup resolveria aquilo especificamente, de forma concreta, nunca como propaganda genérica. NUNCA invente urgência falsa ou prova social inexistente.`;
 }
