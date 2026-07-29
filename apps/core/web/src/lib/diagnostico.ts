@@ -161,7 +161,11 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   ]
 }
 
-Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (ex: nunca diga "vai triplicar suas vendas" — diga algo como "pode aumentar a chance de conversão de quem já busca por você").`;
+Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (ex: nunca diga "vai triplicar suas vendas" — diga algo como "pode aumentar a chance de conversão de quem já busca por você").
+
+SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente. Cada frase precisa carregar informação nova.
+
+INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): sempre que fizer sentido, conecte um achado a como o AutoSetup resolveria aquilo especificamente — não como propaganda genérica ("nossa solução é incrível"), mas mostrando o caminho concreto (ex: "isso é exatamente o tipo de gargalo que some quando alguém organiza esse fluxo pra você"). NUNCA invente urgência falsa, número fabricado, ou prova social que não existe — isso quebra a confiança e derruba a venda em vez de ajudar.`;
 }
 
 function montarPromptComPesquisa(input: DiagnosticoInput): string {
@@ -230,7 +234,11 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   ]
 }
 
-Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.`;
+Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.
+
+SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente.
+
+INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): conecte achados a como o AutoSetup resolveria aquilo especificamente, de forma concreta, nunca como propaganda genérica. NUNCA invente urgência falsa ou prova social inexistente.`;
 }
 
 export async function gerarDiagnostico(input: DiagnosticoInput): Promise<DiagnosticoResultado> {
