@@ -229,3 +229,32 @@ como "diário de princesa", não "SaaS do futuro"; faltava logotipo.
 
 Testado: typecheck 11/11, build de produção com 5 rotas de API,
 comportamento honesto confirmado sem chave configurada neste sandbox.
+
+## PDF do diagnóstico + memória real por telefone (ATLAS-lite) (29/07/2026)
+
+Fonte: pedido de Carlos — "não faz sentido a pesquisa ser dados que vão
+ser apagados"; SAGE precisa ter memória real, não só arquitetura.
+
+- **PDF real**: `lib/gerarPdf.ts`, via `pdf-lib` (puro JS, roda no
+  navegador, sem serviço externo). Botão "Baixar PDF" no resultado,
+  monta perguntas+respostas+diagnóstico completo (resumo, pontos
+  favoráveis, achados de pesquisa, oportunidades, plano de 7 dias,
+  distância até a meta).
+- **Memória real por WhatsApp (primeiro pedaço real do SAGE)**:
+  `buscarHistorico()` em `api/diagnostico/route.ts` consulta o D1 real
+  por diagnósticos anteriores com o mesmo WhatsApp, ANTES de gerar o
+  novo diagnóstico. Se encontrar, o resumo anterior entra no prompt
+  como contexto real (nunca fabricado), com instrução de reconhecer a
+  pessoa sem repetir o texto anterior literalmente. Frontend mostra
+  banner "Reconhecemos você" quando há histórico.
+- **Validado com dado real no banco de produção antes do deploy**:
+  inserido um lead de teste com WhatsApp fixo, confirmado que a query
+  de histórico retorna o resumo anterior corretamente, removido depois.
+- **O que isso NÃO é ainda**: não é o SAGE completo (agente contínuo,
+  proativo, decidindo ações). É memória real e reconhecimento real,
+  disparado por formulário — a peça de "lembrar quem é a pessoa" que o
+  futuro atendente de WhatsApp vai usar quando existir.
+
+Testado: typecheck+lint+build de produção limpos; query de histórico
+validada com INSERT/SELECT/DELETE reais no D1 de produção antes do
+código ir pro ar.

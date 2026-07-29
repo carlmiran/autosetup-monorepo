@@ -32,6 +32,38 @@ interface DadosContato {
  * NUNCA derruba a resposta do diagnóstico — a pessoa já pagou o custo
  * de preencher o formulário, o diagnóstico tem que aparecer de qualquer
  * jeito. Falha de persistência é observável, não é bloqueante. */
+/** Busca real no D1: diagnósticos anteriores da mesma pessoa, pelo
+ * WhatsApp informado. Primeiro pedaço real de memória (ATLAS-lite) —
+ * a pessoa é reconhecida de verdade, não é encenação. Best-effort:
+ * falha na busca não impede o diagnóstico novo de ser gerado. */
+async function buscarHistorico(
+  whatsappContato: string | undefined,
+): Promise<{ data: string; resumo: string }[]> {
+  if (!whatsappContato) return [];
+  try {
+    const { env } = getCloudflareContext();
+    const db = (env as { DB?: D1Database }).DB;
+    if (!db) return [];
+
+    const resultado = await db
+      .prepare(
+        `SELECT criado_em, diagnostico_resumo FROM leads
+         WHERE whatsapp_contato = ? AND diagnostico_resumo IS NOT NULL
+         ORDER BY criado_em DESC LIMIT 3`,
+      )
+      .bind(whatsappContato)
+      .all<{ criado_em: string; diagnostico_resumo: string }>();
+
+    return (resultado.results ?? []).map((r) => ({
+      data: r.criado_em,
+      resumo: r.diagnostico_resumo,
+    }));
+  } catch (err) {
+    console.error("[diagnostico] falha ao buscar histórico no D1:", err);
+    return [];
+  }
+}
+
 async function salvarLead(
   input: DiagnosticoInput & DadosContato,
   resultado: DiagnosticoResultado,
@@ -92,6 +124,8 @@ export async function POST(request: Request) {
     );
   }
 
+  const historicoAnterior = await buscarHistorico(body.whatsappContato);
+
   const input: DiagnosticoInput & DadosContato = {
     nomeNegocio: body.nomeNegocio,
     cidade: body.cidade,
@@ -113,6 +147,7 @@ export async function POST(request: Request) {
     ferramentasAtuais: body.ferramentasAtuais || undefined,
     perdaFinanceira: body.perdaFinanceira || undefined,
     perguntasNicho: Array.isArray(body.perguntasNicho) ? body.perguntasNicho : undefined,
+    historicoAnterior: historicoAnterior.length > 0 ? historicoAnterior : undefined,
     linkInstagram: body.linkInstagram || undefined,
     linkGoogleBusiness: body.linkGoogleBusiness || undefined,
     nomeContato: body.nomeContato || undefined,
@@ -129,7 +164,7 @@ export async function POST(request: Request) {
     try {
       const resultado = await gerarDiagnosticoComPesquisa(input);
       const leadId = await salvarLead(input, resultado);
-      return NextResponse.json({ ...resultado, leadId });
+      return NextResponse.json({ ...resultado, leadId, historicoAnterior });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro desconhecido na pesquisa real.";
       return NextResponse.json({ error: message }, { status: 502 });
@@ -154,7 +189,7 @@ export async function POST(request: Request) {
     await llmAdapter.connect(process.env);
     const resultado = await gerarDiagnostico(input);
     const leadId = await salvarLead(input, resultado);
-    return NextResponse.json({ ...resultado, leadId });
+    return NextResponse.json({ ...resultado, leadId, historicoAnterior });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro desconhecido ao gerar diagnóstico.";
     return NextResponse.json({ error: message }, { status: 502 });

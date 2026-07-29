@@ -51,6 +51,12 @@ export interface DiagnosticoInput {
    * real com o "estado da arte" do nicho — física e digitalmente —
    * não presença digital genérica (isso já é coberto em outro lugar). */
   perguntasNicho?: { pergunta: string; resposta: string }[];
+  /** Memória real (ATLAS-lite): diagnósticos anteriores dessa mesma
+   * pessoa, encontrados pelo WhatsApp informado, buscados no D1 antes
+   * de gerar este novo diagnóstico. Primeiro pedaço real de memória do
+   * SAGE — não é WhatsApp automatizado ainda, mas já é reconhecimento
+   * real, não fabricado. */
+  historicoAnterior?: { data: string; resumo: string }[];
 }
 
 export interface DiagnosticoResultado {
@@ -118,6 +124,13 @@ function linhasPerguntasNicho(input: DiagnosticoInput): string {
     .join("\n");
 }
 
+function linhasHistorico(input: DiagnosticoInput): string {
+  if (!input.historicoAnterior || input.historicoAnterior.length === 0) return "";
+  return input.historicoAnterior
+    .map((h) => `- Diagnóstico anterior em ${h.data}: "${h.resumo}"`)
+    .join("\n");
+}
+
 function montarPrompt(input: DiagnosticoInput): string {
   return `Você é um consultor de presença digital analisando UM negócio real, a partir SOMENTE dos dados que o dono informou abaixo. Nunca invente números, avaliações, seguidores ou fatos que não estejam listados aqui. Se um dado não foi informado, não presuma nada sobre ele — apenas não o mencione ou diga explicitamente "não informado".
 
@@ -133,6 +146,7 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
 ${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) + "\n" : ""}
+${linhasHistorico(input) ? "\nESSA PESSOA JÁ FEZ DIAGNÓSTICO ANTES:\n" + linhasHistorico(input) + "\nReconheça isso naturalmente no resumo (ex: \"desde a última vez, percebo que...\"), sem repetir o texto anterior literalmente. Isso é memória real, não invenção.\n" : ""}
 Se houver "envolvimento com o estado da arte do nicho" acima, use isso pra avaliar o quanto essa pessoa está atualizada/imersa no próprio mercado — se o envolvimento for baixo, uma oportunidade real é aumentar presença nos círculos do nicho (eventos, comunidades, referências); se for alto, uma oportunidade é transformar essa autoridade real em conteúdo/prova social, já que ela existe mas pode não estar sendo comunicada.
 
 Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos. Se houver "tamanho da equipe" informado, calibre as oportunidades sugeridas ao tamanho real do negócio — nunca sugira solução desproporcional (ex: não recomende automação complexa de nível empresarial pra quem trabalha sozinho).
@@ -199,6 +213,7 @@ DADOS INFORMADOS PELO DONO DO NEGÓCIO (trate como ponto de partida, não como v
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) : ""}
 ${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) : ""}
+${linhasHistorico(input) ? "\nESSA PESSOA JÁ FEZ DIAGNÓSTICO ANTES:\n" + linhasHistorico(input) + "\nReconheça isso naturalmente, sem repetir texto anterior literalmente." : ""}
 ${linhasLinks ? "\n" + linhasLinks : ""}
 
 Se houver "envolvimento com o estado da arte do nicho" acima, use isso pra avaliar se a pessoa está atualizada/imersa no próprio mercado, e calibre oportunidades a partir disso.

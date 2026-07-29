@@ -26,6 +26,7 @@ interface DiagnosticoResultado {
     concorrentes: { nome: string; destaque: string }[];
     posicionamento: string;
   } | null;
+  historicoAnterior?: { data: string; resumo: string }[];
   leadId?: number | null;
 }
 
@@ -449,7 +450,7 @@ export default function DiagnosticoPage() {
           </div>
         )}
 
-        {resultado && <ResultadoDiagnostico resultado={resultado} />}
+        {resultado && <ResultadoDiagnostico resultado={resultado} form={form} />}
       </main>
     </>
   );
@@ -466,10 +467,69 @@ function StatusReadout() {
   );
 }
 
-function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }) {
+function ResultadoDiagnostico({
+  resultado,
+  form,
+}: {
+  resultado: DiagnosticoResultado;
+  form: typeof initialForm;
+}) {
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+
+  async function baixarPdf() {
+    setGerandoPdf(true);
+    try {
+      const { gerarPdfDiagnostico } = await import("@/lib/gerarPdf");
+      await gerarPdfDiagnostico({
+        nomeNegocio: form.nomeNegocio,
+        campos: [
+          { label: "Cidade", valor: form.cidade },
+          { label: "Nicho", valor: form.nicho },
+          { label: "Maior dificuldade", valor: form.maiorDificuldade },
+          { label: "Rotina diária", valor: form.rotinaDiaria },
+          { label: "O que atrapalha", valor: form.oQueAtrapalha },
+          { label: "Sobrecarga", valor: form.sobrecarga },
+          { label: "Visão sobre o negócio", valor: form.visaoNegocio },
+          { label: "Meta financeira", valor: form.metaFinanceira },
+          { label: "Tamanho de equipe", valor: form.tamanhoEquipe },
+          { label: "Canais de atendimento", valor: form.canaisAtendimento },
+          { label: "Ferramentas atuais", valor: form.ferramentasAtuais },
+          { label: "Perda financeira", valor: form.perdaFinanceira },
+        ],
+        resumo: resultado.resumo,
+        pontosFavoraveis: resultado.pontosFavoraveis,
+        achadosNaPesquisa: resultado.achadosNaPesquisa,
+        oportunidades: resultado.oportunidades,
+        proximoPasso: resultado.proximoPasso,
+        distanciaAteAMeta: resultado.distanciaAteAMeta,
+        planoSeteDias: resultado.planoSeteDias,
+      });
+    } finally {
+      setGerandoPdf(false);
+    }
+  }
+
   return (
     <div className="mt-8 border border-panel-line rounded-xl p-6 flex flex-col gap-6 bg-panel">
-      <StatusReadout />
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <StatusReadout />
+        <button
+          type="button"
+          onClick={baixarPdf}
+          disabled={gerandoPdf}
+          className="font-mono text-xs text-amber border border-amber-dim rounded-md px-3 py-2 hover:bg-ink disabled:opacity-40 transition-colors"
+        >
+          {gerandoPdf ? "Gerando PDF..." : "⬇ Baixar PDF"}
+        </button>
+      </div>
+
+      {resultado.historicoAnterior && resultado.historicoAnterior.length > 0 && (
+        <div className="border border-mint/30 bg-mint-dim rounded-lg p-3 text-sm text-mint">
+          Reconhecemos você — encontramos {resultado.historicoAnterior.length}{" "}
+          diagnóstico(s) anterior(es) com esse WhatsApp. O texto abaixo já leva
+          isso em conta.
+        </div>
+      )}
       <div>
         <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-1">Resumo</h2>
         <p className="text-sm">{resultado.resumo}</p>
