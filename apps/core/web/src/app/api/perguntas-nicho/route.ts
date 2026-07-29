@@ -7,7 +7,7 @@
 // frequenta/produz eventos, não só se posta no Instagram.
 
 import { NextResponse } from "next/server";
-import { completeViaGateway } from "@autosetup/adapter-llm";
+import { llmAdapter, completeViaGateway } from "@autosetup/adapter-llm";
 
 const SUPPORTED_KEYS = [
   "OPENAI_API_KEY",
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await llmAdapter.connect(process.env);
     const resultado = await completeViaGateway(montarPrompt(nicho));
     let parsed: unknown;
     try {
@@ -72,5 +73,7 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao gerar perguntas do nicho.";
     return NextResponse.json({ error: message }, { status: 502 });
+  } finally {
+    await llmAdapter.disconnect();
   }
 }
