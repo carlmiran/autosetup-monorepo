@@ -119,21 +119,13 @@ export async function POST(request: Request) {
     whatsappContato: body.whatsappContato || undefined,
   };
 
-  const quererPesquisa = Boolean(input.linkInstagram || input.linkGoogleBusiness);
-
-  // Pesquisa real exige especificamente OPENAI_API_KEY (web_search é
-  // capacidade hospedada da OpenAI, não generaliza pro Gateway).
-  if (quererPesquisa && !process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      {
-        error:
-          "Você informou um link, mas a pesquisa real na web exige OPENAI_API_KEY configurada (não encontrada). Configure-a ou tente sem os links.",
-      },
-      { status: 503 },
-    );
-  }
-
-  if (quererPesquisa) {
+  // Pesquisa real (concorrentes + verificação da própria presença) roda
+  // sempre agora, não só quando há link — nicho e cidade já bastam pra
+  // buscar concorrentes reais. Exige especificamente OPENAI_API_KEY
+  // (web_search é capacidade hospedada da OpenAI, não generaliza pro
+  // Gateway). Se só outro provider estiver configurado, cai pro modo
+  // simples (sem pesquisa/comparação de concorrentes) em vez de falhar.
+  if (process.env.OPENAI_API_KEY) {
     try {
       const resultado = await gerarDiagnosticoComPesquisa(input);
       const leadId = await salvarLead(input, resultado);

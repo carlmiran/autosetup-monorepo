@@ -22,6 +22,10 @@ interface DiagnosticoResultado {
   proximoPasso: string;
   distanciaAteAMeta?: string;
   planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string | null }[];
+  comparacaoConcorrentes?: {
+    concorrentes: { nome: string; destaque: string }[];
+    posicionamento: string;
+  } | null;
   leadId?: number | null;
 }
 
@@ -297,9 +301,9 @@ export default function DiagnosticoPage() {
 
           <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
             <p className="text-xs text-paper-dim">
-              Opcional: cole o link do seu Instagram e/ou do seu Google Business.
-              Com isso, fazemos uma pesquisa real na web pra comparar o que você
-              disse com o que está publicamente visível.
+              A gente já pesquisa concorrentes reais do seu nicho automaticamente.
+              Se quiser, cole também seu Instagram/Google Business — assim
+              comparamos o que você disse com o que está publicamente visível.
             </p>
             <label className="flex flex-col gap-1 text-sm">
               Link do Instagram (opcional)
@@ -519,6 +523,25 @@ function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }
             Distância até sua meta
           </h2>
           <p className="text-sm">{resultado.distanciaAteAMeta}</p>
+        </div>
+      )}
+
+      {resultado.comparacaoConcorrentes && (
+        <div className="border-l-2 border-rust pl-4">
+          <h2 className="font-mono text-xs tracking-widest uppercase text-rust mb-1">
+            Você x concorrência
+          </h2>
+          <p className="text-sm">{resultado.comparacaoConcorrentes.posicionamento}</p>
+          <ul className="mt-2 flex flex-col gap-2">
+            {resultado.comparacaoConcorrentes.concorrentes.map((c, i) => (
+              <li key={i} className="text-sm border border-panel-line rounded-lg p-2 bg-ink">
+                <span className="font-mono text-[10px] tracking-widest uppercase text-paper-dim block mb-1">
+                  {c.nome}
+                </span>
+                {c.destaque}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

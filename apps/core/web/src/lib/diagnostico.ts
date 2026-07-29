@@ -71,6 +71,13 @@ export interface DiagnosticoResultado {
    * é roteiro/legenda em TEXTO, nunca uma imagem pronta (isso é serviço
    * pago, mediado por humano — ver PainelServicoPago no front). */
   planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string }[];
+  /** Comparação real com concorrentes — só preenchido no fluxo com
+   * pesquisa (precisa de web_search real). Nunca inventa concorrente
+   * ou dado que não veio de busca de verdade. */
+  comparacaoConcorrentes?: {
+    concorrentes: { nome: string; destaque: string }[];
+    posicionamento: string;
+  } | null;
   /** Qual provider/modo respondeu de verdade — observabilidade real,
    * não é exibido ao prospect, mas fica no log. */
   geradoPor: string;
@@ -199,7 +206,10 @@ Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para ident
 TAREFA:
 1. Pesquise na web pelo nome "${input.nomeNegocio}" em "${input.cidade}" — e pelos links informados acima, se houver — para encontrar presença real (Google Business, Instagram, site, avaliações, reclamações públicas).
 2. Pesquise também tendências gerais do nicho "${input.nicho}" (o que negócios desse tipo costumam precisar para atrair mais clientes hoje).
-3. Compare o que você encontrou com o que o dono informou. Se baterem, reforce isso. Se divergirem (ex: dono disse que não tem Google Business mas você achou um perfil, ou o inverso), diga isso claramente — é informação valiosa pra venda.
+3. Pesquise e identifique até 2 concorrentes REAIS do mesmo nicho "${input.nicho}" na cidade "${input.cidade}" (ou região próxima, se a cidade for pequena) — negócios que você de fato encontrou na busca, com sinais reais (nº de avaliações, nota, presença digital). Compare a posição do negócio analisado com eles: onde está mais preparado, onde está atrás. Seja honesto e específico (ex: "seu concorrente X tem 80 avaliações no Google contra as suas 12 — isso é o que mais pesa hoje na hora de alguém escolher"). Preencha "comparacaoConcorrentes".
+4. Compare o que você encontrou com o que o dono informou. Se baterem, reforce isso. Se divergirem (ex: dono disse que não tem Google Business mas você achou um perfil, ou o inverso), diga isso claramente — é informação valiosa pra venda.
+
+REGRA INEGOCIÁVEL PRA CONCORRENTES: só inclua concorrentes que você realmente encontrou na busca, com nome e sinal real (não invente nome de empresa nem número). Se não encontrar 2 concorrentes claros com presença digital forte, retorne "comparacaoConcorrentes": null e mencione a falta de concorrência digital forte como um achado em "achadosNaPesquisa" (pode ser uma oportunidade: pouca concorrência online = espaço pra dominar).
 
 REGRA INEGOCIÁVEL: tudo em "achadosNaPesquisa" precisa vir de uma busca real que você de fato fez — nunca invente um número ou avaliação que não veio da pesquisa. Se a pesquisa não encontrar nada verificável sobre o negócio específico, "achadosNaPesquisa" deve conter uma única entrada dizendo isso explicitamente (ex: "Não foi possível confirmar presença online própria com o nome informado — comum para negócios locais pequenos"), nunca fique em branco silenciosamente nem invente um achado para preencher.
 
@@ -231,7 +241,13 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
     { "dia": 5, "acao": "...", "conteudoSugerido": null },
     { "dia": 6, "acao": "...", "conteudoSugerido": null },
     { "dia": 7, "acao": "...", "conteudoSugerido": null }
-  ]
+  ],
+  "comparacaoConcorrentes": {
+    "concorrentes": [
+      { "nome": "...", "destaque": "o que diferencia esse concorrente, com dado real da busca" }
+    ],
+    "posicionamento": "1-2 frases honestas sobre onde o negócio analisado está em relação a eles, e o que mais pesa pra melhorar essa posição"
+  }
 }
 
 Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.
@@ -321,6 +337,7 @@ function parsearResultado(raw: string, geradoPor: string): DiagnosticoResultado 
     proximoPasso: p.proximoPasso ?? "",
     distanciaAteAMeta: p.distanciaAteAMeta || undefined,
     planoSeteDias: Array.isArray(p.planoSeteDias) ? p.planoSeteDias : [],
+    comparacaoConcorrentes: p.comparacaoConcorrentes ?? null,
     geradoPor,
   };
 }
