@@ -46,6 +46,11 @@ export interface DiagnosticoInput {
    * gerarDiagnosticoComPesquisa). Nunca obrigatórios. */
   linkInstagram?: string;
   linkGoogleBusiness?: string;
+  /** Perguntas geradas dinamicamente a partir do nicho informado (ver
+   * /api/perguntas-nicho), respondidas pela pessoa. Medem envolvimento
+   * real com o "estado da arte" do nicho — física e digitalmente —
+   * não presença digital genérica (isso já é coberto em outro lugar). */
+  perguntasNicho?: { pergunta: string; resposta: string }[];
 }
 
 export interface DiagnosticoResultado {
@@ -99,6 +104,13 @@ function linhasContextoProfundo(input: DiagnosticoInput): string {
     .join("\n");
 }
 
+function linhasPerguntasNicho(input: DiagnosticoInput): string {
+  if (!input.perguntasNicho || input.perguntasNicho.length === 0) return "";
+  return input.perguntasNicho
+    .map((qa) => `- Pergunta específica do nicho "${qa.pergunta}" → resposta do dono: "${qa.resposta}"`)
+    .join("\n");
+}
+
 function montarPrompt(input: DiagnosticoInput): string {
   return `Você é um consultor de presença digital analisando UM negócio real, a partir SOMENTE dos dados que o dono informou abaixo. Nunca invente números, avaliações, seguidores ou fatos que não estejam listados aqui. Se um dado não foi informado, não presuma nada sobre ele — apenas não o mencione ou diga explicitamente "não informado".
 
@@ -113,6 +125,9 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 - Nota média no Google: ${input.notaMediaGoogle ?? "não informado"}
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
+${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) + "\n" : ""}
+Se houver "envolvimento com o estado da arte do nicho" acima, use isso pra avaliar o quanto essa pessoa está atualizada/imersa no próprio mercado — se o envolvimento for baixo, uma oportunidade real é aumentar presença nos círculos do nicho (eventos, comunidades, referências); se for alto, uma oportunidade é transformar essa autoridade real em conteúdo/prova social, já que ela existe mas pode não estar sendo comunicada.
+
 Se houver relatos de rotina/dificuldade/sobrecarga acima, use-os como fonte PRINCIPAL para identificar dores reais — eles revelam mais sobre o negócio do que presença digital sozinha. Preste atenção a sinais de sobrecarga, gargalos e processos manuais que aparecem nesses relatos. Se houver "tamanho da equipe" informado, calibre as oportunidades sugeridas ao tamanho real do negócio — nunca sugira solução desproporcional (ex: não recomende automação complexa de nível empresarial pra quem trabalha sozinho).
 
 Se houver "visão do negócio hoje" e/ou "meta de ganhos/estrutura" acima, calcule a distância entre os dois em uma frase honesta (nunca prometendo que vai bater a meta) e preencha "distanciaAteAMeta". Se nenhum dos dois foi informado, retorne "distanciaAteAMeta": null.
@@ -170,7 +185,10 @@ DADOS INFORMADOS PELO DONO DO NEGÓCIO (trate como ponto de partida, não como v
 - Nota média no Google (segundo o dono): ${input.notaMediaGoogle ?? "não informado"}
 - Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) : ""}
+${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) : ""}
 ${linhasLinks ? "\n" + linhasLinks : ""}
+
+Se houver "envolvimento com o estado da arte do nicho" acima, use isso pra avaliar se a pessoa está atualizada/imersa no próprio mercado, e calibre oportunidades a partir disso.
 
 Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para identificar dores reais — eles revelam mais que presença digital sozinha. Se houver "tamanho da equipe" informado, calibre as oportunidades sugeridas ao tamanho real do negócio — nunca sugira solução desproporcional (ex: não recomende automação complexa de nível empresarial pra quem trabalha sozinho).
 

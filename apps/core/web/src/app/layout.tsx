@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 // AUTOSETUP — apps/core/web
-// Fontes reais via @fontsource (self-hosted, sem depender de rede
-// externa em build/produção): Fraunces (display, autoridade+calor) e
-// Public Sans (corpo, legibilidade em formulário longo no celular).
-// Paleta preto-quente/dourado/verde — ver globals.css para o
-// racional completo de psicodinâmica das cores.
+// v2 (28/07/2026): direção "painel de sistema operacional" — fundo
+// escuro dominante, JetBrains Mono pra display/rótulos (o produto
+// SE CHAMA "Operating System"), Public Sans pro corpo de texto.
 
 export const metadata: Metadata = {
   title: "AutoSetup OS",
@@ -20,7 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans bg-parchment text-ink">{children}</body>
+      <body className="min-h-full flex flex-col font-sans bg-ink text-paper scanlines">
+        {children}
+      </body>
     </html>
   );
 }

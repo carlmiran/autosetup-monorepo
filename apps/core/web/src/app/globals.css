@@ -1,63 +1,77 @@
 @import "tailwindcss";
-@import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/fraunces/wght-italic.css";
+@import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/public-sans";
 
-/* AUTOSETUP — sistema de cor e tipografia
+/* AUTOSETUP — sistema de cor e tipografia v2 (28/07/2026)
  *
- * Paleta pensada com psicodinâmica das cores para negócio/decisão:
- * - ink (quase-preto quente): autoridade, seriedade de "sistema operacional"
- * - parchment (creme quente): acolhimento, espaço seguro pra responder
- *   perguntas pessoais sobre dinheiro/rotina
- * - brass (dourado envelhecido, não amarelo-ouro brilhante): valor,
- *   oportunidade, decisão — cor de ação (CTAs)
- * - forest (verde escuro): crescimento, achado positivo
- * - clay (terracota escurecida/dessaturada — deliberadamente NÃO o
- *   terracota #D97757 clichê de IA): atenção, ponto de dor
+ * Redesenhado a partir de feedback real: a v1 (creme/dourado
+ * envelhecido/serifa itálica/selo circular) lia como "diário", não como
+ * "SaaS do futuro". Pivô: painel de sistema operacional escuro,
+ * monoespaçada pra rótulos e headline (o produto SE CHAMA "Operating
+ * System" — a tipografia técnica reforça isso), âmbar tipo fósforo de
+ * terminal antigo como cor de destaque (quente, não o azul-neon
+ * genérico de "IA/SaaS", mas ainda lê como tecnológico).
  *
- * Arco de cor pela página: ink (autoridade) → parchment (conversa) →
- * ink de novo no fechamento (decisão séria) — a cor de fundo narra a
- * jornada emocional, não é só decoração.
+ * - ink: fundo dominante da aplicação inteira agora, não só do header
+ * - panel: painel/card, um tom acima do fundo — like a terminal window
+ * - amber: destaque/ação — "fósforo" de terminal, não dourado de selo
+ * - mint: status positivo (dashboards usam verde pra "ok" — convenção
+ *   real de produto, não decoração)
+ * - rust: status de atenção/erro — dessaturado, não o laranja-clichê
  */
 
 :root {
-  --ink: #16140f;
-  --ink-soft: #221f18;
-  --parchment: #f6f1e4;
-  --parchment-soft: #efe8d4;
-  --brass: #b8863b;
-  --brass-light: #e4c77e;
-  --forest: #2f4f3e;
-  --forest-soft: #dde8e1;
-  --clay: #9c4a34;
-  --clay-soft: #f1e0da;
+  --ink: #0b0d0c;
+  --panel: #141613;
+  --panel-line: #232823;
+  --amber: #e0a940;
+  --amber-dim: #8a6a2c;
+  --mint: #5fb894;
+  --mint-dim: #1f3b31;
+  --rust: #c76a52;
+  --rust-dim: #3d2420;
+  --paper: #edeee9;
+  --paper-dim: #9a9d97;
 }
 
 @theme inline {
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-parchment: var(--parchment);
-  --color-parchment-soft: var(--parchment-soft);
-  --color-brass: var(--brass);
-  --color-brass-light: var(--brass-light);
-  --color-forest: var(--forest);
-  --color-forest-soft: var(--forest-soft);
-  --color-clay: var(--clay);
-  --color-clay-soft: var(--clay-soft);
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --color-panel: var(--panel);
+  --color-panel-line: var(--panel-line);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+  --color-mint: var(--mint);
+  --color-mint-dim: var(--mint-dim);
+  --color-rust: var(--rust);
+  --color-rust-dim: var(--rust-dim);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --font-display: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
   --font-sans: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--parchment);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
   font-family: var(--font-sans);
 }
 
-/* Foco de teclado visível — acessibilidade não é opcional */
 :focus-visible {
-  outline: 2px solid var(--brass);
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
+}
+
+/* leve textura de scanline no fundo — reforça "terminal", sutil o
+ * bastante pra não atrapalhar leitura */
+.scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(224, 169, 64, 0.025) 0px,
+    rgba(224, 169, 64, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

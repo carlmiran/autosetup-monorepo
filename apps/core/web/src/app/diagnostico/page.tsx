@@ -1,21 +1,18 @@
 "use client";
 
 // AUTOSETUP — apps/core/web/src/app/diagnostico/page.tsx
-// Página real de diagnóstico self-service (LENS). Fonte: Constitutional
-// Principle #24-25 — nenhum dado de exemplo é mostrado como se fosse
-// real; tudo que aparece no resultado vem do que a própria pessoa
-// digitou/falou aqui, processado por IA real via /api/diagnostico.
-//
-// Design (28/07/2026, pedido de Carlos): paleta ink/brass/forest com
-// psicodinâmica de cor deliberada — ver globals.css para o racional.
-// O formulário virou uma "ficha de diagnóstico" com seções nomeadas
-// (não uma lista solta de campos), e o resultado abre com um selo —
-// referência ao carimbo/selo de documento oficial, familiar pra quem
-// já lidou com nota fiscal/contrato no Brasil — pra comunicar "isso é
-// uma análise séria", não um formulário qualquer.
+// v2 (28/07/2026) — duas mudanças reais nesta versão:
+// 1. Redesign: de "diário" (creme/dourado/serifa) pra "painel de
+//    sistema operacional" (escuro/mono/âmbar de terminal) — feedback
+//    direto de Carlos.
+// 2. Perguntas dinâmicas por nicho: depois de digitar o nicho, a
+//    pessoa pode gerar 2 perguntas específicas sobre envolvimento real
+//    com o estado da arte daquele mercado (não presença digital
+//    genérica) — geradas por IA a partir do nicho, não hardcoded.
 
 import { useState } from "react";
 import { CampoTextoComAudio } from "@/components/CampoTextoComAudio";
+import { Logo } from "@/components/Logo";
 
 interface DiagnosticoResultado {
   resumo: string;
@@ -26,6 +23,11 @@ interface DiagnosticoResultado {
   distanciaAteAMeta?: string;
   planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string | null }[];
   leadId?: number | null;
+}
+
+interface PerguntaNicho {
+  pergunta: string;
+  ajuda: string;
 }
 
 const initialForm = {
@@ -56,15 +58,17 @@ const initialForm = {
 function SecaoDivisoria({ numero, titulo }: { numero: string; titulo: string }) {
   return (
     <div className="flex items-center gap-3 mt-4 mb-1">
-      <span className="font-display italic text-brass text-lg leading-none">{numero}</span>
-      <span className="font-sans text-xs tracking-[0.2em] uppercase text-ink/50">{titulo}</span>
-      <span className="flex-1 h-px bg-ink/15" />
+      <span className="font-mono text-amber text-xs">{numero}</span>
+      <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-paper-dim">
+        {titulo}
+      </span>
+      <span className="flex-1 h-px bg-panel-line" />
     </div>
   );
 }
 
 function inputClass(extra = "") {
-  return `border border-ink/15 bg-white rounded-lg px-3 py-2.5 focus-visible:outline-brass ${extra}`;
+  return `border border-panel-line bg-panel text-paper rounded-md px-3 py-2.5 focus-visible:outline-amber placeholder:text-paper-dim/50 ${extra}`;
 }
 
 export default function DiagnosticoPage() {
@@ -72,6 +76,35 @@ export default function DiagnosticoPage() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<DiagnosticoResultado | null>(null);
+
+  const [perguntasNicho, setPerguntasNicho] = useState<PerguntaNicho[]>([]);
+  const [respostasNicho, setRespostasNicho] = useState<string[]>([]);
+  const [loadingNicho, setLoadingNicho] = useState(false);
+  const [erroNicho, setErroNicho] = useState<string | null>(null);
+
+  async function gerarPerguntasNicho() {
+    if (!form.nicho.trim()) return;
+    setLoadingNicho(true);
+    setErroNicho(null);
+    try {
+      const res = await fetch("/api/perguntas-nicho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nicho: form.nicho }),
+      });
+      const data = (await res.json()) as { perguntas?: PerguntaNicho[]; error?: string };
+      if (!res.ok || !data.perguntas) {
+        setErroNicho(data.error ?? "Não consegui gerar perguntas pra esse nicho.");
+      } else {
+        setPerguntasNicho(data.perguntas);
+        setRespostasNicho(data.perguntas.map(() => ""));
+      }
+    } catch {
+      setErroNicho("Não foi possível conectar ao servidor.");
+    } finally {
+      setLoadingNicho(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +122,9 @@ export default function DiagnosticoPage() {
             ? Number(form.numeroAvaliacoesGoogle)
             : null,
           notaMediaGoogle: form.notaMediaGoogle ? Number(form.notaMediaGoogle) : null,
+          perguntasNicho: perguntasNicho
+            .map((q, i) => ({ pergunta: q.pergunta, resposta: respostasNicho[i] ?? "" }))
+            .filter((qa) => qa.resposta.trim().length > 0),
         }),
       });
       const data = (await res.json()) as DiagnosticoResultado & { error?: string };
@@ -106,23 +142,23 @@ export default function DiagnosticoPage() {
 
   return (
     <>
-      <header className="bg-ink text-parchment px-6 py-10 text-center">
-        <p className="font-sans text-xs tracking-[0.3em] uppercase text-brass-light mb-2">
-          AutoSetup · Diagnóstico
-        </p>
-        <h1 className="font-display text-3xl">Ficha de diagnóstico do seu negócio</h1>
-        <p className="font-sans text-sm text-parchment/70 mt-3 max-w-md mx-auto">
-          Responda com os dados reais — digitando ou falando, você escolhe.
-          A análise é gerada exatamente a partir do que você informar aqui.
-          Nada é inventado.
-        </p>
+      <header className="border-b border-panel-line px-6 py-6 flex flex-col items-center gap-4">
+        <Logo size={32} />
+        <div className="text-center">
+          <h1 className="font-display text-xl text-paper">Diagnóstico do seu negócio</h1>
+          <p className="font-sans text-sm text-paper-dim mt-2 max-w-md mx-auto">
+            Responda com os dados reais — digitando ou falando, você escolhe.
+            A análise é gerada exatamente a partir do que você informar aqui.
+            Nada é inventado.
+          </p>
+        </div>
       </header>
 
       <main className="mx-auto max-w-xl px-6 py-10">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <SecaoDivisoria numero="01" titulo="Contato" />
-          <div className="border border-ink/10 rounded-xl p-4 flex flex-col gap-3 bg-parchment-soft">
-            <p className="text-xs text-ink/60">
+          <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
+            <p className="text-xs text-paper-dim">
               Pra te enviar o resultado e, se fizer sentido, tirar dúvidas
               depois. Nunca usamos esses dados pra outra coisa.
             </p>
@@ -150,7 +186,7 @@ export default function DiagnosticoPage() {
 
           <label className="flex flex-col gap-1 text-sm">
             Nome do negócio
-            <span className="text-xs text-ink/50">
+            <span className="text-xs text-paper-dim">
               Digite o nome da sua empresa. Mesmo que ela ainda não exista
               formalmente, mesmo que seja só um projeto no papel — pode
               colocar o nome que você já tem em mente.
@@ -165,7 +201,7 @@ export default function DiagnosticoPage() {
 
           <label className="flex flex-col gap-1 text-sm">
             Cidade
-            <span className="text-xs text-ink/50">
+            <span className="text-xs text-paper-dim">
               A cidade onde o negócio atua (ou vai atuar). Ajuda a entender a
               concorrência e o público local.
             </span>
@@ -179,23 +215,55 @@ export default function DiagnosticoPage() {
 
           <label className="flex flex-col gap-1 text-sm">
             Nicho
-            <span className="text-xs text-ink/50">
+            <span className="text-xs text-paper-dim">
               O tipo de negócio, em poucas palavras — ex: barbearia, clínica de
-              estética, oficina mecânica, salão de beleza.
+              estética, oficina mecânica, organização de eventos.
             </span>
             <input
               required
-              placeholder="ex: barbearia, estética, oficina mecânica"
+              placeholder="ex: barbearia, estética, organização de eventos"
               className={inputClass()}
               value={form.nicho}
               onChange={(e) => setForm({ ...form, nicho: e.target.value })}
             />
           </label>
 
+          {perguntasNicho.length === 0 && (
+            <button
+              type="button"
+              onClick={gerarPerguntasNicho}
+              disabled={!form.nicho.trim() || loadingNicho}
+              className="self-start font-mono text-xs text-amber border border-amber-dim rounded-md px-3 py-2 hover:bg-panel disabled:opacity-40 transition-colors"
+            >
+              {loadingNicho ? "Analisando nicho..." : "▸ Analisar meu nicho"}
+            </button>
+          )}
+          {erroNicho && <p className="text-xs text-rust">{erroNicho}</p>}
+
+          {perguntasNicho.length > 0 && (
+            <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-4 bg-panel">
+              <p className="text-xs text-paper-dim">
+                Perguntas específicas pro seu nicho — medem o quanto você está
+                por dentro do que está rolando no seu mercado agora.
+              </p>
+              {perguntasNicho.map((q, i) => (
+                <CampoTextoComAudio
+                  key={i}
+                  label={q.pergunta}
+                  ajuda={q.ajuda}
+                  value={respostasNicho[i] ?? ""}
+                  onChange={(v) =>
+                    setRespostasNicho((prev) => prev.map((r, idx) => (idx === i ? v : r)))
+                  }
+                />
+              ))}
+            </div>
+          )}
+
           <SecaoDivisoria numero="03" titulo="Presença digital" />
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-ink/50">
+            <span className="text-xs text-paper-dim">
               Marque o que você já tem — não tem problema nenhum não ter
               nada ainda, isso também é um dado útil pro diagnóstico.
             </span>
@@ -227,12 +295,11 @@ export default function DiagnosticoPage() {
             </div>
           </div>
 
-          <div className="border border-ink/10 rounded-xl p-4 flex flex-col gap-3 bg-parchment-soft">
-            <p className="text-xs text-ink/60">
+          <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
+            <p className="text-xs text-paper-dim">
               Opcional: cole o link do seu Instagram e/ou do seu Google Business.
               Com isso, fazemos uma pesquisa real na web pra comparar o que você
-              disse com o que está publicamente visível — o diagnóstico fica
-              mais preciso.
+              disse com o que está publicamente visível.
             </p>
             <label className="flex flex-col gap-1 text-sm">
               Link do Instagram (opcional)
@@ -282,7 +349,7 @@ export default function DiagnosticoPage() {
           </div>
 
           <SecaoDivisoria numero="04" titulo="O dia a dia" />
-          <p className="text-xs text-ink/50 -mt-2">
+          <p className="text-xs text-paper-dim -mt-2">
             Estas são as perguntas mais importantes — quanto mais real e
             detalhada a resposta, melhor o diagnóstico. Pode digitar ou
             apertar o botão de gravar e responder falando, do seu jeito.
@@ -298,7 +365,7 @@ export default function DiagnosticoPage() {
 
           <CampoTextoComAudio
             label="Como é o seu dia a dia no negócio?"
-            ajuda='Ex: quando você começa o dia, quais são as primeiras ações que você toma? Com quem você fala primeiro? Conte como se estivesse explicando pra alguém que nunca viu seu negócio funcionando.'
+            ajuda='Ex: quando você começa o dia, quais são as primeiras ações que você toma? Com quem você fala primeiro?'
             value={form.rotinaDiaria}
             onChange={(v) => setForm({ ...form, rotinaDiaria: v })}
           />
@@ -344,7 +411,7 @@ export default function DiagnosticoPage() {
 
           <CampoTextoComAudio
             label="Por onde os seus clientes chegam e conversam com você hoje?"
-            ajuda="Ex: WhatsApp, Instagram Direct, telefone, balcão/presencial, e-mail, site. Se souber, diga qual consome mais tempo da sua equipe."
+            ajuda="Ex: WhatsApp, Instagram Direct, telefone, balcão/presencial, e-mail, site."
             value={form.canaisAtendimento}
             onChange={(v) => setForm({ ...form, canaisAtendimento: v })}
           />
@@ -366,14 +433,14 @@ export default function DiagnosticoPage() {
           <button
             type="submit"
             disabled={loading}
-            className="font-sans font-semibold bg-brass text-ink rounded-full px-6 py-4 mt-2 hover:bg-brass-light transition-colors disabled:opacity-50"
+            className="font-sans font-semibold bg-amber text-ink rounded-md px-6 py-4 mt-2 hover:brightness-110 transition-all disabled:opacity-50"
           >
             {loading ? "Gerando diagnóstico real..." : "Ver meu diagnóstico"}
           </button>
         </form>
 
         {erro && (
-          <div className="mt-6 border border-clay/30 bg-clay-soft text-clay rounded-xl p-4 text-sm">
+          <div className="mt-6 border border-rust/40 bg-rust-dim text-rust rounded-lg p-4 text-sm">
             {erro}
           </div>
         )}
@@ -384,50 +451,30 @@ export default function DiagnosticoPage() {
   );
 }
 
-function Selo() {
+function StatusReadout() {
   return (
-    <div className="flex flex-col items-center gap-2 mb-2">
-      <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
-        <circle cx="36" cy="36" r="33" fill="none" stroke="var(--brass)" strokeWidth="1.5" />
-        <circle cx="36" cy="36" r="27" fill="none" stroke="var(--brass)" strokeWidth="1" strokeDasharray="2 3" />
-        <text
-          x="36"
-          y="33"
-          textAnchor="middle"
-          fontFamily="var(--font-display)"
-          fontStyle="italic"
-          fontSize="11"
-          fill="var(--brass)"
-        >
-          AutoSetup
-        </text>
-        <text
-          x="36"
-          y="45"
-          textAnchor="middle"
-          fontFamily="var(--font-sans)"
-          fontSize="6"
-          letterSpacing="1"
-          fill="var(--brass)"
-        >
-          DIAGNÓSTICO REAL
-        </text>
-      </svg>
+    <div className="flex items-center gap-2 border border-amber-dim rounded-md px-3 py-1.5 self-start">
+      <span className="w-1.5 h-1.5 rounded-full bg-mint" />
+      <span className="font-mono text-[10px] tracking-widest uppercase text-amber">
+        AutoSetup · Diagnóstico gerado
+      </span>
     </div>
   );
 }
 
 function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }) {
   return (
-    <div className="mt-8 border border-ink/10 rounded-2xl p-6 flex flex-col gap-6 bg-white">
-      <Selo />
+    <div className="mt-8 border border-panel-line rounded-xl p-6 flex flex-col gap-6 bg-panel">
+      <StatusReadout />
       <div>
-        <h2 className="font-display text-lg text-ink">Resumo</h2>
-        <p className="text-sm mt-1">{resultado.resumo}</p>
+        <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-1">Resumo</h2>
+        <p className="text-sm">{resultado.resumo}</p>
       </div>
 
-      <div className="border-l-2 border-forest pl-4">
-        <h2 className="font-display text-lg text-forest">Pontos favoráveis</h2>
+      <div className="border-l-2 border-mint pl-4">
+        <h2 className="font-mono text-xs tracking-widest uppercase text-mint mb-1">
+          Pontos favoráveis
+        </h2>
         <ul className="list-disc pl-5 text-sm mt-1 space-y-1">
           {resultado.pontosFavoraveis.map((p, i) => (
             <li key={i}>{p}</li>
@@ -436,8 +483,10 @@ function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }
       </div>
 
       {resultado.achadosNaPesquisa && resultado.achadosNaPesquisa.length > 0 && (
-        <div className="border-l-2 border-ink/20 pl-4">
-          <h2 className="font-display text-lg">O que encontramos pesquisando</h2>
+        <div className="border-l-2 border-panel-line pl-4">
+          <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-1">
+            O que encontramos pesquisando
+          </h2>
           <ul className="list-disc pl-5 text-sm mt-1 space-y-1">
             {resultado.achadosNaPesquisa.map((a, i) => (
               <li key={i}>{a}</li>
@@ -446,8 +495,10 @@ function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }
         </div>
       )}
 
-      <div className="border-l-2 border-brass pl-4">
-        <h2 className="font-display text-lg text-brass">Oportunidades</h2>
+      <div className="border-l-2 border-amber pl-4">
+        <h2 className="font-mono text-xs tracking-widest uppercase text-amber mb-1">
+          Oportunidades
+        </h2>
         <ul className="list-disc pl-5 text-sm mt-1 space-y-1">
           {resultado.oportunidades.map((o, i) => (
             <li key={i}>{o}</li>
@@ -456,29 +507,35 @@ function ResultadoDiagnostico({ resultado }: { resultado: DiagnosticoResultado }
       </div>
 
       <div>
-        <h2 className="font-display text-lg text-ink">Próximo passo</h2>
-        <p className="text-sm mt-1">{resultado.proximoPasso}</p>
+        <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-1">
+          Próximo passo
+        </h2>
+        <p className="text-sm">{resultado.proximoPasso}</p>
       </div>
 
       {resultado.distanciaAteAMeta && (
-        <div className="bg-parchment-soft rounded-xl p-4">
-          <h2 className="font-display text-lg text-ink">Distância até sua meta</h2>
-          <p className="text-sm mt-1">{resultado.distanciaAteAMeta}</p>
+        <div className="bg-ink rounded-lg p-4 border border-panel-line">
+          <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-1">
+            Distância até sua meta
+          </h2>
+          <p className="text-sm">{resultado.distanciaAteAMeta}</p>
         </div>
       )}
 
       {resultado.planoSeteDias && resultado.planoSeteDias.length > 0 && (
         <div>
-          <h2 className="font-display text-lg text-ink mb-2">Plano de 7 dias</h2>
+          <h2 className="font-mono text-xs tracking-widest uppercase text-paper-dim mb-2">
+            Plano de 7 dias
+          </h2>
           <ol className="flex flex-col gap-3">
             {resultado.planoSeteDias.map((item) => (
-              <li key={item.dia} className="border border-ink/10 rounded-lg p-3">
-                <p className="text-xs font-sans tracking-widest uppercase text-brass mb-1">
+              <li key={item.dia} className="border border-panel-line rounded-lg p-3 bg-ink">
+                <p className="font-mono text-[10px] tracking-widest uppercase text-amber mb-1">
                   Dia {item.dia}
                 </p>
                 <p className="text-sm">{item.acao}</p>
                 {item.conteudoSugerido && (
-                  <p className="text-sm mt-2 italic text-ink/70 border-t border-ink/10 pt-2">
+                  <p className="text-sm mt-2 italic text-paper-dim border-t border-panel-line pt-2">
                     Ideia de conteúdo: {item.conteudoSugerido}
                   </p>
                 )}
@@ -511,7 +568,7 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
   }
 
   return (
-    <div className="-mx-6 -mb-6 mt-2 bg-ink text-parchment rounded-b-2xl p-6 flex flex-col gap-3">
+    <div className="-mx-6 -mb-6 mt-2 bg-ink border-t border-panel-line rounded-b-xl p-6 flex flex-col gap-3">
       <p className="text-sm">
         Esse plano de 7 dias é só o começo — o AutoSetup pode ir além do
         texto: nossa equipe produz as artes dos posts/carrosséis com base
@@ -527,14 +584,14 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
         <button
           type="button"
           onClick={() => registrarInteresse("sim")}
-          className="font-sans font-semibold rounded-full px-5 py-2.5 text-sm bg-brass text-ink hover:bg-brass-light transition-colors"
+          className="font-sans font-semibold rounded-md px-5 py-2.5 text-sm bg-amber text-ink hover:brightness-110 transition-all"
         >
           Sim, quero saber mais
         </button>
         <button
           type="button"
           onClick={() => registrarInteresse("nao")}
-          className="font-sans rounded-full px-5 py-2.5 text-sm border border-parchment/30 text-parchment"
+          className="font-sans rounded-md px-5 py-2.5 text-sm border border-panel-line text-paper"
         >
           Ainda não
         </button>
@@ -547,18 +604,18 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm underline text-brass-light"
+            className="text-sm underline text-amber"
           >
             Continuar conversa no WhatsApp →
           </a>
         ) : (
-          <p className="text-xs text-parchment/60">
+          <p className="text-xs text-paper-dim">
             Contato ainda não configurado neste ambiente — fale com quem te
             enviou este link.
           </p>
         ))}
       {interesse === "nao" && (
-        <p className="text-xs text-parchment/60">
+        <p className="text-xs text-paper-dim">
           Sem problema — o diagnóstico acima já é seu, fique à vontade pra
           voltar quando fizer sentido.
         </p>

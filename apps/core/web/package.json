@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@autosetup/adapter-llm": "workspace:*",
-    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/public-sans": "^5.3.0",
     "next": "16.2.12",
     "react": "19.2.4",

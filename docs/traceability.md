@@ -198,3 +198,34 @@ mais pedido direto de Carlos (2 perguntas de satisfação/meta).
 
 Testado: typecheck 11/11 limpo, build de produção com 4 rotas de API,
 D1 verificado com query real antes do código ser escrito.
+
+## Redesign v2 (OS-panel) + perguntas dinâmicas por nicho (28/07/2026)
+
+Fonte: feedback direto de Carlos — v1 (creme/dourado/serifa/selo) lia
+como "diário de princesa", não "SaaS do futuro"; faltava logotipo.
+
+- **Paleta v2**: ink (#0b0d0c) dominante em toda a aplicação (não só
+  header), panel (#141613) pra cards, âmbar (#e0a940, "fósforo de
+  terminal") como cor de ação, mint pra status positivo, rust pra erro
+  — convenção real de dashboard, não decoração.
+- **Tipografia v2**: JetBrains Mono (self-hosted via @fontsource) pra
+  display/headline/rótulos — decisão deliberada de reforçar que o
+  produto SE CHAMA "Operating System"; Public Sans mantido pro corpo de
+  texto (legibilidade). Fraunces removido.
+- **Logotipo real**: `components/Logo.tsx` — marca geométrica com 8 nós
+  ao redor de um núcleo central, representando literalmente os 8
+  componentes do Core (LENS/SAGE/ATLAS/PULSE/PATHS/WINDOW/WORKERS + HUB
+  no centro) — não é um ícone genérico, é o diagrama real do produto.
+- **Perguntas dinâmicas por nicho**: `/api/perguntas-nicho` gera 2
+  perguntas específicas via LLM a partir do nicho digitado, medindo
+  envolvimento REAL com o estado da arte do mercado (física e
+  digitalmente) — ex: nicho "organização de eventos" → pergunta sobre
+  frequentar/produzir eventos, não presença digital genérica (isso já é
+  perguntado em outra seção). Botão "Analisar meu nicho" dispara a
+  geração; respostas (texto ou áudio, reaproveitando CampoTextoComAudio)
+  entram no diagnóstico como contexto de calibração de oportunidades.
+- D1: coluna `perguntas_nicho` adicionada à tabela `leads` via
+  `ALTER TABLE` real (não migration arquivo, aplicada direto via query)
+
+Testado: typecheck 11/11, build de produção com 5 rotas de API,
+comportamento honesto confirmado sem chave configurada neste sandbox.
