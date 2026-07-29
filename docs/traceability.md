@@ -258,3 +258,35 @@ ser apagados"; SAGE precisa ter memória real, não só arquitetura.
 Testado: typecheck+lint+build de produção limpos; query de histórico
 validada com INSERT/SELECT/DELETE reais no D1 de produção antes do
 código ir pro ar.
+
+## Nunca perder o que a pessoa preencheu (29/07/2026)
+
+Fonte: Carlos reportou "page could not be found" ao clicar em "Ver meu
+diagnóstico" — e pediu explicitamente que os dados nunca se percam,
+mesmo se algo falhar.
+
+- **Rascunho salvo no navegador (localStorage)**: todo o formulário é
+  salvo automaticamente (debounced, 500ms) a cada mudança. Se a página
+  falhar, recarregar, ou a pessoa fechar sem querer, o rascunho volta
+  sozinho, com aviso "Recuperamos o que você já tinha preenchido antes"
+  e opção de começar do zero. Limpo só depois de um diagnóstico gerado
+  com sucesso.
+- **Timeout explícito no fetch (AbortController, 110s)**: antes, uma
+  falha de rede/timeout aparecia como erro genérico do navegador (o que
+  provavelmente causou o "page could not be found" relatado). Agora
+  aparece uma mensagem clara dentro do próprio app, reforçando que os
+  dados estão salvos.
+- **Expectativa de tempo**: texto abaixo do botão avisa que a busca de
+  concorrentes reais pode levar até 1 minuto — hipótese real de causa
+  raiz é a pessoa achar que travou e sair da tela antes de terminar
+  (a pesquisa de concorrentes+nicho+verificação numa chamada só ficou
+  mais pesada depois da feature de comparação com concorrentes).
+- Bug real de lint pego no processo: `setState` síncrono dentro de
+  `useEffect` (React) — corrigido com inicialização preguiçosa do
+  estado (`useState(() => ...)`), padrão correto pra restaurar de
+  localStorage sem cascata de renders.
+
+Testado: typecheck+lint (0 erros reais)+build de produção limpos.
+Causa raiz exata do "page could not be found" não confirmada (não temos
+acesso a logs do Cloudflare nesta sessão) — mitigação cobre os cenários
+mais prováveis (timeout, navegação por impaciência, erro de rede).

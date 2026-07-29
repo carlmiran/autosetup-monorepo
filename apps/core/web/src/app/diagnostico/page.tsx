@@ -1,18 +1,20 @@
 "use client";
 
 // AUTOSETUP — apps/core/web/src/app/diagnostico/page.tsx
-// v2 (28/07/2026) — duas mudanças reais nesta versão:
-// 1. Redesign: de "diário" (creme/dourado/serifa) pra "painel de
-//    sistema operacional" (escuro/mono/âmbar de terminal) — feedback
-//    direto de Carlos.
-// 2. Perguntas dinâmicas por nicho: depois de digitar o nicho, a
-//    pessoa pode gerar 2 perguntas específicas sobre envolvimento real
-//    com o estado da arte daquele mercado (não presença digital
-//    genérica) — geradas por IA a partir do nicho, não hardcoded.
+// v3 (29/07/2026): NUNCA MAIS PERDER O QUE A PESSOA PREENCHEU.
+// Pedido de Carlos após um erro real em produção ("page could not be
+// found" depois de clicar em "Ver meu diagnóstico"): o formulário
+// inteiro é salvo no localStorage do navegador a cada mudança
+// (debounced), e restaurado automaticamente se a pessoa recarregar ou
+// a página falhar. Limpo só depois de um diagnóstico gerado com
+// sucesso. Também: timeout explícito no fetch com mensagem clara em
+// vez de deixar o navegador mostrar erro genérico.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CampoTextoComAudio } from "@/components/CampoTextoComAudio";
 import { Logo } from "@/components/Logo";
+
+const CHAVE_LOCALSTORAGE = "autosetup-diagnostico-rascunho";
 
 interface DiagnosticoResultado {
   resumo: string;
@@ -76,8 +78,28 @@ function inputClass(extra = "") {
   return `border border-panel-line bg-panel text-paper rounded-md px-3 py-2.5 focus-visible:outline-amber placeholder:text-paper-dim/50 ${extra}`;
 }
 
+function restaurarRascunho(): { form: typeof initialForm; restaurado: boolean } {
+  if (typeof window === "undefined") return { form: initialForm, restaurado: false };
+  try {
+    const salvo = window.localStorage.getItem(CHAVE_LOCALSTORAGE);
+    if (salvo) {
+      const parsed = JSON.parse(salvo) as Partial<typeof initialForm>;
+      const temAlgumDado = Object.values(parsed).some(
+        (v) => typeof v === "string" && v.trim().length > 0,
+      );
+      if (temAlgumDado) {
+        return { form: { ...initialForm, ...parsed }, restaurado: true };
+      }
+    }
+  } catch {
+    // rascunho corrompido — ignora silenciosamente, não impede o uso
+  }
+  return { form: initialForm, restaurado: false };
+}
+
 export default function DiagnosticoPage() {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState<typeof initialForm>(() => restaurarRascunho().form);
+  const [restaurado, setRestaurado] = useState<boolean>(() => restaurarRascunho().restaurado);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<DiagnosticoResultado | null>(null);
@@ -86,6 +108,27 @@ export default function DiagnosticoPage() {
   const [respostasNicho, setRespostasNicho] = useState<string[]>([]);
   const [loadingNicho, setLoadingNicho] = useState(false);
   const [erroNicho, setErroNicho] = useState<string | null>(null);
+
+  // Salva o rascunho a cada mudança (debounced), pra nunca perder o que
+  // a pessoa já digitou/gravou — mesmo se a geração do diagnóstico falhar.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        window.localStorage.setItem(CHAVE_LOCALSTORAGE, JSON.stringify(form));
+      } catch {
+        // localStorage indisponível (modo privado, etc.) — segue sem salvar
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [form]);
+
+  function limparRascunho() {
+    try {
+      window.localStorage.removeItem(CHAVE_LOCALSTORAGE);
+    } catch {
+      // ignora
+    }
+  }
 
   async function gerarPerguntasNicho() {
     if (!form.nicho.trim()) return;
@@ -117,10 +160,14 @@ export default function DiagnosticoPage() {
     setErro(null);
     setResultado(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 110_000); // 110s — a busca de concorrentes pode demorar
+
     try {
       const res = await fetch("/api/diagnostico", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           ...form,
           numeroAvaliacoesGoogle: form.numeroAvaliacoesGoogle
@@ -137,10 +184,20 @@ export default function DiagnosticoPage() {
         setErro(data.error ?? "Erro ao gerar diagnóstico.");
       } else {
         setResultado(data);
+        limparRascunho(); // só limpa depois de um diagnóstico gerado com sucesso
       }
-    } catch {
-      setErro("Não foi possível conectar ao servidor de diagnóstico.");
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setErro(
+          "A geração demorou mais do que o esperado (a busca por concorrentes reais pode levar mais de um minuto). Suas respostas continuam salvas neste navegador — tente novamente em alguns instantes.",
+        );
+      } else {
+        setErro(
+          "Não foi possível conectar ao servidor de diagnóstico. Suas respostas continuam salvas neste navegador — tente novamente.",
+        );
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }
@@ -160,6 +217,23 @@ export default function DiagnosticoPage() {
       </header>
 
       <main className="mx-auto max-w-xl px-6 py-10">
+        {restaurado && (
+          <div className="border border-mint/30 bg-mint-dim rounded-lg p-3 text-sm text-mint mb-5 flex items-center justify-between gap-2">
+            <span>Recuperamos o que você já tinha preenchido antes.</span>
+            <button
+              type="button"
+              onClick={() => {
+                setForm(initialForm);
+                setRestaurado(false);
+                limparRascunho();
+              }}
+              className="font-mono text-xs underline shrink-0"
+            >
+              Começar do zero
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <SecaoDivisoria numero="01" titulo="Contato" />
           <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
@@ -442,6 +516,13 @@ export default function DiagnosticoPage() {
           >
             {loading ? "Gerando diagnóstico real..." : "Ver meu diagnóstico"}
           </button>
+          {loading && (
+            <p className="text-xs text-paper-dim text-center -mt-3">
+              Estamos pesquisando concorrentes reais do seu nicho — pode levar
+              até 1 minuto. Não feche esta tela, suas respostas já estão salvas
+              de qualquer forma.
+            </p>
+          )}
         </form>
 
         {erro && (
