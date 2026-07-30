@@ -10,6 +10,7 @@
 // inventar fatos — e o parser rejeita resposta se o modelo tentar.
 
 import { completeViaGateway } from "@autosetup/adapter-llm";
+import { buscarConcorrentesGooglePlaces, type ConcorrenteReal } from "@/lib/googlePlaces";
 
 export interface DiagnosticoInput {
   nomeNegocio: string;
@@ -191,7 +192,7 @@ UNIÃO/PARCERIA: em pelo menos um ponto do texto (no resumo ou no próximo passo
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): sempre que fizer sentido, conecte um achado a como o AutoSetup resolveria aquilo especificamente — não como propaganda genérica ("nossa solução é incrível"), mas mostrando o caminho concreto (ex: "isso é exatamente o tipo de gargalo que some quando alguém organiza esse fluxo pra você"). NUNCA invente urgência falsa, número fabricado, ou prova social que não existe — isso quebra a confiança e derruba a venda em vez de ajudar.`;
 }
 
-function montarPromptComPesquisa(input: DiagnosticoInput): string {
+function montarPromptComPesquisa(input: DiagnosticoInput, concorrentesReais: ConcorrenteReal[]): string {
   const linhasLinks = [
     input.linkInstagram ? `- Instagram informado pelo dono: ${input.linkInstagram}` : null,
     input.linkGoogleBusiness ? `- Google Business/Maps informado pelo dono: ${input.linkGoogleBusiness}` : null,
@@ -223,7 +224,18 @@ Se houver relatos de rotina/dificuldade/sobrecarga acima, priorize-os para ident
 TAREFA:
 1. Pesquise na web pelo nome "${input.nomeNegocio}" em "${input.cidade}" — e pelos links informados acima, se houver — para encontrar presença real (Google Business, Instagram, site, avaliações, reclamações públicas).
 2. Pesquise também tendências gerais do nicho "${input.nicho}" (o que negócios desse tipo costumam precisar para atrair mais clientes hoje).
-3. Pesquise concorrentes REAIS do mesmo nicho "${input.nicho}" na cidade "${input.cidade}" (ou região próxima, se a cidade for pequena). Siga este passo a passo: primeiro, faça uma busca real com uma query direta no estilo "${input.nicho} em ${input.cidade}" (adapte o termo pra como esse nicho é normalmente buscado — ex: "barbearia em Poços de Caldas", "clínica de estética em Poços de Caldas"). Olhe os primeiros negócios reais que aparecerem — nomes de empresas de verdade, não genéricos. Escolha até 2 que sejam claramente concorrentes diretos (mesma cidade/bairro próximo, mesmo tipo de serviço). Para cada um, tente achar também nº de avaliações e nota no Google (na mesma busca ou numa busca complementar pelo nome do concorrente). Compare a posição do negócio analisado com eles: onde está mais preparado, onde está atrás. Seja honesto e específico (ex: "seu concorrente X tem 80 avaliações no Google contra as suas 12 — isso é o que mais pesa hoje na hora de alguém escolher"). Preencha "comparacaoConcorrentes".
+3. ${
+    concorrentesReais.length > 0
+      ? `Já pesquisamos concorrentes REAIS do nicho "${input.nicho}" em "${input.cidade}" via Google Places (dado estruturado, confirmado, não é busca da IA). Use APENAS esta lista, não pesquise nem invente outros concorrentes:\n${concorrentesReais
+          .map(
+            (c) =>
+              `   - ${c.nome}${c.endereco ? `, ${c.endereco}` : ""}${c.avaliacoes ? ` — ${c.avaliacoes} avaliações` : ""}${c.nota ? `, nota ${c.nota}` : ""}`,
+          )
+          .join(
+            "\n",
+          )}\nCompare a posição do negócio analisado com eles: onde está mais preparado, onde está atrás. Seja honesto e específico (ex: "seu concorrente X tem 80 avaliações no Google contra as suas 12 — isso é o que mais pesa hoje na hora de alguém escolher"). Preencha "comparacaoConcorrentes".`
+      : `Pesquise concorrentes REAIS do mesmo nicho "${input.nicho}" na cidade "${input.cidade}" (ou região próxima, se a cidade for pequena). Siga este passo a passo: primeiro, faça uma busca real com uma query direta no estilo "${input.nicho} em ${input.cidade}" (adapte o termo pra como esse nicho é normalmente buscado — ex: "barbearia em Poços de Caldas", "clínica de estética em Poços de Caldas"). Olhe os primeiros negócios reais que aparecerem — nomes de empresas de verdade, não genéricos. Escolha até 2 que sejam claramente concorrentes diretos (mesma cidade/bairro próximo, mesmo tipo de serviço). Para cada um, tente achar também nº de avaliações e nota no Google (na mesma busca ou numa busca complementar pelo nome do concorrente). Compare a posição do negócio analisado com eles: onde está mais preparado, onde está atrás. Seja honesto e específico (ex: "seu concorrente X tem 80 avaliações no Google contra as suas 12 — isso é o que mais pesa hoje na hora de alguém escolher"). Preencha "comparacaoConcorrentes".`
+  }
 4. Compare o que você encontrou com o que o dono informou. Se baterem, reforce isso. Se divergirem (ex: dono disse que não tem Google Business mas você achou um perfil, ou o inverso), diga isso claramente — é informação valiosa pra venda.
 
 REGRA INEGOCIÁVEL PRA CONCORRENTES: só inclua concorrentes que você realmente encontrou na busca, com nome PRÓPRIO real (ex: "Barbearia do Zé", "Studio Ana Estética") — nunca um nome genérico tipo "concorrente local" ou "empresa X" como se fosse resposta válida; isso conta como não ter encontrado. Nunca invente nome de empresa nem número. Se não encontrar 2 concorrentes claros com presença digital forte, retorne "comparacaoConcorrentes": null e mencione a falta de concorrência digital forte como um achado em "achadosNaPesquisa" (pode ser uma oportunidade: pouca concorrência online = espaço pra dominar).
@@ -296,6 +308,8 @@ export async function gerarDiagnosticoComPesquisa(
 
   const model = process.env.OPENAI_SEARCH_MODEL || "gpt-4o";
 
+  const concorrentesReais = await buscarConcorrentesGooglePlaces(input.nicho, input.cidade);
+
   const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -305,7 +319,7 @@ export async function gerarDiagnosticoComPesquisa(
     body: JSON.stringify({
       model,
       tools: [{ type: "web_search" }],
-      input: montarPromptComPesquisa(input),
+      input: montarPromptComPesquisa(input, concorrentesReais),
     }),
   });
 

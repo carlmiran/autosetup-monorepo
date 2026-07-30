@@ -382,3 +382,33 @@ imutabilidade) — corrigido usando `window.location.assign()`.
 
 Testado: typecheck+lint (0 erros)+build de produção limpos (14 rotas).
 Comportamento honesto confirmado sem chave configurada neste sandbox.
+
+## Google Places API real pra comparação com concorrentes (30/07/2026)
+
+Fonte: Carlos perguntou se já tínhamos integração com Google Places —
+não tínhamos, o sistema dependia só da IA "lendo a internet" (OpenAI
+web_search) pra achar concorrentes, o que podia sair impreciso.
+
+- `lib/googlePlaces.ts`: busca real via Places API (New), Text Search
+  com query "[nicho] em [cidade]", retorna nome/endereço/avaliações/
+  nota REAIS e estruturados direto do Google — não depende da IA
+  interpretar texto de página.
+- `gerarDiagnosticoComPesquisa`: busca concorrentes via Google Places
+  ANTES de chamar a IA; se encontrar, injeta a lista no prompt como
+  dado já verificado ("use apenas estes, não pesquise nem invente
+  outros") — a IA só escreve a comparação honesta, não precisa mais
+  descobrir os concorrentes sozinha. Se a chave não estiver configurada
+  ou a busca não achar nada, cai de volta pro método anterior (busca via
+  IA) — nunca quebra o diagnóstico por causa disso.
+- Custo real pesquisado: cobrança por SKU (~R$160-200/1.000 buscas pro
+  tier com avaliação), mas **5.000 buscas grátis por mês** — dado o
+  volume atual do AutoSetup, deve sair de graça por um bom tempo.
+
+Pendência real, ação de Carlos: criar conta Google Cloud (exige cartão
+cadastrado, mesmo pra usar cota grátis), ativar "Places API (New)",
+gerar chave, colar como `GOOGLE_PLACES_API_KEY` no painel da Cloudflare
+— nunca em chat.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos. Comportamento
+honesto confirmado: ausência da chave não quebra o fluxo, cai pro
+método anterior sem erro.
