@@ -30,11 +30,21 @@ function getAccessToken(): string {
 }
 
 /** Pagamento único — cria uma Preferência e retorna a URL de checkout
- * (init_point) pra redirecionar o cliente. */
+ * (init_point) pra redirecionar o cliente.
+ *
+ * Split de comissão (opcional): quando "comissao" é informado, usa o
+ * parâmetro marketplace_fee do Mercado Pago pra tentar rotear a
+ * comissão pra conta conectada do indicador. ATENÇÃO REAL: a mecânica
+ * exata de "marketplace_fee" pra rotear a um terceiro dinâmico
+ * (indicador diferente a cada venda) tem nuance que não consegui
+ * confirmar 100% sem teste real contra a API — Carlos precisa validar
+ * isso no ambiente de sandbox do Mercado Pago, com conta de teste,
+ * ANTES de usar com dinheiro real. Ver docs/plano-comissao-indicadores.md. */
 export async function criarPreferencia(
   plano: PlanoConfig,
   email: string,
   urlBase: string,
+  comissao?: { mpUserId: string; valor: number },
 ): Promise<{ checkoutUrl: string; mpId: string }> {
   const token = getAccessToken();
 
@@ -61,6 +71,7 @@ export async function criarPreferencia(
       },
       auto_return: "approved",
       external_reference: `${plano.id}:${email}:${Date.now()}`,
+      ...(comissao ? { marketplace_fee: comissao.valor } : {}),
     }),
   });
 
