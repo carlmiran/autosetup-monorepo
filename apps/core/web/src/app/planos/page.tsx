@@ -1,15 +1,18 @@
-// AUTOSETUP — apps/core/web/src/app/planos/page.tsx
-// Preços e planos reais. Fonte: pedido de Carlos (29/07/2026) — "assuma
-// o destrave de dinheiro". Calibrado pela faixa real de gestão de redes
-// sociais pra pequeno negócio no Brasil (R$300-800 freelancer/pequena
-// agência, R$1.000-3.000 agência estabelecida) — AutoSetup fica
-// competitivo por baixo disso. Estimativa fundamentada, não testada com
-// venda real — ajustar conforme resposta de mercado.
+"use client";
 
+// AUTOSETUP — apps/core/web/src/app/planos/page.tsx
+// Preços e planos reais + checkout real via Mercado Pago (30/07/2026).
+// Calibrado pela faixa real de gestão de redes sociais pra pequeno
+// negócio no Brasil (R$300-800 freelancer/pequena agência, R$1.000-3.000
+// agência estabelecida) — AutoSetup fica competitivo por baixo dessa
+// faixa. Estimativa fundamentada, não testada com venda real.
+
+import { useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 interface Plano {
+  id: string;
   nome: string;
   preco: string;
   periodo?: string;
@@ -20,6 +23,7 @@ interface Plano {
 
 const planos: Plano[] = [
   {
+    id: "raiox",
     nome: "Raio-X + Plano de Ação",
     preco: "R$ 97",
     periodo: "pagamento único",
@@ -31,6 +35,7 @@ const planos: Plano[] = [
     ],
   },
   {
+    id: "essencial",
     nome: "Parceria Mensal Essencial",
     preco: "R$ 397",
     periodo: "por mês",
@@ -43,6 +48,7 @@ const planos: Plano[] = [
     destaque: true,
   },
   {
+    id: "completo",
     nome: "Parceria Mensal Completa",
     preco: "R$ 797",
     periodo: "por mês",
@@ -58,6 +64,38 @@ const planos: Plano[] = [
 ];
 
 export default function PlanosPage() {
+  const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [nome, setNome] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function iniciarCheckout(planoId: string) {
+    if (!email.trim()) {
+      setErro("Informe seu e-mail pra continuar.");
+      return;
+    }
+    setLoading(true);
+    setErro(null);
+    try {
+      const res = await fetch("/api/pagamento/criar-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planoId, email, nome }),
+      });
+      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (!res.ok || !data.checkoutUrl) {
+        setErro(data.error ?? "Não foi possível iniciar o pagamento.");
+      } else {
+        window.location.assign(data.checkoutUrl);
+      }
+    } catch {
+      setErro("Não foi possível conectar ao servidor de pagamento.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <header className="border-b border-panel-line px-6 py-6 flex flex-col items-center gap-4">
@@ -75,7 +113,7 @@ export default function PlanosPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {planos.map((plano) => (
             <div
-              key={plano.nome}
+              key={plano.id}
               className={`border rounded-xl p-6 flex flex-col gap-4 bg-panel ${
                 plano.destaque ? "border-amber" : "border-panel-line"
               }`}
@@ -103,9 +141,52 @@ export default function PlanosPage() {
                   </li>
                 ))}
               </ul>
+
+              {planoSelecionado === plano.id ? (
+                <div className="flex flex-col gap-2 border-t border-panel-line pt-4">
+                  <input
+                    type="text"
+                    placeholder="Seu nome"
+                    className="border border-panel-line bg-ink text-paper rounded-md px-3 py-2 text-sm focus-visible:outline-amber"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Seu e-mail"
+                    className="border border-panel-line bg-ink text-paper rounded-md px-3 py-2 text-sm focus-visible:outline-amber"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => iniciarCheckout(plano.id)}
+                    disabled={loading}
+                    className="font-sans font-semibold bg-amber text-ink rounded-md px-4 py-2.5 text-sm hover:brightness-110 transition-all disabled:opacity-50"
+                  >
+                    {loading ? "Abrindo pagamento..." : "Ir para o pagamento →"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanoSelecionado(plano.id);
+                    setErro(null);
+                  }}
+                  className="font-sans font-semibold border border-amber-dim text-amber rounded-md px-4 py-2.5 text-sm hover:bg-ink transition-colors"
+                >
+                  {plano.periodo === "pagamento único" ? "Comprar" : "Assinar"}
+                </button>
+              )}
             </div>
           ))}
         </div>
+
+        {erro && (
+          <p className="text-sm text-rust text-center mt-4">{erro}</p>
+        )}
 
         <div className="mt-6 border border-panel-line rounded-xl p-6 bg-panel text-center">
           <h2 className="font-display text-lg text-paper">Personalizado</h2>
@@ -120,7 +201,7 @@ export default function PlanosPage() {
           <Link href="/diagnostico" className="underline text-amber">
             diagnóstico gratuito
           </Link>
-          .
+          . Pagamento processado com segurança pelo Mercado Pago.
         </p>
       </main>
     </>

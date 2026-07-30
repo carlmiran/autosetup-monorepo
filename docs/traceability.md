@@ -346,3 +346,39 @@ própria dele), domínio próprio, analytics de funil.
 
 Testado: typecheck+lint+build de produção limpos (13 rotas). Rate limit
 verificado com dado real no D1 de produção antes do deploy.
+
+## Checkout real via Mercado Pago (30/07/2026)
+
+Fonte: pedido de Carlos — "assuma o destrave de dinheiro", decisão de
+processador confirmada (Mercado Pago, conta pessoa física/CPF por
+enquanto). Fecha o maior gap identificado no inventário de robustez.
+
+- Confirmado na documentação oficial: pagamento único usa API de
+  Preferências (Checkout Pro), assinatura mensal usa API de Preapproval
+  — dois mecanismos distintos, implementados corretamente.
+- `lib/mercadoPago.ts`: `criarPreferencia()` (Raio-X R$97) e
+  `criarAssinatura()` (Essencial R$397/mês, Completo R$797/mês)
+- `api/pagamento/criar-checkout`: recebe plano+e-mail, cria o checkout
+  certo conforme o tipo, salva pagamento como "pendente" no D1
+  (tabela `pagamentos`, criada e testada antes do código)
+- `api/pagamento/webhook`: recebe notificação real do Mercado Pago,
+  consulta o status real (nunca confia no payload da notificação sem
+  verificar), atualiza o D1. Sempre retorna 200 rápido — Mercado Pago
+  reenvia por até 4 dias se não receber confirmação.
+- `/planos`: botões reais "Comprar"/"Assinar", pede nome+e-mail inline,
+  redireciona pro checkout de verdade do Mercado Pago
+- `/planos/sucesso`: página de retorno pós-pagamento
+
+**Pendência real, ação de Carlos**: `MERCADOPAGO_ACCESS_TOKEN` precisa
+ser gerado no painel de desenvolvedores do Mercado Pago e colado direto
+no painel de Secrets da Cloudflare — nunca em chat, mesma regra de
+sempre. Sem isso, o checkout retorna erro honesto (não finge sucesso).
+Webhook também precisa ser configurado no painel do Mercado Pago
+apontando pra `/api/pagamento/webhook`.
+
+Bug real de lint pego no processo: `window.location.href = ...` é
+rejeitado pela versão atual do eslint-plugin-react-hooks (regra de
+imutabilidade) — corrigido usando `window.location.assign()`.
+
+Testado: typecheck+lint (0 erros)+build de produção limpos (14 rotas).
+Comportamento honesto confirmado sem chave configurada neste sandbox.
