@@ -412,3 +412,39 @@ gerar chave, colar como `GOOGLE_PLACES_API_KEY` no painel da Cloudflare
 Testado: typecheck+lint(0 erros)+build de produção limpos. Comportamento
 honesto confirmado: ausência da chave não quebra o fluxo, cai pro
 método anterior sem erro.
+
+## Radar de Oportunidades — prospecção por geolocalização (30/07/2026)
+
+Fonte: pedido de Carlos — navegar negócios reais perto de um local
+(estilo "pedir um Uber"), clicar num e ver análise comercial como
+possível cliente, sem precisar pré-selecionar nicho.
+
+- `lib/googlePlaces.ts`: nova função `buscarNegociosProximos()` — usa
+  Nearby Search da Places API (New), endpoint diferente do Text Search
+  já usado pra concorrentes no diagnóstico. Filtro de tipo opcional.
+- `lib/radar.ts`: `gerarAnaliseRadar()` — usa OpenAI Responses API com
+  `web_search` de verdade (bug real pego antes do deploy: a primeira
+  versão usava o Gateway de texto simples, sem ferramenta de busca,
+  então a instrução "pesquise na web" no prompt não tinha como
+  funcionar — corrigido pro mesmo padrão real do diagnóstico). Tom
+  deliberadamente diferente do LENS: é nota interna de prospecção, não
+  fala com o dono do negócio (que não pediu a análise).
+- `/api/radar/proximos` + `/api/radar/analisar`: rate limiting aplicado
+  (15/hora cada), erro honesto sem `GOOGLE_PLACES_API_KEY`/localização
+  inválida — testado antes do deploy.
+- `/radar`: página com geolocalização real do navegador, lista de
+  negócios próximos, clique gera análise (resumo, presença digital,
+  oportunidades, abordagem sugerida).
+
+Nota de processo: outra sessão paralela já tinha implementado a
+integração base do Google Places (commit 56b0c6c) enquanto esta sessão
+conversava com Carlos sobre o mesmo assunto — verificado e reaproveitado
+antes de construir em cima, evitando duplicação.
+
+Pendência: mesma GOOGLE_PLACES_API_KEY do diagnóstico cobre esta
+feature também — nenhuma chave nova necessária.
+
+Testado: typecheck (achou e corrigiu um erro de sintaxe real deixado
+por um str_replace anterior) + lint (0 erros) + build de produção
+limpos (15 rotas). Comportamento honesto confirmado sem chave/dado
+inválido neste sandbox.
