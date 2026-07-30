@@ -65,3 +65,31 @@ mais amplo, só adiar sua implementação):
   execução do EBK Task 0.1, que já assume o Core de 8 componentes como
   base. Se precisar ser revertida, isso também exige ADR próprio, não
   uma decisão implícita.
+
+## Adendo (29/07/2026) — segunda ocorrência da mesma visão
+
+Um documento externo ("Cognitive Business Operating System", proposta de
+reposicionamento com 7 pilares, Marketplace de 5 áreas, Instituto,
+Academia, "AI executives" — CEO IA, Diretor Comercial IA etc.) foi
+avaliado e classificado como a **mesma visão de Horizonte H4/H5**
+descrita acima, com mais elaboração de ecossistema. Decisão de dev
+master, comunicada a Carlos: **não implementar agora** — motivos
+específicos:
+
+1. Zero cliente pagante confirmado; rebranding/expansão de escopo antes
+   de validar tração repete o padrão que gerou o repositório vazio
+   auditado em 26/07.
+2. O framing "AI executives trabalhando 24h" viola o Princípio da
+   Realidade / Honestidade em Demonstrações — nenhum desses agentes
+   está implementado, nem SAGE roda como agente contínuo hoje.
+3. O bloqueio real do projeto (preço/estrutura de oferta da consultoria
+   ainda não definidos) não é resolvido por nenhuma dessas 7 categorias.
+
+Aproveitado do documento, com ajuste: a regra de priorização ("toda
+funcionalidade nova precisa fortalecer receita, inteligência ou
+ecossistema") é adotada como disciplina, com um quarto filtro adicional
+obrigatório — **a funcionalidade precisa ser entregável com honestidade
+hoje**, não uma promessa do que existiria em teoria.
+
+Este documento fica registrado como referência de visão de longo prazo
+(H4/H5), não como roadmap ativo.
