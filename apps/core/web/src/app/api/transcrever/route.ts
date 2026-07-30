@@ -8,8 +8,14 @@
 // falhar, retorna erro real, nunca um texto inventado no lugar do áudio.
 
 import { NextResponse } from "next/server";
+import { verificarRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
+  const limite = await verificarRateLimit(request, { rota: "transcrever", maximo: 20, janelaMinutos: 60 });
+  if (!limite.permitido) {
+    return NextResponse.json({ error: "Muitas tentativas em pouco tempo. Espere um pouco e tente de novo." }, { status: 429 });
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

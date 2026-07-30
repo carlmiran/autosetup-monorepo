@@ -9,6 +9,7 @@
 // automaticamente (nunca perder o que foi preenchido).
 
 import { useState } from "react";
+import Link from "next/link";
 import { CampoTextoComAudio } from "@/components/CampoTextoComAudio";
 import { Logo } from "@/components/Logo";
 
@@ -307,6 +308,11 @@ export default function EntrevistaRhPage() {
             </p>
           </div>
         )}
+        <footer className="text-center mt-10">
+          <Link href="/privacidade" className="text-xs text-paper-dim underline">
+            Privacidade e Termos de Uso
+          </Link>
+        </footer>
       </main>
     </>
   );

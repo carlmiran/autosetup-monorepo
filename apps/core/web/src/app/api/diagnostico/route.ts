@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { llmAdapter } from "@autosetup/adapter-llm";
+import { verificarRateLimit } from "@/lib/rateLimit";
 import {
   gerarDiagnostico,
   gerarDiagnosticoComPesquisa,
@@ -114,6 +115,18 @@ async function salvarLead(
 }
 
 export async function POST(request: Request) {
+  const limite = await verificarRateLimit(request, {
+    rota: "diagnostico",
+    maximo: 5,
+    janelaMinutos: 60,
+  });
+  if (!limite.permitido) {
+    return NextResponse.json(
+      { error: "Muitas tentativas em pouco tempo. Espere um pouco e tente de novo." },
+      { status: 429 },
+    );
+  }
+
   const body = (await request.json()) as Partial<DiagnosticoInput> & DadosContato;
 
   // Validação real — não deixa passar diagnóstico com dado essencial faltando.

@@ -8,6 +8,7 @@
 
 import { NextResponse } from "next/server";
 import { llmAdapter, completeViaGateway } from "@autosetup/adapter-llm";
+import { verificarRateLimit } from "@/lib/rateLimit";
 
 const SUPPORTED_KEYS = [
   "OPENAI_API_KEY",
@@ -35,6 +36,11 @@ Responda ESTRITAMENTE em JSON válido, sem markdown:
 }
 
 export async function POST(request: Request) {
+  const limite = await verificarRateLimit(request, { rota: "perguntas-nicho", maximo: 10, janelaMinutos: 60 });
+  if (!limite.permitido) {
+    return NextResponse.json({ error: "Muitas tentativas em pouco tempo. Espere um pouco e tente de novo." }, { status: 429 });
+  }
+
   const body = (await request.json()) as { nicho?: string };
   const nicho = body.nicho?.trim();
 

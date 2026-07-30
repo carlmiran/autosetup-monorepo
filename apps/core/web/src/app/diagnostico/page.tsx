@@ -533,6 +533,12 @@ export default function DiagnosticoPage() {
         )}
 
         {resultado && <ResultadoDiagnostico resultado={resultado} form={form} />}
+
+        <footer className="text-center mt-10">
+          <Link href="/privacidade" className="text-xs text-paper-dim underline">
+            Privacidade e Termos de Uso
+          </Link>
+        </footer>
       </main>
     </>
   );

@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { llmAdapter } from "@autosetup/adapter-llm";
 import { gerarSinteseEntrevista, type EntrevistaRhInput } from "@/lib/entrevistaRh";
+import { verificarRateLimit } from "@/lib/rateLimit";
 
 const SUPPORTED_KEYS = [
   "OPENAI_API_KEY",
@@ -56,6 +57,11 @@ async function salvarEntrevista(
 }
 
 export async function POST(request: Request) {
+  const limite = await verificarRateLimit(request, { rota: "rh-entrevista", maximo: 5, janelaMinutos: 60 });
+  if (!limite.permitido) {
+    return NextResponse.json({ error: "Muitas tentativas em pouco tempo. Espere um pouco e tente de novo." }, { status: 429 });
+  }
+
   const body = (await request.json()) as Partial<EntrevistaRhInput>;
 
   if (!body.nome || !body.fascinaRh || !body.processosMalResolvidos || !body.ferramentaIdeal) {

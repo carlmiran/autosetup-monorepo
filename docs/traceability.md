@@ -318,3 +318,31 @@ implementada silenciosamente.
 - RH: pricing não definido ainda — prematuro antes do PRD existir.
 
 Testado: typecheck+lint+build de produção limpos (12 rotas).
+
+## Robustez pra venda: rate limiting + privacidade (29/07/2026)
+
+Fonte: pedido de Carlos — "melhoramentos faltantes pra AutoSetup ficar
+mais robusto e pronto pra ser vendido". Inventário completo dado a
+Carlos: falta checkout de pagamento real (maior gap), rate limiting
+(resolvido agora), política de privacidade (resolvido agora), domínio
+próprio (pendente, depende de decisão/compra de Carlos), analytics
+(pendente).
+
+- **Rate limiting real**: tabela `rate_limits` no D1, testada com
+  INSERT/SELECT/DELETE reais antes do código. Aplicado nas 4 rotas que
+  custam dinheiro de verdade (diagnostico: 5/hora, perguntas-nicho:
+  10/hora, transcrever: 20/hora, rh/entrevista: 5/hora) por IP. Falha
+  do D1 nunca bloqueia a requisição (best-effort, protege custo sem
+  arriscar disponibilidade).
+- **Política de Privacidade e Termos de Uso real**: `/privacidade`,
+  texto honesto sobre o que é coletado, como é usado, onde fica
+  guardado (D1/Cloudflare), direitos LGPD, e deixa claro que o
+  diagnóstico é análise, não garantia de resultado. Linkado no rodapé
+  do diagnóstico e da entrevista de RH.
+
+Ainda pendente (depende de decisão de Carlos, não implementado):
+checkout de pagamento real (Mercado Pago/Stripe — precisa de conta
+própria dele), domínio próprio, analytics de funil.
+
+Testado: typecheck+lint+build de produção limpos (13 rotas). Rate limit
+verificado com dado real no D1 de produção antes do deploy.
