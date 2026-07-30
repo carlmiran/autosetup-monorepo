@@ -69,6 +69,9 @@ export default function PlanosPage() {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [codigoIndicacao] = useState<string>(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("ref") ?? "",
+  );
 
   async function iniciarCheckout(planoId: string) {
     if (!email.trim()) {
@@ -81,7 +84,7 @@ export default function PlanosPage() {
       const res = await fetch("/api/pagamento/criar-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planoId, email, nome }),
+        body: JSON.stringify({ planoId, email, nome, codigoIndicacao: codigoIndicacao || undefined }),
       });
       const data = (await res.json()) as { checkoutUrl?: string; error?: string };
       if (!res.ok || !data.checkoutUrl) {

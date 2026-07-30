@@ -448,3 +448,30 @@ Testado: typecheck (achou e corrigiu um erro de sintaxe real deixado
 por um str_replace anterior) + lint (0 erros) + build de produção
 limpos (15 rotas). Comportamento honesto confirmado sem chave/dado
 inválido neste sandbox.
+
+## Rastreamento de indicação — base pra comissão futura (30/07/2026)
+
+Fonte: pedido de Carlos — modelo de comissão por indicação (tipo
+iFood/Quinto Andar), pessoa usa o Radar pra achar prospect, visita,
+faz diagnóstico, oferece serviços da agência, ganha comissão.
+
+Decisão de escopo (dev master): implementar SÓ o rastreamento agora —
+pagamento automático de comissão fica de fora, porque envolve formalizar
+acordo com quem indica (contrato/recibo, decisão contábil) antes de virar
+código, e Carlos ainda está em CPF, não CNPJ.
+
+- D1: coluna `codigo_indicacao` adicionada em `leads` e `pagamentos`
+  (ALTER TABLE real, testado com INSERT/SELECT antes do deploy)
+- `/diagnostico` e `/planos`: capturam `?ref=CODIGO` da URL
+  automaticamente e salvam junto com o lead/pagamento
+- Uso pretendido: cada pessoa que for prospectar recebe um link próprio
+  (ex: `.../diagnostico?ref=NOMEDOPARCEIRO`), e Carlos consegue ver no
+  banco quem trouxe qual venda pra calcular comissão manualmente por
+  enquanto
+
+Pendência real: nenhuma interface de gestão de parceiros/comissões foi
+construída — isso é decisão de produto pra depois, quando o modelo for
+validado com volume real.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (15 rotas).
+Rastreamento validado com INSERT/SELECT/DELETE reais no D1 de produção.

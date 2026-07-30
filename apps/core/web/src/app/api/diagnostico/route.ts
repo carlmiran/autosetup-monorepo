@@ -26,6 +26,7 @@ const SUPPORTED_KEYS = [
 interface DadosContato {
   nomeContato?: string;
   whatsappContato?: string;
+  codigoIndicacao?: string;
 }
 
 /** Salva o lead no D1 real. Best-effort: se o binding não existir (ex.
@@ -83,8 +84,8 @@ async function salvarLead(
           nome_contato, whatsapp_contato, nome_negocio, cidade, nicho,
           tamanho_equipe, canais_atendimento, ferramentas_atuais, perda_financeira,
           maior_dificuldade, rotina_diaria, o_que_atrapalha, sobrecarga,
-          visao_negocio, meta_financeira, diagnostico_resumo, perguntas_nicho
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          visao_negocio, meta_financeira, diagnostico_resumo, perguntas_nicho, codigo_indicacao
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.nomeContato ?? null,
@@ -104,6 +105,7 @@ async function salvarLead(
         input.metaFinanceira ?? null,
         resultado.resumo ?? null,
         input.perguntasNicho ? JSON.stringify(input.perguntasNicho) : null,
+        input.codigoIndicacao ?? null,
       )
       .run();
 
@@ -165,6 +167,7 @@ export async function POST(request: Request) {
     linkGoogleBusiness: body.linkGoogleBusiness || undefined,
     nomeContato: body.nomeContato || undefined,
     whatsappContato: body.whatsappContato || undefined,
+    codigoIndicacao: body.codigoIndicacao || undefined,
   };
 
   // Pesquisa real (concorrentes + verificação da própria presença) roda

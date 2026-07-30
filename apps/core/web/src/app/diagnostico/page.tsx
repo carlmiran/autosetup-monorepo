@@ -41,6 +41,7 @@ interface PerguntaNicho {
 const initialForm = {
   nomeContato: "",
   whatsappContato: "",
+  codigoIndicacao: "",
   nomeNegocio: "",
   cidade: "",
   nicho: "",
@@ -81,6 +82,9 @@ function inputClass(extra = "") {
 
 function restaurarRascunho(): { form: typeof initialForm; restaurado: boolean } {
   if (typeof window === "undefined") return { form: initialForm, restaurado: false };
+
+  const refDaUrl = new URLSearchParams(window.location.search).get("ref") ?? "";
+
   try {
     const salvo = window.localStorage.getItem(CHAVE_LOCALSTORAGE);
     if (salvo) {
@@ -89,13 +93,16 @@ function restaurarRascunho(): { form: typeof initialForm; restaurado: boolean } 
         (v) => typeof v === "string" && v.trim().length > 0,
       );
       if (temAlgumDado) {
-        return { form: { ...initialForm, ...parsed }, restaurado: true };
+        return {
+          form: { ...initialForm, ...parsed, codigoIndicacao: refDaUrl || parsed.codigoIndicacao || "" },
+          restaurado: true,
+        };
       }
     }
   } catch {
     // rascunho corrompido — ignora silenciosamente, não impede o uso
   }
-  return { form: initialForm, restaurado: false };
+  return { form: { ...initialForm, codigoIndicacao: refDaUrl }, restaurado: false };
 }
 
 export default function DiagnosticoPage() {

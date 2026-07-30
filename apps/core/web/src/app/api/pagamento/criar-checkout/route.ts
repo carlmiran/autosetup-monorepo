@@ -11,6 +11,7 @@ async function salvarPagamentoPendente(
   nome: string | undefined,
   tipo: string,
   mpId: string,
+  codigoIndicacao: string | undefined,
 ): Promise<void> {
   try {
     const { env } = getCloudflareContext();
@@ -18,9 +19,9 @@ async function salvarPagamentoPendente(
     if (!db) return;
     await db
       .prepare(
-        "INSERT INTO pagamentos (plano, nome, email, tipo, mp_id, status) VALUES (?, ?, ?, ?, ?, 'pendente')",
+        "INSERT INTO pagamentos (plano, nome, email, tipo, mp_id, status, codigo_indicacao) VALUES (?, ?, ?, ?, ?, 'pendente', ?)",
       )
-      .bind(plano, nome ?? null, email, tipo, mpId)
+      .bind(plano, nome ?? null, email, tipo, mpId, codigoIndicacao ?? null)
       .run();
   } catch (err) {
     console.error("[pagamento] falha ao salvar pagamento pendente:", err);
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json()) as { planoId?: string; email?: string; nome?: string };
+  const body = (await request.json()) as { planoId?: string; email?: string; nome?: string; codigoIndicacao?: string };
 
   if (!body.planoId || !body.email) {
     return NextResponse.json({ error: "Informe o plano e o e-mail." }, { status: 400 });
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
         ? await criarPreferencia(plano, body.email, urlBase)
         : await criarAssinatura(plano, body.email, urlBase);
 
-    await salvarPagamentoPendente(plano.id, body.email, body.nome, plano.tipo, resultado.mpId);
+    await salvarPagamentoPendente(plano.id, body.email, body.nome, plano.tipo, resultado.mpId, body.codigoIndicacao);
 
     return NextResponse.json({ checkoutUrl: resultado.checkoutUrl });
   } catch (err) {
