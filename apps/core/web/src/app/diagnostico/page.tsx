@@ -11,6 +11,7 @@
 // vez de deixar o navegador mostrar erro genérico.
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CampoTextoComAudio } from "@/components/CampoTextoComAudio";
 import { Logo } from "@/components/Logo";
 
@@ -742,6 +743,13 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
         quiser usar), e a gente organiza tudo pra você publicar. Isso faz
         parte da consultoria/parceria contratada — hoje é acompanhado por
         gente de verdade, não é automático.
+      </p>
+      <p className="text-sm">
+        Tem um plano de entrada por{" "}
+        <Link href="/planos" className="underline text-amber font-semibold">
+          R$ 97, sem compromisso mensal
+        </Link>
+        , se quiser começar leve.
       </p>
       <p className="text-sm font-medium">
         Isso faz sentido pro seu dia a dia e pro seu negócio?

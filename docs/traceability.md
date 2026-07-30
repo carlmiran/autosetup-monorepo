@@ -290,3 +290,31 @@ Testado: typecheck+lint (0 erros reais)+build de produção limpos.
 Causa raiz exata do "page could not be found" não confirmada (não temos
 acesso a logs do Cloudflare nesta sessão) — mitigação cobre os cenários
 mais prováveis (timeout, navegação por impaciência, erro de rede).
+
+## Estrutura de preços e planos real (29/07/2026)
+
+Fonte: pedido de Carlos — "assuma o destrave de dinheiro... defina
+preços e planos". Decisão de dev master (produto/preço, não arquitetura
+— sem necessidade de ADR), comunicada com raciocínio explícito, não
+implementada silenciosamente.
+
+- `/planos`: página real com 3 camadas + personalizado sob consulta:
+  - Raio-X + Plano de Ação — R$97 (pagamento único, oferta de entrada)
+  - Parceria Mensal Essencial — R$397/mês
+  - Parceria Mensal Completa — R$797/mês
+  - Personalizado — sob consulta
+- Calibração: faixa real de gestão de redes sociais pra pequeno negócio
+  no Brasil (R$300-800 freelancer/pequena agência, R$1.000-3.000 agência
+  estabelecida) — AutoSetup posicionado competitivo por baixo dessa
+  faixa. **Estimativa fundamentada, não testada com venda real** —
+  ajustar conforme resposta de mercado.
+- Fechamento do diagnóstico atualizado: menciona o plano de entrada
+  (R$97) com link real pra `/planos`, em vez de oferta vaga sem preço.
+- Público-alvo expandido (sugestão, não implementação de código):
+  clínicas odontológicas, clínicas veterinárias, fisioterapeutas,
+  academias pequenas, restaurantes/lanchonetes locais — mesmo perfil dos
+  nichos já testados (dependem de reputação local/Google, baixa
+  maturidade digital). Não expandido pra B2B/empresas maiores.
+- RH: pricing não definido ainda — prematuro antes do PRD existir.
+
+Testado: typecheck+lint+build de produção limpos (12 rotas).
