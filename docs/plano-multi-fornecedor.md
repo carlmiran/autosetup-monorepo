@@ -71,3 +71,29 @@ validar o que já existe", já corrigido várias vezes nesta sessão.
 3. Grupo 1 (financeiro) só entra em pauta depois de resolução jurídica
    específica — não é uma "fase 3" natural do roadmap técnico, é uma
    decisão de negócio separada que precisa vir de fora do código.
+
+## Refinamento real (30/07/2026) — cenário de venda que simplifica o Grupo 2
+
+Carlos descreveu o cenário real de abordagem comercial que já acontece
+em conversas de vendedor com comerciante: o dono do estabelecimento
+menciona precisar de um produto/serviço que o fornecedor atual não
+atende mais. Pra não parecer "multi-produto"/oportunista, o vendedor
+**não tenta virar fornecedor daquilo** — ele indica o AutoSetup como se
+indicasse uma pessoa/consultor de confiança. O AutoSetup (equipe de
+Carlos) então busca/negocia o fornecimento manualmente, e o vendedor
+original recebe comissão pela indicação.
+
+**Isso muda a arquitetura necessária pro Grupo 2 de forma importante**:
+não precisa de integração com API de fornecedor nenhum pra começar — o
+AutoSetup vira o **ponto único de contato pra qualquer necessidade não
+atendida**, e o cumprimento (sourcing/negociação) é manual, feito pela
+equipe, do mesmo jeito que já funciona o serviço pago de conteúdo hoje
+(humano + IA, não automação). Isso reaproveita 100% da infraestrutura
+de indicação já construída (`?ref=`, split de comissão) — só precisa de
+um jeito genérico de capturar "fulano indicou um prospect que precisa
+de X", sem catálogo de produto nem integração nova.
+
+Isso reduz drasticamente o esforço/risco de uma primeira versão do
+Grupo 2 — não depende mais de "provar o modelo com um fornecedor
+específico" antes de generalizar; pode nascer já genérico, porque quem
+resolve a necessidade específica é gente, não código.
