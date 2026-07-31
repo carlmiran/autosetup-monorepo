@@ -24,7 +24,7 @@ interface DiagnosticoResultado {
   oportunidades: string[];
   proximoPasso: string;
   distanciaAteAMeta?: string;
-  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string | null }[];
+  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string | null; prioridade?: string }[];
   comparacaoConcorrentes?: {
     concorrentes: { nome: string; destaque: string }[];
     posicionamento: string;
@@ -708,9 +708,24 @@ function ResultadoDiagnostico({
           <ol className="flex flex-col gap-3">
             {resultado.planoSeteDias.map((item) => (
               <li key={item.dia} className="border border-panel-line rounded-lg p-3 bg-ink">
-                <p className="font-mono text-[10px] tracking-widest uppercase text-amber mb-1">
-                  Dia {item.dia}
-                </p>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="font-mono text-[10px] tracking-widest uppercase text-amber">
+                    Dia {item.dia}
+                  </p>
+                  {item.prioridade && (
+                    <span
+                      className={`font-mono text-[9px] tracking-widest uppercase rounded px-2 py-0.5 ${
+                        item.prioridade === "alta"
+                          ? "bg-rust-dim text-rust"
+                          : item.prioridade === "média"
+                            ? "bg-panel text-amber border border-amber-dim"
+                            : "text-paper-dim"
+                      }`}
+                    >
+                      {item.prioridade}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm">{item.acao}</p>
                 {item.conteudoSugerido && (
                   <p className="text-sm mt-2 italic text-paper-dim border-t border-panel-line pt-2">

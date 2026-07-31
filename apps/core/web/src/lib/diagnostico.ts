@@ -77,7 +77,7 @@ export interface DiagnosticoResultado {
    * "conteudoSugerido" só aparece nos dias que envolvem post/conteúdo —
    * é roteiro/legenda em TEXTO, nunca uma imagem pronta (isso é serviço
    * pago, mediado por humano — ver PainelServicoPago no front). */
-  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string }[];
+  planoSeteDias: { dia: number; acao: string; conteudoSugerido?: string; prioridade?: string }[];
   /** Comparação real com concorrentes — só preenchido no fluxo com
    * pesquisa (precisa de web_search real). Nunca inventa concorrente
    * ou dado que não veio de busca de verdade. */
@@ -162,7 +162,7 @@ conteúdo (post ou carrossel); nesses dias, preencha "conteudoSugerido" com
 um roteiro em TEXTO (tema + ideia de legenda, 2-3 frases) — nunca uma
 imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
 fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
-dia do plano.
+dia do plano. Classifique cada dia com "prioridade": "alta" (resolve a dor mais urgente relatada), "média" ou "baixa".
 
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
@@ -173,7 +173,7 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "proximoPasso": "uma ação prática e específica que o dono poderia tomar essa semana",
   "distanciaAteAMeta": null,
   "planoSeteDias": [
-    { "dia": 1, "acao": "...", "conteudoSugerido": null },
+    { "dia": 1, "acao": "...", "conteudoSugerido": null, "prioridade": "alta|média|baixa" },
     { "dia": 2, "acao": "...", "conteudoSugerido": null },
     { "dia": 3, "acao": "...", "conteudoSugerido": null },
     { "dia": 4, "acao": "...", "conteudoSugerido": null },
@@ -188,6 +188,10 @@ Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido (e
 SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente. Cada frase precisa carregar informação nova.
 
 UNIÃO/PARCERIA: em pelo menos um ponto do texto (no resumo ou no próximo passo, onde soar natural), mencione o nome do negócio "${input.nomeNegocio}" junto com "AutoSetup" na mesma frase — reforça a sensação de time, de estar junto, não de robô falando sozinho. Só quando soar natural, nunca forçado.
+
+CONSULTOR, NÃO RELATÓRIO: o dono do negócio não compra gráfico nem indicador — compra entendimento. Em "oportunidades" e "proximoPasso", sempre que fizer sentido, estruture o raciocínio como: o que está acontecendo → por que isso importa pro negócio dele (nunca assuma que ele conhece termo técnico: se usar "no-show", "CAC", "SEO", "conversão", "lead", "funil", "LTV" ou parecido, explique em 1 frase simples, na hora, sem exigir que ele pergunte) → o que fazer a respeito.
+
+IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só mencione um valor em R$ específico se ele vier de algo real — o que o próprio dono informou (meta financeira, visão sobre o negócio) ou algo que a pesquisa real confirmou. NUNCA calcule ou invente um número de faturamento/economia "estimado" sem base real, mesmo rotulando como "estimativa" — um número específico fabricado (ex: "R$ 2.870/mês") continua sendo fabricação com etiqueta de honestidade colada em cima, isso é PIOR que não dar número nenhum. Se não houver base real pra estimar em R$, diga isso com essas palavras — nunca substitua por um número inventado só pra "parecer mais concreto".
 
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): sempre que fizer sentido, conecte um achado a como o AutoSetup resolveria aquilo especificamente — não como propaganda genérica ("nossa solução é incrível"), mas mostrando o caminho concreto (ex: "isso é exatamente o tipo de gargalo que some quando alguém organiza esse fluxo pra você"). NUNCA invente urgência falsa, número fabricado, ou prova social que não existe — isso quebra a confiança e derruba a venda em vez de ajudar.`;
 }
@@ -252,7 +256,7 @@ conteúdo (post ou carrossel); nesses dias, preencha "conteudoSugerido" com
 um roteiro em TEXTO (tema + ideia de legenda, 2-3 frases) — nunca uma
 imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
 fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
-dia do plano.
+dia do plano. Classifique cada dia com "prioridade": "alta" (resolve a dor mais urgente relatada), "média" ou "baixa".
 
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
@@ -263,7 +267,7 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "proximoPasso": "uma ação prática e específica pra essa semana",
   "distanciaAteAMeta": null,
   "planoSeteDias": [
-    { "dia": 1, "acao": "...", "conteudoSugerido": null },
+    { "dia": 1, "acao": "...", "conteudoSugerido": null, "prioridade": "alta|média|baixa" },
     { "dia": 2, "acao": "...", "conteudoSugerido": null },
     { "dia": 3, "acao": "...", "conteudoSugerido": null },
     { "dia": 4, "acao": "...", "conteudoSugerido": null },
@@ -284,6 +288,10 @@ Tom: parceiro e direto, nunca genérico, nunca prometendo resultado garantido.
 SEJA SUCINTO: frases curtas, sem floreio, sem repetir a mesma ideia de forma diferente.
 
 UNIÃO/PARCERIA: em pelo menos um ponto do texto, mencione o nome do negócio "${input.nomeNegocio}" junto com "AutoSetup" na mesma frase — reforça sensação de time. Só quando soar natural.
+
+CONSULTOR, NÃO RELATÓRIO: sempre que usar termo técnico ("no-show", "CAC", "SEO", "conversão", "lead", "funil", "LTV" ou parecido), explique em 1 frase simples na hora. Estruture oportunidades como: o que está acontecendo → por que importa → o que fazer.
+
+IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só cite valor em R$ específico se vier de dado real (o que o dono informou, ou o que a pesquisa confirmou). NUNCA invente número "estimado" sem base — isso é fabricação com etiqueta de honestidade, pior que não dar número. Sem base real, diga isso explicitamente.
 
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): conecte achados a como o AutoSetup resolveria aquilo especificamente, de forma concreta, nunca como propaganda genérica. NUNCA invente urgência falsa ou prova social inexistente.`;
 }

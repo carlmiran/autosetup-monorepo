@@ -475,3 +475,27 @@ validado com volume real.
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (15 rotas).
 Rastreamento validado com INSERT/SELECT/DELETE reais no D1 de produção.
+
+## LENS consultivo: glossário + honestidade financeira + prioridade (31/07/2026)
+
+Fonte: proposta do ChatGPT (evolução comercial do LENS) — aceita com
+correção séria. Cabe no feature freeze por ser melhoria de LENS/
+conversão, não funcionalidade nova.
+
+- **Adotado**: estrutura consultiva (o que aconteceu → por que importa,
+  explicando termo técnico na hora → o que fazer), sem exigir schema
+  novo — instrução reforçada nos dois prompts
+- **Adotado**: prioridade (alta/média/baixa) em cada dia do plano de 7
+  dias — novo campo opcional `prioridade`, badge visual no resultado
+- **CORRIGIDO antes de implementar**: o "Motor de Impacto Financeiro"
+  original pedia sempre calcular um valor em R$ específico (ex: "R$
+  2.870/mês"), rotulando como "estimativa" quando não há dado real.
+  Isso foi rejeitado — um número específico fabricado continua sendo
+  fabricação mesmo com etiqueta de honestidade colada. Regra
+  implementada: só citar R$ específico com base real (dado informado
+  pelo usuário ou pesquisa real confirmada); sem base, dizer isso
+  explicitamente, nunca inventar número pra "parecer mais concreto"
+- **Não implementado agora**: plano de 90 dias (mudança de estrutura
+  maior, mudança de estrutura maior, fica pra depois de testar o resto)
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.
