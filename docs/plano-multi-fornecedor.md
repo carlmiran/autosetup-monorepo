@@ -97,3 +97,15 @@ Isso reduz drasticamente o esforço/risco de uma primeira versão do
 Grupo 2 — não depende mais de "provar o modelo com um fornecedor
 específico" antes de generalizar; pode nascer já genérico, porque quem
 resolve a necessidade específica é gente, não código.
+
+## Reincidência do erro de categoria (31/07/2026)
+
+ChatGPT propôs "Marketplace Inteligente" (Radar identifica fazenda de
+café → sugere irrigação, drones, energia solar, **crédito rural**,
+gestão) — misturando de novo produto financeiro com serviço comum na
+mesma lista, como se fossem o mesmo nível de risco. **Crédito rural é
+financiamento — Grupo 1, bloqueado**, mesma regra de sempre: exige
+registro como correspondente bancário no Banco Central. Irrigação,
+drones, energia solar, gestão são Grupo 2 (viável). Reforçando o
+registro anterior: qualquer proposta futura que junte esses dois grupos
+numa lista só deve ser separada antes de qualquer implementação.

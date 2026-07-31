@@ -203,3 +203,43 @@ Nenhuma venda foi concluída ainda (o único pagamento iniciado segue
 existe hoje uma forma automática de ver esse painel sem eu consultar o
 banco manualmente — construir isso de verdade é o item "Analytics",
 ainda não priorizado.
+
+---
+
+## Mudança de estratégia (31/07/2026) — validação comercial, não mais construção
+
+Fonte: proposta do ChatGPT (Product Owner) avaliada e **aceita** —
+alinhada com a disciplina já seguida nesta sessão (revenue antes de
+engenharia nova).
+
+**Missão do Trilho A mudou**: de "construir o Revenue Engine" pra
+"validar o modelo de negócio". São coisas diferentes — o código já está
+pronto, falta prova de mercado.
+
+**Feature Freeze parcial, decidido e em vigor**: por algumas semanas,
+não criar funcionalidade nova. Só melhorar LENS, Comercial, Conversão,
+Pagamento, Onboarding — até existir caixa de verdade.
+
+**Nova ordem de prioridade** (substitui qualquer lista anterior):
+1. Domínio
+2. CNPJ
+3. Primeiro cliente
+4. Primeiro case
+5. Primeiro depoimento
+6. Primeiro indicador (validado, com dinheiro real)
+7. Primeira renovação
+
+**Divisão de esforço proposta pros próximos 30 dias**: 70% conversão/
+clientes/onboarding/cobrança, 30% continuação de arquitetura (SAGE,
+WORKERS, HUB) — o Trilho B continua vivo, mas não é prioridade.
+
+**Nova meta do Comitê**: conquistar os 10 primeiros clientes pagantes
+usando o LENS como porta de entrada, documentar aprendizados, só depois
+disso investir pesado em SAGE/HUB/ATLAS.
+
+**Nota de disciplina**: uma segunda proposta do mesmo ChatGPT, no mesmo
+dia, contradisse esse freeze (propôs 7 estratégias novas, incluindo uma
+funcionalidade nova). Decisão de dev master: seguir esta mudança de
+estratégia (validação comercial), não a lista de novas estratégias —
+arquivada em `docs/plano-multi-fornecedor.md` e
+`docs/plano-painel-cliente.md` como visão, não como roadmap ativo.

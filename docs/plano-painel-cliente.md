@@ -82,3 +82,28 @@ Mesmo argumento já registrado nos outros planos de longo prazo desta
 sessão: validar o que já está em produção (split de comissão em
 sandbox, primeira venda real convertida) antes de somar mais uma frente
 de engenharia nova.
+
+## Ideias adicionais registradas (31/07/2026) — visão, não roadmap
+
+ChatGPT trouxe mais conceitos pro painel do cliente, coerentes com a
+visão já registrada aqui:
+
+- **Notificações diárias de engajamento** ("hoje você ganhou 3
+  avaliações", "seu concorrente publicou 12 posts") — mais viável que
+  parece, já que reaproveita infraestrutura existente (diagnóstico +
+  Google Places), só precisa de execução agendada (cron/scheduled job)
+  monitorando periodicamente. Não é Horizonte H4 — é extensão razoável
+  do que já existe, mas ainda não priorizada (feature freeze em vigor,
+  ver `docs/cronograma-mestre.md`).
+- **"Modo Piloto Automático"** (4 níveis de autonomia — 0: só
+  diagnóstico, 1: IA recomenda, 2: IA executa aprovado, 3: IA opera
+  dentro de limites do Business DNA): conceito coerente, mas Nível 2 e
+  3 dependem de WORKERS/Business DNA, que não existem. Nível 0 e 1 já
+  são essencialmente o que o LENS faz hoje. Fica registrado como
+  framing útil pra quando o produto evoluir, não como funcionalidade a
+  construir agora.
+
+**Nota de disciplina**: essas ideias vieram junto com uma proposta que
+contradizia o feature freeze recomendado pelo mesmo ChatGPT no mesmo
+dia (ver nota em `docs/cronograma-mestre.md`) — registradas como visão,
+não adotadas como prioridade.
