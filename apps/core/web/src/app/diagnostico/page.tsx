@@ -60,6 +60,7 @@ const initialForm = {
   canaisAtendimento: "",
   ferramentasAtuais: "",
   perdaFinanceira: "",
+  precosServicos: "",
   linkInstagram: "",
   linkGoogleBusiness: "",
 };
@@ -515,6 +516,13 @@ export default function DiagnosticoPage() {
             ajuda="Seja sincero — já aconteceu de esquecer de retornar um orçamento, ou o cliente esperar demais?"
             value={form.perdaFinanceira}
             onChange={(v) => setForm({ ...form, perdaFinanceira: v })}
+          />
+
+          <CampoTextoComAudio
+            label="Quanto você cobra pelos seus principais serviços ou produtos? (opcional)"
+            ajuda='Ex: "corte R$40, barba R$25" ou "consulta de 1h R$150". Com isso, o diagnóstico consegue calcular impacto financeiro real, não só estimativa.'
+            value={form.precosServicos}
+            onChange={(v) => setForm({ ...form, precosServicos: v })}
           />
 
           <button

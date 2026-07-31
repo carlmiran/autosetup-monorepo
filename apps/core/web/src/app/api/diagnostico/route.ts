@@ -84,8 +84,9 @@ async function salvarLead(
           nome_contato, whatsapp_contato, nome_negocio, cidade, nicho,
           tamanho_equipe, canais_atendimento, ferramentas_atuais, perda_financeira,
           maior_dificuldade, rotina_diaria, o_que_atrapalha, sobrecarga,
-          visao_negocio, meta_financeira, diagnostico_resumo, perguntas_nicho, codigo_indicacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          visao_negocio, meta_financeira, diagnostico_resumo, perguntas_nicho, codigo_indicacao,
+          precos_servicos
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         input.nomeContato ?? null,
@@ -106,6 +107,7 @@ async function salvarLead(
         resultado.resumo ?? null,
         input.perguntasNicho ? JSON.stringify(input.perguntasNicho) : null,
         input.codigoIndicacao ?? null,
+        input.precosServicos ?? null,
       )
       .run();
 
@@ -161,6 +163,7 @@ export async function POST(request: Request) {
     canaisAtendimento: body.canaisAtendimento || undefined,
     ferramentasAtuais: body.ferramentasAtuais || undefined,
     perdaFinanceira: body.perdaFinanceira || undefined,
+    precosServicos: body.precosServicos || undefined,
     perguntasNicho: Array.isArray(body.perguntasNicho) ? body.perguntasNicho : undefined,
     historicoAnterior: historicoAnterior.length > 0 ? historicoAnterior : undefined,
     linkInstagram: body.linkInstagram || undefined,

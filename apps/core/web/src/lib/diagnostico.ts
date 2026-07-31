@@ -43,6 +43,11 @@ export interface DiagnosticoInput {
   canaisAtendimento?: string;
   ferramentasAtuais?: string;
   perdaFinanceira?: string;
+  /** Preço real dos principais serviços/produtos, informado pelo
+   * próprio dono. Fonte: pedido de Carlos (31/07/2026) — quando isso
+   * existe, o impacto financeiro deixa de ser estimativa vaga e vira
+   * cálculo real (ex: "mais 4 clientes/mês x R$150 = R$600"). */
+  precosServicos?: string;
   /** Opcionais — se informados, habilitam a pesquisa real na web (ver
    * gerarDiagnosticoComPesquisa). Nunca obrigatórios. */
   linkInstagram?: string;
@@ -112,6 +117,9 @@ function linhasContextoProfundo(input: DiagnosticoInput): string {
       : null,
     input.perdaFinanceira
       ? `- Sente que perde vendas/clientes por demora ou desorganização (relato do dono): "${input.perdaFinanceira}"`
+      : null,
+    input.precosServicos
+      ? `- Preço real dos principais serviços/produtos (informado pelo dono): "${input.precosServicos}"`
       : null,
   ]
     .filter(Boolean)
@@ -191,7 +199,7 @@ UNIÃO/PARCERIA: em pelo menos um ponto do texto (no resumo ou no próximo passo
 
 CONSULTOR, NÃO RELATÓRIO: o dono do negócio não compra gráfico nem indicador — compra entendimento. Em "oportunidades" e "proximoPasso", sempre que fizer sentido, estruture o raciocínio como: o que está acontecendo → por que isso importa pro negócio dele (nunca assuma que ele conhece termo técnico: se usar "no-show", "CAC", "SEO", "conversão", "lead", "funil", "LTV" ou parecido, explique em 1 frase simples, na hora, sem exigir que ele pergunte) → o que fazer a respeito.
 
-IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só mencione um valor em R$ específico se ele vier de algo real — o que o próprio dono informou (meta financeira, visão sobre o negócio) ou algo que a pesquisa real confirmou. NUNCA calcule ou invente um número de faturamento/economia "estimado" sem base real, mesmo rotulando como "estimativa" — um número específico fabricado (ex: "R$ 2.870/mês") continua sendo fabricação com etiqueta de honestidade colada em cima, isso é PIOR que não dar número nenhum. Se não houver base real pra estimar em R$, diga isso com essas palavras — nunca substitua por um número inventado só pra "parecer mais concreto".
+IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só mencione um valor em R$ específico se ele vier de algo real — o que o próprio dono informou (meta financeira, visão sobre o negócio) ou algo que a pesquisa real confirmou. NUNCA calcule ou invente um número de faturamento/economia "estimado" sem base real, mesmo rotulando como "estimativa" — um número específico fabricado (ex: "R$ 2.870/mês") continua sendo fabricação com etiqueta de honestidade colada em cima, isso é PIOR que não dar número nenhum. Se não houver base real pra estimar em R$, diga isso com essas palavras — nunca substitua por um número inventado só pra "parecer mais concreto". Se o dono informou o preço real de algum serviço/produto ("preços dos principais serviços"), USE ISSO pra calcular impacto real quando fizer sentido (ex: "atrair mais 3 clientes/mês pro seu serviço de R$150 pode significar R$450 a mais" — matemática real em cima de dado real, deixe claro que é baseado no preço que ele mesmo informou).
 
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): sempre que fizer sentido, conecte um achado a como o AutoSetup resolveria aquilo especificamente — não como propaganda genérica ("nossa solução é incrível"), mas mostrando o caminho concreto (ex: "isso é exatamente o tipo de gargalo que some quando alguém organiza esse fluxo pra você"). NUNCA invente urgência falsa, número fabricado, ou prova social que não existe — isso quebra a confiança e derruba a venda em vez de ajudar.`;
 }
@@ -291,7 +299,7 @@ UNIÃO/PARCERIA: em pelo menos um ponto do texto, mencione o nome do negócio "$
 
 CONSULTOR, NÃO RELATÓRIO: sempre que usar termo técnico ("no-show", "CAC", "SEO", "conversão", "lead", "funil", "LTV" ou parecido), explique em 1 frase simples na hora. Estruture oportunidades como: o que está acontecendo → por que importa → o que fazer.
 
-IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só cite valor em R$ específico se vier de dado real (o que o dono informou, ou o que a pesquisa confirmou). NUNCA invente número "estimado" sem base — isso é fabricação com etiqueta de honestidade, pior que não dar número. Sem base real, diga isso explicitamente.
+IMPACTO FINANCEIRO — REGRA INEGOCIÁVEL: só cite valor em R$ específico se vier de dado real (o que o dono informou, ou o que a pesquisa confirmou). NUNCA invente número "estimado" sem base — isso é fabricação com etiqueta de honestidade, pior que não dar número. Sem base real, diga isso explicitamente. Se houver preço real de serviço informado, use pra calcular impacto real (ex: "+3 clientes/mês x R$150 = R$450"), deixando claro que veio do preço que ele informou.
 
 INTENÇÃO DE COPY DE VENDAS (sem perder honestidade): conecte achados a como o AutoSetup resolveria aquilo especificamente, de forma concreta, nunca como propaganda genérica. NUNCA invente urgência falsa ou prova social inexistente.`;
 }

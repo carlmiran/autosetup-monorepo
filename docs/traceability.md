@@ -499,3 +499,25 @@ conversão, não funcionalidade nova.
   maior, mudança de estrutura maior, fica pra depois de testar o resto)
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Preço real do serviço = impacto financeiro real (31/07/2026)
+
+Fonte: Carlos perguntou se cliente poderia informar tabela de preços
+pra tornar as estimativas financeiras reais. Resposta: sim, mas como
+campo de texto (com áudio), não upload de arquivo — evita ativar a
+construção maior do Painel do Cliente (que exigiria storage/R2, fora de
+escopo por ora).
+
+- Novo campo opcional `precosServicos` no formulário ("Quanto você
+  cobra pelos seus principais serviços?"), mesmo padrão de áudio já
+  usado nos outros campos
+- Instrução de impacto financeiro atualizada: quando esse preço real
+  existe, a IA é instruída a calcular impacto de verdade em cima dele
+  (ex: "+3 clientes/mês x R$150 = R$450"), deixando claro que veio do
+  preço informado pelo próprio dono — fecha exatamente o gap que a
+  correção da proposta do ChatGPT (nunca inventar R$) tinha deixado:
+  agora existe um caminho real pra ter número de verdade, não só a
+  opção de "não temos base pra estimar"
+- D1: coluna `precos_servicos` adicionada à tabela `leads`
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.
