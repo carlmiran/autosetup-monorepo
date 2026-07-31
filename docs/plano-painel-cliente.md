@@ -47,6 +47,25 @@ anteriormente nesta sessão como fora de escopo por depender de
 aprovação externa, fora do nosso controle. Continua bloqueado pelo
 mesmo motivo.
 
+**Refinamento técnico (30/07/2026)**: as APIs específicas existem de
+verdade — Instagram Graph API (Content Publishing: feed, carrossel,
+Reels, Stories), Facebook Pages API, Threads API. Mas publicar em nome
+de **múltiplos clientes diferentes** (o modelo necessário pro AutoSetup
+oferecer isso como serviço) exige status de **Meta Tech Provider**, que
+não é um passo técnico simples:
+
+1. CNPJ + Business Manager verificado (mesmo bloqueio já registrado)
+2. Virar Meta ISV primeiro (geralmente via um BSP)
+3. Só depois aplicar pra Tech Provider, com aprovação direta da Meta
+4. Auditoria real de segurança de dados, estabilidade técnica e
+   conformidade — não é autodeclaração
+5. Evoluir pro nível seguinte (Tech Partner) exige mínimo de 10 clientes
+   e 2.500 conversas/dia — escala que o AutoSetup ainda não tem
+
+Isso é um processo de meses, que só faz sentido depois de CNPJ +
+verificação de negócio + base real de clientes pagantes existirem —
+não uma tarefa técnica isolada.
+
 ## Recomendação de ordem, se avançar
 
 1. Itens 1+2 (upload de documento + análise mais profunda) como
