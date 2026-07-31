@@ -63,3 +63,26 @@ de rota de dinheiro não aparece como erro de API, aparece como
    assinaturas é trabalho futuro, depois de validar o caminho simples.
 5. Percentual de comissão (hoje 20%, fixo no código) é decisão de
    negócio de Carlos — fácil de ajustar depois de validado.
+
+## Mapeamento técnico (31/07/2026) — respondendo checklist trazido por Carlos
+
+País: Brasil. Tipo de checkout: **Checkout Pro** (`/checkout/preferences`
+pro pagamento único, Preapproval API pras assinaturas).
+
+| Ponto | Resposta |
+|---|---|
+| Modelo do repasse | Comissão de indicado/afiliado — sempre 1 fornecedor (Carlos) + no máximo 1 indicador por venda, nunca múltiplos recebedores |
+| Quem são os recebedores | Cada indicador conecta a própria conta MP via OAuth (já implementado). Armazenamos só `mp_user_id` — nunca CPF/CNPJ do indicador |
+| Regra do split | Percentual fixo (20%, hardcoded em `PERCENTUAL_COMISSAO`), calculado sobre o valor cheio do plano — sem desconto/frete no modelo |
+| Conciliação | `external_reference` (`plano:email:timestamp`) + tabela `pagamentos` própria relacionando venda → indicador |
+
+**Duas lacunas reais que esse mapeamento expôs, ainda não resolvidas
+no código**:
+
+6. **Responsabilidade pela tarifa do Mercado Pago** — quem absorve a
+   taxa deles (Carlos, indicador, ou dividido)? Decisão de negócio
+   ainda não tomada, código não trata isso hoje.
+7. **Estorno/chargeback não reverte o split** — se uma venda com
+   comissão for cancelada, o dinheiro já dividido não volta
+   automaticamente. Buraco real, precisa de solução antes de produção
+   com volume.
