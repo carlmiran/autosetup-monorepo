@@ -521,3 +521,27 @@ escopo por ora).
 - D1: coluna `precos_servicos` adicionada à tabela `leads`
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Bug real de campo encontrado por prospect (02/08/2026)
+
+Fonte: Fábio (Pousada Casa do Fábio, primeiro contato externo real),
+relatou por áudio no WhatsApp pra Carlos que não conseguiu colocar o
+link do Instagram no diagnóstico. Nenhum registro dele apareceu no D1,
+consistente com ter travado no formulário antes de conseguir enviar.
+
+Hipótese técnica (provável causa raiz): os campos de link usavam
+`type="url"`, que exige protocolo (`https://`) pra passar na validação
+nativa do navegador. Usuário real digitando só `instagram.com/negocio`
+(sem `https://`) provavelmente travava no envio sem mensagem de erro
+clara.
+
+Corrigido: campos trocados pra `type="text"` (sem validação nativa
+rígida), com `inputMode="url"` (mantém teclado otimizado no celular),
+microcopy explicando que funciona com ou sem "https://", e normalização
+real no `handleSubmit` — adiciona `https://` automaticamente se a
+pessoa não digitou, antes de mandar pro servidor.
+
+Bug real de lint pego no processo: aspas retas dentro de JSX
+(`react/no-unescaped-entities`) — corrigido com `&quot;`.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.

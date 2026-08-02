@@ -163,6 +163,12 @@ export default function DiagnosticoPage() {
     }
   }
 
+  function normalizarLink(valor: string): string {
+    const limpo = valor.trim();
+    if (!limpo) return "";
+    return /^https?:\/\//i.test(limpo) ? limpo : `https://${limpo}`;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -179,6 +185,8 @@ export default function DiagnosticoPage() {
         signal: controller.signal,
         body: JSON.stringify({
           ...form,
+          linkInstagram: normalizarLink(form.linkInstagram),
+          linkGoogleBusiness: normalizarLink(form.linkGoogleBusiness),
           numeroAvaliacoesGoogle: form.numeroAvaliacoesGoogle
             ? Number(form.numeroAvaliacoesGoogle)
             : null,
@@ -391,9 +399,14 @@ export default function DiagnosticoPage() {
             </p>
             <label className="flex flex-col gap-1 text-sm">
               Link do Instagram (opcional)
+              <span className="text-xs text-paper-dim">
+                Pode colar do jeito que copiar — com ou sem &quot;https://&quot; na frente,
+                a gente ajusta sozinho.
+              </span>
               <input
-                type="url"
-                placeholder="https://instagram.com/seunegocio"
+                type="text"
+                inputMode="url"
+                placeholder="instagram.com/seunegocio"
                 className={inputClass()}
                 value={form.linkInstagram}
                 onChange={(e) => setForm({ ...form, linkInstagram: e.target.value })}
@@ -402,8 +415,9 @@ export default function DiagnosticoPage() {
             <label className="flex flex-col gap-1 text-sm">
               Link do Google Business / Google Maps (opcional)
               <input
-                type="url"
-                placeholder="https://maps.app.goo.gl/..."
+                type="text"
+                inputMode="url"
+                placeholder="maps.app.goo.gl/..."
                 className={inputClass()}
                 value={form.linkGoogleBusiness}
                 onChange={(e) => setForm({ ...form, linkGoogleBusiness: e.target.value })}
