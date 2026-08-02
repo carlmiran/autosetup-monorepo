@@ -545,3 +545,26 @@ Bug real de lint pego no processo: aspas retas dentro de JSX
 (`react/no-unescaped-entities`) — corrigido com `&quot;`.
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Notificação real de pagamento + checklist de entrega (02/08/2026)
+
+Fonte: Carlos, cenário identificado — "o que acontece quando alguém
+paga de verdade e ninguém é avisado?"
+
+- `lib/resend.ts`: envia e-mail real via Resend quando o webhook do
+  Mercado Pago confirma status "approved"/"authorized" — usa domínio de
+  teste deles (`onboarding@resend.dev`), não exige domínio próprio
+- Deduplicação real: só notifica quando o UPDATE no D1 realmente mudou
+  o status de "pendente" (checando `changes` do resultado) — reenvio do
+  mesmo webhook pelo Mercado Pago não gera aviso duplicado
+- `docs/checklist-entrega.md`: processo real de entrega pro Raio-X e
+  planos mensais, com prazo definido (3 dias úteis) — antes não existia
+  nenhum processo escrito, só a promessa em `/planos`
+
+**Pendência real, ação de Carlos**: criar conta no Resend, gerar
+`RESEND_API_KEY`, colar no painel da Cloudflare — mesma regra de
+sempre, nunca em chat. Também precisa definir `NOTIFICATION_EMAIL`
+(o e-mail que deve receber o aviso — pode ser passado em texto, não é
+segredo).
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.

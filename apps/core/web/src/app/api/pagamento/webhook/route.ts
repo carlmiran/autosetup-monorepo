@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { notificarPagamentoAprovado } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +52,8 @@ async function atualizarStatusAssinatura(preapprovalId: string): Promise<void> {
   await gravarStatus(data.external_reference, data.status);
 }
 
+const STATUS_APROVADO = new Set(["approved", "authorized"]);
+
 async function gravarStatus(externalReference: string | undefined, status: string | undefined): Promise<void> {
   if (!externalReference || !status) return;
   try {
@@ -59,13 +62,20 @@ async function gravarStatus(externalReference: string | undefined, status: strin
     if (!db) return;
 
     const [planoId, email] = externalReference.split(":");
-    await db
+    const resultado = await db
       .prepare(
         "UPDATE pagamentos SET status = ?, atualizado_em = datetime('now') " +
           "WHERE plano = ? AND email = ? AND status = 'pendente'",
       )
       .bind(status, planoId, email)
       .run();
+
+    // Só notifica se essa atualização realmente mudou o estado agora
+    // (evita aviso duplicado se o Mercado Pago reenviar o mesmo webhook).
+    const mudouAgora = (resultado.meta.changes ?? 0) > 0;
+    if (mudouAgora && STATUS_APROVADO.has(status)) {
+      await notificarPagamentoAprovado({ plano: planoId, emailCliente: email, status });
+    }
   } catch (err) {
     console.error("[pagamento/webhook] falha ao gravar status:", err);
   }
