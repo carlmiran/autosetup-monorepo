@@ -568,3 +568,19 @@ sempre, nunca em chat. Também precisa definir `NOTIFICATION_EMAIL`
 segredo).
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## LENS multilíngue (texto, sem mudança de negócio) (02/08/2026)
+
+Fonte: Carlos perguntou sobre tornar o LENS global. Separado em parte
+barata (implementada) e parte cara (documentada como visão gated, ver
+`docs/plano-lens-global.md`).
+
+- Instrução adicionada aos dois prompts do diagnóstico: responder no
+  mesmo idioma que a pessoa usou pra escrever as respostas — capacidade
+  nativa do modelo, sem custo extra, sem infraestrutura nova
+- Preço (R$), processador de pagamento (Mercado Pago), base jurídica
+  (LGPD/RFC-001) continuam Brasil-only — "ir global de verdade" exige
+  resolver pagamento/moeda/jurídico por região, escopo equivalente ao
+  da frente B2B já gated
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.
