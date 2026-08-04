@@ -107,3 +107,15 @@ visão já registrada aqui:
 contradizia o feature freeze recomendado pelo mesmo ChatGPT no mesmo
 dia (ver nota em `docs/cronograma-mestre.md`) — registradas como visão,
 não adotadas como prioridade.
+
+## Sobreposição com proposta do Gemini (02/08/2026)
+
+Proposta trazida por Carlos ("Lens: do diagnóstico à execução") pede
+painel único do cliente (nota do Google, mensagens, métricas do site) —
+mesma coisa já registrada aqui. Também propõe gerador automático de
+site (landing page a partir do scraping do GMB) e automação de
+postagem/resposta de avaliação no Google Meu Negócio (exige escrita na
+API do Google Business Profile, diferente da leitura via Places que já
+usamos hoje) e campanha de pedido de avaliação por WhatsApp/SMS (esbarra
+no mesmo bloqueio de sempre — CNPJ + verificação Meta). Nada disso
+implementado — permanece gated atrás da validação atual.
