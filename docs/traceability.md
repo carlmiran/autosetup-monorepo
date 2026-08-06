@@ -584,3 +584,32 @@ barata (implementada) e parte cara (documentada como visão gated, ver
   da frente B2B já gated
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Geração real de imagem pra posts + oferta reforçada (06/08/2026)
+
+Fonte: implementação a partir das decisões consolidadas nas últimas
+horas (memória de sessões paralelas) — Carlos pediu implementação
+direta como Dev Master.
+
+- `lib/gerarImagemPost.ts`: gera imagem real via OpenAI (gpt-image-1),
+  a partir de tema+legenda — mesma chave já configurada, custo real
+  ~R$0,10-0,20/imagem (modelo calculado antes, confirmado)
+- `/api/entrega/gerar-post` + `/entrega/gerar-post`: ferramenta
+  interna (não linkada publicamente), pra equipe gerar a imagem durante
+  a entrega de um plano pago — rate limit de 30/hora (uso interno, não
+  público)
+- **Decisão de escopo**: NÃO chamado automaticamente no `/diagnostico`
+  gratuito — custo fica embutido só nos planos pagos, consistente com
+  a decisão já registrada de não inflar o custo do que é grátis
+- `/planos`: Essencial atualizado pra 12 posts/mês, Completo pra 24/mês
+  (texto + imagem pronta), copy menciona entrega em pequenos lotes via
+  WhatsApp — números batem com o modelo de custo calculado (~2% da
+  receita do plano)
+
+**O que ainda não foi implementado, propositalmente**: envio automático
+via WhatsApp (continua exigindo CNPJ + verificação Meta) — a entrega
+continua manual, equipe gera a imagem aqui e manda ela mesma, mesmo
+padrão do checklist de entrega já documentado.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (16 rotas).
+Comportamento honesto confirmado sem chave configurada neste sandbox.

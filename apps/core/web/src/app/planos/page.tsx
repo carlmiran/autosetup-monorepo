@@ -41,7 +41,8 @@ const planos: Plano[] = [
     periodo: "por mês",
     descricao: "Pra quem quer presença constante sem virar tarefa sua.",
     itens: [
-      "8 posts por mês (conteúdo + arte)",
+      "12 posts por mês (texto + imagem pronta)",
+      "Entregue aos poucos no seu WhatsApp, não tudo de uma vez",
       "Acompanhamento quinzenal via WhatsApp",
       "1 relatório mensal comparando com a concorrência",
     ],
@@ -54,7 +55,8 @@ const planos: Plano[] = [
     periodo: "por mês",
     descricao: "Pra quem quer ritmo forte de crescimento.",
     itens: [
-      "16 posts por mês + carrosséis",
+      "24 posts por mês (texto + imagem pronta)",
+      "Entregue aos poucos no seu WhatsApp, não tudo de uma vez",
       "Acompanhamento semanal via WhatsApp",
       "Monitoramento de concorrência",
       "Call estratégica mensal",
