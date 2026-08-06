@@ -153,6 +153,12 @@ export default function ManualRadarPage() {
             Isso vai mudar assim que o pagamento automático for validado — até
             lá, essa é a forma real de funcionar, sem enrolação.
           </p>
+          <p>
+            <Link href="/radar/termos" className="underline text-amber">
+              Leia os termos completos da colaboração
+            </Link>{" "}
+            (inclui o esclarecimento de que não há vínculo empregatício).
+          </p>
         </Secao>
 
         <Secao numero="08" titulo="Perguntas comuns">

@@ -633,3 +633,20 @@ e vender o AutoSetup.
   estado real do sistema, não o estado desejado
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (17 rotas).
+
+## Termos de colaboração — sem vínculo empregatício (06/08/2026)
+
+Fonte: Carlos pediu esclarecimento formal de que a atividade de
+indicação/prospecção não constitui vínculo empregatício.
+
+- `/radar/termos`: sem vínculo empregatício, como funciona a comissão
+  hoje (honesto: combinada diretamente, pagamento automático não
+  validado ainda), o que se espera do indicador, direito de parar a
+  qualquer momento sem penalidade
+- Aviso explícito no topo: não é contrato formal registrado nem
+  revisado por advogado — se a relação virar PJ/RPA formal, documento
+  próprio revisado juridicamente será criado (mantém a mesma cautela já
+  registrada em `docs/plano-onboarding-vendedores.md`)
+- Linkado a partir de `/radar/manual`
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (18 rotas).
