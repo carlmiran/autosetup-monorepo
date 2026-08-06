@@ -650,3 +650,22 @@ indicação/prospecção não constitui vínculo empregatício.
 - Linkado a partir de `/radar/manual`
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (18 rotas).
+
+## Painéis internos: comissões e clientes (06/08/2026)
+
+Fonte: Carlos pediu forma de gerenciar pagamento manual de comissão e
+acompanhamento pós-venda, já que ambos ainda são processos manuais.
+
+- `/admin/comissoes`: lista pagamentos aprovados com indicador
+  associado, calcula comissão (20%), checkbox pra marcar como paga
+  (persistido no D1, nova coluna `comissao_paga`), total em aberto,
+  exportação CSV pra abrir como planilha
+- `/admin/clientes`: lista diagnósticos e pagamentos (duas listas
+  separadas — não existe campo em comum confiável entre `leads` e
+  `pagamentos` hoje pra juntar automaticamente sem risco de associar
+  errado, documentado no próprio código), exportação CSV de cada uma
+- Nenhuma das duas páginas linkada publicamente — uso interno
+
+Testado: typecheck+lint(0 erros, corrigido um erro real de React
+hooks)+build de produção limpos (20 rotas). Dado real gravado/consultado/
+removido no D1 de produção antes do deploy.
