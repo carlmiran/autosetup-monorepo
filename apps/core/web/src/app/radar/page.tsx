@@ -7,6 +7,7 @@
 // como prospect. Fonte: pedido de Carlos (30/07/2026).
 
 import { useState } from "react";
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 interface NegocioProximo {
@@ -116,6 +117,9 @@ export default function RadarPage() {
             Negócios reais perto de você — clique num pra ver a análise
             comercial como possível cliente.
           </p>
+          <Link href="/radar/manual" className="text-xs underline text-amber">
+            Primeira vez? Leia o manual do indicador
+          </Link>
         </div>
       </header>
 

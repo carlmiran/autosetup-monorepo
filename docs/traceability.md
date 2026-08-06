@@ -613,3 +613,23 @@ padrão do checklist de entrega já documentado.
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (16 rotas).
 Comportamento honesto confirmado sem chave configurada neste sandbox.
+
+## Manual do Indicador (06/08/2026)
+
+Fonte: Carlos pediu um manual pra pessoa sem experiência de vendas
+(ou migrando de carreira) usar o Radar de Oportunidades pra prospectar
+e vender o AutoSetup.
+
+- `/radar/manual`: 8 seções — o que é o AutoSetup, resumo do papel do
+  indicador, passo a passo real de uso do Radar, script de abordagem,
+  o que explicar sobre o diagnóstico, o que NUNCA prometer (resultado
+  garantido, WhatsApp automatizado, geração automática de post no
+  gratuito), como funciona a comissão HOJE (honesto: rastreamento já
+  existe via `?ref=`, pagamento automático ainda não validado —
+  combinado direto com quem indicou por enquanto), perguntas comuns
+- Linkado a partir de `/radar` ("Primeira vez? Leia o manual")
+- Decisão de honestidade: não empurra ninguém pra `/indicadores/entrar`
+  (fluxo de conexão Mercado Pago não validado) — o manual reflete o
+  estado real do sistema, não o estado desejado
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (17 rotas).
