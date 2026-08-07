@@ -669,3 +669,37 @@ acompanhamento pós-venda, já que ambos ainda são processos manuais.
 Testado: typecheck+lint(0 erros, corrigido um erro real de React
 hooks)+build de produção limpos (20 rotas). Dado real gravado/consultado/
 removido no D1 de produção antes do deploy.
+
+## Meus Clientes (indicador) + Radar sem repetir negócio visto (06/08/2026)
+
+Fonte: Carlos pediu que o vendedor/indicador tenha controle próprio dos
+clientes dele (WhatsApp, notas, follow-up) enquanto atendimento
+automatizado não existe, e que o Radar não repita negócio já visto pro
+mesmo vendedor.
+
+- `clientes_indicador` (D1): lista pessoal por código de indicador —
+  nome, WhatsApp, notas ("vontades e detalhes da venda"), data de
+  follow-up
+- `radar_visto` (D1): registra qual negócio (place_id) cada código já
+  viu; `/api/radar/proximos` agora filtra automaticamente esses
+  negócios das buscas seguintes do mesmo código
+- `/radar/meus-clientes`: sem login, identificado só pelo código (mesmo
+  padrão informal do resto do programa) — cadastra cliente, vê lista
+  com destaque visual pra follow-up atrasado (vermelho) ou hoje
+  (âmbar)
+- `/radar`: ganhou campo de código (opcional) e link pra "Meus clientes
+  e follow-ups"
+
+**Honestidade sobre o que ficou de fora**: notificação push/automática
+("radar sempre ligado avisando") não foi construída — exigiria conta de
+usuário real (não existe) e serviço de notificação push (infraestrutura
+nova). O que existe é pull, não push: o vendedor abre a própria lista e
+vê o que está atrasado/pra hoje, o sistema não avisa sozinho ainda.
+
+Bug real de lint corrigido no processo: mesmo padrão de setState
+síncrono em efeito via função nomeada — corrigido com IIFE inline +
+inicialização preguiçosa do código vindo da URL.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
+Dado real gravado/consultado/removido nas duas tabelas novas antes do
+deploy.

@@ -31,6 +31,7 @@ export default function RadarPage() {
   const [negocios, setNegocios] = useState<NegocioProximo[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [tipo, setTipo] = useState("");
+  const [codigo, setCodigo] = useState("");
 
   const [selecionado, setSelecionado] = useState<NegocioProximo | null>(null);
   const [analise, setAnalise] = useState<AnaliseRadar | null>(null);
@@ -61,6 +62,7 @@ export default function RadarPage() {
               latitude: posicao.coords.latitude,
               longitude: posicao.coords.longitude,
               tipo: tipo.trim() || undefined,
+              codigo: codigo.trim() || undefined,
             }),
           });
           const data = (await res.json()) as { negocios?: NegocioProximo[]; error?: string };
@@ -120,11 +122,21 @@ export default function RadarPage() {
           <Link href="/radar/manual" className="text-xs underline text-amber">
             Primeira vez? Leia o manual do indicador
           </Link>
+          <Link href="/radar/meus-clientes" className="text-xs underline text-amber">
+            Meus clientes e follow-ups
+          </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-xl px-6 py-10">
         <div className="flex flex-col gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Seu código de indicador (opcional — evita repetir negócio já visto)"
+            className="border border-panel-line bg-panel text-paper rounded-md px-3 py-2.5 text-sm focus-visible:outline-amber"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+          />
           <input
             type="text"
             placeholder='Tipo de negócio (opcional, ex: "barbershop", "beauty_salon")'
