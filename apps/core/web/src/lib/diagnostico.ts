@@ -90,6 +90,11 @@ export interface DiagnosticoResultado {
     concorrentes: { nome: string; destaque: string }[];
     posicionamento: string;
   } | null;
+  /** Avaliação real de qualidade das respostas — usada pra decidir se
+   * a pessoa ganha o desconto por ter respondido de forma substantiva
+   * (não "sim"/"não sei"/vazio). Fonte: pedido de Carlos (07/08/2026).
+   * Nunca conceder desconto por só ter enviado o formulário. */
+  respostasSubstantivas: boolean;
   /** Qual provider/modo respondeu de verdade — observabilidade real,
    * não é exibido ao prospect, mas fica no log. */
   geradoPor: string;
@@ -172,6 +177,8 @@ imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
 fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
 dia do plano. Classifique cada dia com "prioridade": "alta" (resolve a dor mais urgente relatada), "média" ou "baixa".
 
+AVALIAÇÃO DE QUALIDADE DAS RESPOSTAS: analise se as respostas em texto livre (maior dificuldade, rotina diária, o que atrapalha, sobrecarga, visão do negócio, meta financeira) foram substantivas — descreveram algo real e específico sobre o negócio — ou foram vazias/genéricas (ex: "sim", "não sei", "nada", uma palavra só, ou não respondidas). Preencha "respostasSubstantivas": true SOMENTE se pelo menos 2 dessas respostas tiverem conteúdo real e específico. Isso decide se a pessoa ganha um desconto — nunca marque true só porque o formulário foi enviado.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases resumindo a situação atual, só com base no que foi informado",
@@ -180,6 +187,7 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "oportunidades": ["2 a 3 oportunidades concretas de melhoria de presença digital, específicas para o nicho e a dificuldade relatada — não genéricas"],
   "proximoPasso": "uma ação prática e específica que o dono poderia tomar essa semana",
   "distanciaAteAMeta": null,
+  "respostasSubstantivas": true,
   "planoSeteDias": [
     { "dia": 1, "acao": "...", "conteudoSugerido": null, "prioridade": "alta|média|baixa" },
     { "dia": 2, "acao": "...", "conteudoSugerido": null },
@@ -268,6 +276,8 @@ imagem, isso não existe neste fluxo. Nos outros dias, "conteudoSugerido"
 fica ausente/null. Nunca prometa resultado numérico garantido em nenhum
 dia do plano. Classifique cada dia com "prioridade": "alta" (resolve a dor mais urgente relatada), "média" ou "baixa".
 
+AVALIAÇÃO DE QUALIDADE DAS RESPOSTAS: analise se as respostas em texto livre (maior dificuldade, rotina diária, o que atrapalha, sobrecarga, visão do negócio, meta financeira) foram substantivas — descreveram algo real e específico sobre o negócio — ou foram vazias/genéricas (ex: "sim", "não sei", "nada", uma palavra só, ou não respondidas). Preencha "respostasSubstantivas": true SOMENTE se pelo menos 2 dessas respostas tiverem conteúdo real e específico. Isso decide se a pessoa ganha um desconto — nunca marque true só porque o formulário foi enviado.
+
 Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
 {
   "resumo": "1-2 frases sobre a situação atual, combinando o que foi informado com o que a pesquisa confirmou",
@@ -276,6 +286,7 @@ Responda ESTRITAMENTE em JSON válido, sem markdown, no formato:
   "oportunidades": ["2 a 3 oportunidades concretas, informadas pelas tendências reais do nicho que você pesquisou"],
   "proximoPasso": "uma ação prática e específica pra essa semana",
   "distanciaAteAMeta": null,
+  "respostasSubstantivas": true,
   "planoSeteDias": [
     { "dia": 1, "acao": "...", "conteudoSugerido": null, "prioridade": "alta|média|baixa" },
     { "dia": 2, "acao": "...", "conteudoSugerido": null },
@@ -391,6 +402,7 @@ function parsearResultado(raw: string, geradoPor: string): DiagnosticoResultado 
     distanciaAteAMeta: p.distanciaAteAMeta || undefined,
     planoSeteDias: Array.isArray(p.planoSeteDias) ? p.planoSeteDias : [],
     comparacaoConcorrentes: p.comparacaoConcorrentes ?? null,
+    respostasSubstantivas: p.respostasSubstantivas === true,
     geradoPor,
   };
 }

@@ -47,6 +47,45 @@ async function buscarIndicador(codigo: string | undefined): Promise<{ mpUserId: 
   }
 }
 
+/** Valida um código de desconto real (gerado só quando o diagnóstico
+ * teve respostas substantivas) e marca como usado atomicamente — evita
+ * uso duplicado em corrida (dois checkouts ao mesmo tempo com o mesmo
+ * código). Retorna o percentual se válido, ou um erro explicando por
+ * quê, se inválido/já usado — nunca ignora silenciosamente um código
+ * digitado errado. */
+async function validarEUsarDesconto(
+  codigo: string | undefined,
+): Promise<{ percentual: number } | { erro: string } | null> {
+  if (!codigo) return null;
+  try {
+    const { env } = getCloudflareContext();
+    const db = (env as { DB?: D1Database }).DB;
+    if (!db) return { erro: "Não foi possível validar o código agora." };
+
+    const linha = await db
+      .prepare("SELECT percentual, usado FROM descontos WHERE codigo = ?")
+      .bind(codigo)
+      .first<{ percentual: number; usado: number }>();
+
+    if (!linha) return { erro: "Código de desconto não encontrado." };
+    if (linha.usado) return { erro: "Esse código de desconto já foi usado." };
+
+    const resultado = await db
+      .prepare("UPDATE descontos SET usado = 1, usado_em = datetime('now') WHERE codigo = ? AND usado = 0")
+      .bind(codigo)
+      .run();
+
+    if ((resultado.meta.changes ?? 0) === 0) {
+      return { erro: "Esse código de desconto já foi usado." };
+    }
+
+    return { percentual: linha.percentual };
+  } catch (err) {
+    console.error("[pagamento] falha ao validar desconto:", err);
+    return { erro: "Não foi possível validar o código agora." };
+  }
+}
+
 export async function POST(request: Request) {
   const limite = await verificarRateLimit(request, { rota: "pagamento", maximo: 10, janelaMinutos: 60 });
   if (!limite.permitido) {
@@ -56,7 +95,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json()) as { planoId?: string; email?: string; nome?: string; codigoIndicacao?: string };
+  const body = (await request.json()) as {
+    planoId?: string;
+    email?: string;
+    nome?: string;
+    codigoIndicacao?: string;
+    codigoDesconto?: string;
+  };
 
   if (!body.planoId || !body.email) {
     return NextResponse.json({ error: "Informe o plano e o e-mail." }, { status: 400 });
@@ -67,21 +112,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Plano inválido." }, { status: 400 });
   }
 
+  const desconto = await validarEUsarDesconto(body.codigoDesconto);
+  if (desconto && "erro" in desconto) {
+    return NextResponse.json({ error: desconto.erro }, { status: 400 });
+  }
+
+  const planoComDesconto = desconto
+    ? { ...plano, valor: Math.round(plano.valor * (1 - desconto.percentual / 100) * 100) / 100 }
+    : plano;
+
   const urlBase = new URL(request.url).origin;
   const indicador = await buscarIndicador(body.codigoIndicacao);
 
   try {
     const resultado =
-      plano.tipo === "unico"
+      planoComDesconto.tipo === "unico"
         ? await criarPreferencia(
-            plano,
+            planoComDesconto,
             body.email,
             urlBase,
             indicador
-              ? { mpUserId: indicador.mpUserId, valor: Math.round(plano.valor * PERCENTUAL_COMISSAO * 100) / 100 }
+              ? {
+                  mpUserId: indicador.mpUserId,
+                  valor: Math.round(planoComDesconto.valor * PERCENTUAL_COMISSAO * 100) / 100,
+                }
               : undefined,
           )
-        : await criarAssinatura(plano, body.email, urlBase);
+        : await criarAssinatura(planoComDesconto, body.email, urlBase);
     // Nota: split de comissão só aplicado no pagamento único por enquanto —
     // ver docs/plano-comissao-indicadores.md sobre a pendência em assinaturas.
 

@@ -703,3 +703,30 @@ inicialização preguiçosa do código vindo da URL.
 Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
 Dado real gravado/consultado/removido nas duas tabelas novas antes do
 deploy.
+
+## Desconto por diagnóstico bem respondido (07/08/2026)
+
+Fonte: Carlos pediu incentivo pra converter mais gente pros planos, mas
+condicionado à qualidade real das respostas — nunca desconto por
+"responder de qualquer jeito".
+
+- Prompts do diagnóstico (ambos) ganharam avaliação real de qualidade:
+  `respostasSubstantivas: boolean` — só `true` se pelo menos 2 respostas
+  em texto livre forem específicas e reais, nunca por só ter enviado o
+  formulário. Default conservador (`false`) se o modelo não informar.
+- Quando `true`, gera um código real (`LENS` + 6 caracteres aleatórios),
+  salva no D1 (`descontos`, 15%), mostra na tela do resultado
+- O link pro plano de entrada já leva o código embutido
+  (`/planos?desconto=CODIGO`) — não precisa copiar/colar
+- `/planos`: campo de código de desconto no checkout, valida de verdade
+  contra o D1 antes de criar a Preferência/Assinatura — código
+  inválido ou já usado retorna erro claro, nunca ignora silenciosamente
+- Marcação de uso é atômica (`UPDATE ... WHERE usado = 0`, checando
+  `changes`) — evita dois checkouts simultâneos usarem o mesmo código
+- Comissão do indicador (quando existe) calculada sobre o valor **já
+  com desconto**, não o valor cheio — justo com o indicador, reflete a
+  receita real
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
+Ciclo completo (gerar código → validar → marcar usado → tentar reusar)
+testado com dado real no D1 de produção antes do deploy.

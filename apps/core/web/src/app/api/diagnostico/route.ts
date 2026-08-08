@@ -66,6 +66,32 @@ async function buscarHistorico(
   }
 }
 
+const PERCENTUAL_DESCONTO_DIAGNOSTICO = 15;
+
+/** Gera e salva um código de desconto real, só quando as respostas
+ * foram avaliadas como substantivas (nunca por só ter enviado o
+ * formulário). Fonte: pedido de Carlos (07/08/2026). Best-effort: se
+ * falhar, o diagnóstico continua sem desconto, nunca quebra a resposta
+ * principal. */
+async function gerarCodigoDesconto(leadId: number | null): Promise<string | null> {
+  try {
+    const { env } = getCloudflareContext();
+    const db = (env as { DB?: D1Database }).DB;
+    if (!db) return null;
+
+    const codigo = `LENS${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    await db
+      .prepare("INSERT INTO descontos (codigo, percentual, lead_id) VALUES (?, ?, ?)")
+      .bind(codigo, PERCENTUAL_DESCONTO_DIAGNOSTICO, leadId)
+      .run();
+
+    return codigo;
+  } catch (err) {
+    console.error("[diagnostico] falha ao gerar código de desconto:", err);
+    return null;
+  }
+}
+
 async function salvarLead(
   input: DiagnosticoInput & DadosContato,
   resultado: DiagnosticoResultado,
@@ -183,7 +209,10 @@ export async function POST(request: Request) {
     try {
       const resultado = await gerarDiagnosticoComPesquisa(input);
       const leadId = await salvarLead(input, resultado);
-      return NextResponse.json({ ...resultado, leadId, historicoAnterior });
+      const codigoDesconto = resultado.respostasSubstantivas
+        ? await gerarCodigoDesconto(leadId)
+        : null;
+      return NextResponse.json({ ...resultado, leadId, historicoAnterior, codigoDesconto, percentualDesconto: codigoDesconto ? 15 : null });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro desconhecido na pesquisa real.";
       return NextResponse.json({ error: message }, { status: 502 });
@@ -208,7 +237,10 @@ export async function POST(request: Request) {
     await llmAdapter.connect(process.env);
     const resultado = await gerarDiagnostico(input);
     const leadId = await salvarLead(input, resultado);
-    return NextResponse.json({ ...resultado, leadId, historicoAnterior });
+    const codigoDesconto = resultado.respostasSubstantivas
+        ? await gerarCodigoDesconto(leadId)
+        : null;
+      return NextResponse.json({ ...resultado, leadId, historicoAnterior, codigoDesconto, percentualDesconto: codigoDesconto ? 15 : null });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro desconhecido ao gerar diagnóstico.";
     return NextResponse.json({ error: message }, { status: 502 });

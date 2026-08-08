@@ -31,6 +31,8 @@ interface DiagnosticoResultado {
   } | null;
   historicoAnterior?: { data: string; resumo: string }[];
   leadId?: number | null;
+  codigoDesconto?: string | null;
+  percentualDesconto?: number | null;
 }
 
 interface PerguntaNicho {
@@ -760,12 +762,28 @@ function ResultadoDiagnostico({
         </div>
       )}
 
-      <BlocoFechamento leadId={resultado.leadId ?? null} />
+      {resultado.codigoDesconto && (
+        <div className="border border-mint rounded-lg p-4 bg-mint-dim text-center">
+          <p className="text-xs text-mint font-mono tracking-widest uppercase mb-1">
+            Você ganhou {resultado.percentualDesconto}% de desconto
+          </p>
+          <p className="text-sm text-mint mb-2">
+            Suas respostas foram detalhadas de verdade — isso vale um desconto
+            em qualquer plano.
+          </p>
+          <p className="font-mono text-lg text-mint font-bold tracking-wider">
+            {resultado.codigoDesconto}
+          </p>
+          <p className="text-xs text-mint/70 mt-1">Use esse código na hora de assinar.</p>
+        </div>
+      )}
+
+      <BlocoFechamento leadId={resultado.leadId ?? null} codigoDesconto={resultado.codigoDesconto} />
     </div>
   );
 }
 
-function BlocoFechamento({ leadId }: { leadId: number | null }) {
+function BlocoFechamento({ leadId, codigoDesconto }: { leadId: number | null; codigoDesconto?: string | null }) {
   const [interesse, setInteresse] = useState<"sim" | "nao" | null>(null);
   const numeroWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMERO;
 
@@ -796,7 +814,10 @@ function BlocoFechamento({ leadId }: { leadId: number | null }) {
       </p>
       <p className="text-sm">
         Tem um plano de entrada por{" "}
-        <Link href="/planos" className="underline text-amber font-semibold">
+        <Link
+          href={codigoDesconto ? `/planos?desconto=${encodeURIComponent(codigoDesconto)}` : "/planos"}
+          className="underline text-amber font-semibold"
+        >
           R$ 97, sem compromisso mensal
         </Link>
         , se quiser começar leve.

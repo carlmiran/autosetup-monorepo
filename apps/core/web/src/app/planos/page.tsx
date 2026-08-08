@@ -74,6 +74,9 @@ export default function PlanosPage() {
   const [codigoIndicacao] = useState<string>(() =>
     typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("ref") ?? "",
   );
+  const [codigoDesconto, setCodigoDesconto] = useState<string>(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("desconto") ?? "",
+  );
 
   async function iniciarCheckout(planoId: string) {
     if (!email.trim()) {
@@ -86,7 +89,13 @@ export default function PlanosPage() {
       const res = await fetch("/api/pagamento/criar-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planoId, email, nome, codigoIndicacao: codigoIndicacao || undefined }),
+        body: JSON.stringify({
+          planoId,
+          email,
+          nome,
+          codigoIndicacao: codigoIndicacao || undefined,
+          codigoDesconto: codigoDesconto || undefined,
+        }),
       });
       const data = (await res.json()) as { checkoutUrl?: string; error?: string };
       if (!res.ok || !data.checkoutUrl) {
@@ -163,6 +172,13 @@ export default function PlanosPage() {
                     className="border border-panel-line bg-ink text-paper rounded-md px-3 py-2 text-sm focus-visible:outline-amber"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Código de desconto (opcional)"
+                    className="border border-panel-line bg-ink text-paper rounded-md px-3 py-2 text-sm focus-visible:outline-amber uppercase"
+                    value={codigoDesconto}
+                    onChange={(e) => setCodigoDesconto(e.target.value.toUpperCase())}
                   />
                   <button
                     type="button"
