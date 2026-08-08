@@ -769,12 +769,14 @@ function ResultadoDiagnostico({
           </p>
           <p className="text-sm text-mint mb-2">
             Suas respostas foram detalhadas de verdade — isso vale um desconto
-            em qualquer plano.
+            na assinatura mensal (Essencial ou Completo).
           </p>
           <p className="font-mono text-lg text-mint font-bold tracking-wider">
             {resultado.codigoDesconto}
           </p>
-          <p className="text-xs text-mint/70 mt-1">Use esse código na hora de assinar.</p>
+          <p className="text-xs text-mint/70 mt-1">
+            Use esse código ao assinar um dos planos mensais.
+          </p>
         </div>
       )}
 

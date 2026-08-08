@@ -730,3 +730,20 @@ condicionado à qualidade real das respostas — nunca desconto por
 Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
 Ciclo completo (gerar código → validar → marcar usado → tentar reusar)
 testado com dado real no D1 de produção antes do deploy.
+
+## Correção: desconto só pra assinatura mensal (07/08/2026)
+
+Fonte: Carlos revisou a própria ideia — melhor incentivar receita
+recorrente (Essencial/Completo) do que descontar o Raio-X, que já é a
+entrada mais barata e não precisa de desconto extra pra ser aceito.
+
+- `/api/pagamento/criar-checkout`: rejeita código de desconto em plano
+  `tipo !== "assinatura"` **antes** de validar/consumir o código no
+  banco — uma tentativa errada nunca queima o código à toa
+- Copy do banner de desconto no resultado do diagnóstico atualizada:
+  "vale um desconto na assinatura mensal (Essencial ou Completo)", não
+  mais "em qualquer plano"
+
+Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
+que tentar aplicar no Raio-X recusa com mensagem clara, sem consumir o
+código.

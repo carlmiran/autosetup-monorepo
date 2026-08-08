@@ -112,6 +112,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Plano inválido." }, { status: 400 });
   }
 
+  // Desconto vale só pra assinatura mensal — decisão de Carlos
+  // (07/08/2026): melhor incentivar receita recorrente do que descontar
+  // o Raio-X, que já é a entrada mais barata. Checa ANTES de validar o
+  // código no banco, pra nunca consumir um código à toa nessa tentativa.
+  if (body.codigoDesconto && plano.tipo !== "assinatura") {
+    return NextResponse.json(
+      { error: "Esse desconto vale só pra planos de assinatura mensal (Essencial ou Completo)." },
+      { status: 400 },
+    );
+  }
+
   const desconto = await validarEUsarDesconto(body.codigoDesconto);
   if (desconto && "erro" in desconto) {
     return NextResponse.json({ error: desconto.erro }, { status: 400 });
