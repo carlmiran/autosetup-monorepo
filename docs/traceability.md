@@ -770,3 +770,21 @@ software.
 
 Testado: typecheck+lint(0 erros, corrigido erro real de aspas em
 JSX)+build de produção limpos (21 rotas).
+
+## Redirecionamento honesto pra quem não tem negócio (09/08/2026)
+
+Fonte: Carlos perguntou o que aconteceria se alguém preenchesse "nicho"
+com algo que não é negócio (ex: "mãe solteira", "desempregado"). Buraco
+real identificado: o diagnóstico pressupõe negócio existente, mas o
+formulário nunca direcionava quem não tem um.
+
+- `/diagnostico`: aviso no topo do formulário, antes de qualquer campo
+  — explica que o diagnóstico é pra quem tem/está começando negócio, e
+  linka pro Manual do Indicador (`/radar/manual`) pra quem quer renda
+  sem ter negócio próprio (caminho que já existia, só não era indicado)
+- Prompts do diagnóstico (ambos): instrução nova — se "nicho" não
+  parecer negócio de verdade, o resumo reconhece isso com gentileza e
+  menciona o caminho de indicador, em vez de fingir que existe
+  oportunidade de negócio que não existe
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.

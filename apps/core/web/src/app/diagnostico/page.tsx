@@ -253,6 +253,15 @@ export default function DiagnosticoPage() {
           </div>
         )}
 
+        <div className="border border-panel-line rounded-lg p-4 bg-panel text-xs text-paper-dim mb-2">
+          Esse diagnóstico é pra quem já tem (ou está começando) um negócio
+          próprio. Ainda não tem negócio, mas quer uma renda?{" "}
+          <Link href="/radar/manual" className="underline text-amber">
+            Veja como ganhar comissão indicando negócios pro AutoSetup
+          </Link>{" "}
+          — não precisa de CNPJ nem experiência de vendas.
+        </div>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <SecaoDivisoria numero="01" titulo="Contato" />
           <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
