@@ -470,8 +470,7 @@ export default function DiagnosticoPage() {
 
           <CampoTextoComAudio
             label="Qual sua maior dificuldade hoje pra atrair ou converter clientes?"
-            ajuda="Pense em algo concreto que aconteceu recentemente — não precisa ser bonito, precisa ser real."
-            required
+            ajuda="Pense em algo concreto que aconteceu recentemente — não precisa ser bonito, precisa ser real. Se isso não se aplica à sua situação, pode deixar em branco."
             value={form.maiorDificuldade}
             onChange={(v) => setForm({ ...form, maiorDificuldade: v })}
           />

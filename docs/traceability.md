@@ -788,3 +788,33 @@ formulário nunca direcionava quem não tem um.
   oportunidade de negócio que não existe
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Removida obrigatoriedade de pergunta de negócio (09/08/2026)
+
+Fonte: Carlos testou preenchendo nicho "desempregado" e constatou que
+ainda era obrigado a responder "qual sua maior dificuldade pra atrair
+clientes" — pergunta que não faz sentido pra quem não tem negócio.
+
+- `maiorDificuldade` deixou de ser obrigatório: removido `required` do
+  campo no formulário, removido da validação do backend
+  (`api/diagnostico/route.ts`), tipo atualizado pra opcional em
+  `lib/diagnostico.ts`
+- Prompts do diagnóstico (ambos) tratam a ausência explicitamente:
+  "Maior dificuldade: não informada (pode ser sinal de que a pessoa não
+  está numa situação de negócio tradicional)" — nunca quebra nem finge
+  que a resposta existe
+- Campos obrigatórios agora: nome, cidade, nicho — os mínimos que
+  fazem sentido pra qualquer situação, sem forçar pergunta
+  business-specific
+
+**Decisão consciente, comunicada a Carlos**: não construí "orientação
+de amparo pra qualquer situação de vida" — isso extrapola o que o
+AutoSetup é/deveria fingir ser, e poderia ser prejudicial (dar sensação
+de ajuda real onde não existe recurso de verdade) pra alguém numa
+situação vulnerável. A resposta honesta pra quem não tem negócio
+continua sendo o direcionamento pro caminho de indicador, já
+implementado ontem.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
+que o formulário aceita envio sem "maior dificuldade" e continua
+recusando sem os 3 campos mínimos reais.

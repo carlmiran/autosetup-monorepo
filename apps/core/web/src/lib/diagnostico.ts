@@ -21,7 +21,7 @@ export interface DiagnosticoInput {
   temGoogleBusiness: boolean;
   numeroAvaliacoesGoogle: number | null;
   notaMediaGoogle: number | null;
-  maiorDificuldade: string;
+  maiorDificuldade?: string;
   /** Perguntas mais profundas — opcionais, texto digitado OU transcrito
    * de áudio (a pessoa pode ter respondido por voz). Pedido de Carlos:
    * revelar dores reais do dia a dia, não só presença digital. */
@@ -157,7 +157,7 @@ DADOS REAIS INFORMADOS PELO DONO DO NEGÓCIO:
 - Tem perfil no Google Business: ${input.temGoogleBusiness ? "sim" : "não"}
 - Número de avaliações no Google: ${input.numeroAvaliacoesGoogle ?? "não informado"}
 - Nota média no Google: ${input.notaMediaGoogle ?? "não informado"}
-- Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
+${input.maiorDificuldade ? `- Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"` : "- Maior dificuldade: não informada (pode ser sinal de que a pessoa não está numa situação de negócio tradicional)"}
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) + "\n" : ""}
 ${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) + "\n" : ""}
 ${linhasHistorico(input) ? "\nESSA PESSOA JÁ FEZ DIAGNÓSTICO ANTES:\n" + linhasHistorico(input) + "\nReconheça isso naturalmente no resumo (ex: \"desde a última vez, percebo que...\"), sem repetir o texto anterior literalmente. Isso é memória real, não invenção.\n" : ""}
@@ -235,7 +235,7 @@ DADOS INFORMADOS PELO DONO DO NEGÓCIO (trate como ponto de partida, não como v
 - Tem perfil no Google Business: ${input.temGoogleBusiness ? "sim" : "não"}
 - Número de avaliações no Google (segundo o dono): ${input.numeroAvaliacoesGoogle ?? "não informado"}
 - Nota média no Google (segundo o dono): ${input.notaMediaGoogle ?? "não informado"}
-- Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"
+${input.maiorDificuldade ? `- Maior dificuldade relatada pelo dono: "${input.maiorDificuldade}"` : "- Maior dificuldade: não informada (pode ser sinal de que a pessoa não está numa situação de negócio tradicional)"}
 ${linhasContextoProfundo(input) ? "\n" + linhasContextoProfundo(input) : ""}
 ${linhasPerguntasNicho(input) ? "\nEnvolvimento com o estado da arte do nicho:\n" + linhasPerguntasNicho(input) : ""}
 ${linhasHistorico(input) ? "\nESSA PESSOA JÁ FEZ DIAGNÓSTICO ANTES:\n" + linhasHistorico(input) + "\nReconheça isso naturalmente, sem repetir texto anterior literalmente." : ""}

@@ -160,9 +160,11 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Partial<DiagnosticoInput> & DadosContato;
 
   // Validação real — não deixa passar diagnóstico com dado essencial faltando.
-  if (!body.nomeNegocio || !body.cidade || !body.nicho || !body.maiorDificuldade) {
+  // "maiorDificuldade" não é mais obrigatório: força pergunta de negócio
+  // em quem pode não ter negócio nenhum (ex: nicho "desempregado").
+  if (!body.nomeNegocio || !body.cidade || !body.nicho) {
     return NextResponse.json(
-      { error: "Preencha nome do negócio, cidade, nicho e maior dificuldade." },
+      { error: "Preencha nome do negócio, cidade e nicho." },
       { status: 400 },
     );
   }
@@ -179,7 +181,7 @@ export async function POST(request: Request) {
     numeroAvaliacoesGoogle:
       typeof body.numeroAvaliacoesGoogle === "number" ? body.numeroAvaliacoesGoogle : null,
     notaMediaGoogle: typeof body.notaMediaGoogle === "number" ? body.notaMediaGoogle : null,
-    maiorDificuldade: body.maiorDificuldade,
+    maiorDificuldade: body.maiorDificuldade || undefined,
     rotinaDiaria: body.rotinaDiaria || undefined,
     oQueAtrapalha: body.oQueAtrapalha || undefined,
     sobrecarga: body.sobrecarga || undefined,
