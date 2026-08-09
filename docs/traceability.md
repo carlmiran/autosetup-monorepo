@@ -747,3 +747,26 @@ entrada mais barata e não precisa de desconto extra pra ser aceito.
 Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
 que tentar aplicar no Raio-X recusa com mensagem clara, sem consumir o
 código.
+
+## Radar com horário real + Manual enriquecido (08/08/2026)
+
+Fonte: Carlos perguntou como o AutoSetup deveria atuar quando a rota do
+Radar mostra nichos variados, e pediu estratégia de vendedor de
+software.
+
+- **Esclarecimento**: a análise do Radar já se adapta a qualquer nicho
+  por construção (IA + pesquisa real por negócio, não template fixo) —
+  nenhuma mudança de código necessária pra isso
+- `lib/googlePlaces.ts`: campo `regularOpeningHours` adicionado ao
+  Nearby Search — Radar agora mostra "Aberto agora"/"Fechado agora" na
+  lista, informação real de quando visitar
+- `/radar/manual`: duas seções novas (renumerado 01-10):
+  - "Antes de visitar — o que checar" (usar o horário do Radar, olhar
+    perfil digital do negócio, ler avaliação negativa como gancho,
+    evitar hora de pico)
+  - "O que um bom vendedor de software faz diferente" (escutar mais
+    que falar, diagnóstico é demonstração não venda, perguntar o
+    porquê de um "não", nunca insistir na hora)
+
+Testado: typecheck+lint(0 erros, corrigido erro real de aspas em
+JSX)+build de produção limpos (21 rotas).

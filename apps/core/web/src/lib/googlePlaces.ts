@@ -32,6 +32,9 @@ export interface NegocioProximo {
   categoria?: string;
   latitude?: number;
   longitude?: number;
+  /** Texto real de horário de funcionamento (ex: "Aberto até 19:00"),
+   * vindo direto do Google — ajuda a saber quando visitar. */
+  statusHorario?: string;
 }
 
 interface PlaceNearbyResultado {
@@ -42,6 +45,7 @@ interface PlaceNearbyResultado {
   userRatingCount?: number;
   primaryTypeDisplayName?: { text?: string };
   location?: { latitude?: number; longitude?: number };
+  regularOpeningHours?: { weekdayDescriptions?: string[]; openNow?: boolean };
 }
 
 /** Busca negócios reais perto de uma coordenada (estilo "pedir um Uber")
@@ -77,7 +81,8 @@ export async function buscarNegociosProximos(
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask":
           "places.id,places.displayName,places.formattedAddress,places.rating," +
-          "places.userRatingCount,places.primaryTypeDisplayName,places.location",
+          "places.userRatingCount,places.primaryTypeDisplayName,places.location," +
+          "places.regularOpeningHours",
       },
       body: JSON.stringify(body),
     });
@@ -99,6 +104,12 @@ export async function buscarNegociosProximos(
         categoria: p.primaryTypeDisplayName?.text,
         latitude: p.location?.latitude,
         longitude: p.location?.longitude,
+        statusHorario:
+          p.regularOpeningHours?.openNow !== undefined
+            ? p.regularOpeningHours.openNow
+              ? "Aberto agora"
+              : "Fechado agora"
+            : undefined,
       }));
   } catch (err) {
     console.error("[googlePlaces] falha no nearby:", err);

@@ -90,7 +90,21 @@ export default function ManualRadarPage() {
           </ol>
         </Secao>
 
-        <Secao numero="04" titulo="Como abordar o dono do negócio">
+        <Secao numero="04" titulo="Antes de visitar — o que checar">
+          <p>
+            O Radar já mostra se o negócio está aberto agora (verde) ou
+            fechado (vermelho) — não vá numa hora fechada, parece básico mas
+            é o erro mais comum. Além disso, antes de sair de casa:
+          </p>
+          <ul className="list-disc pl-5 flex flex-col gap-2">
+            <li>Leia a análise que a IA gerou pra aquele negócio específico — ela já pesquisou a presença digital real dele.</li>
+            <li>Dê uma olhada rápida no perfil do Instagram/Google dele, se existir — veja se tem post recente, se responde comentário, se tem foto do local.</li>
+            <li>Se a avaliação no Google for baixa (abaixo de 4), veja se dá pra ler alguma reclamação real — pode virar um gancho de conversa honesto.</li>
+            <li>Prefira horário de menor movimento (evite hora de pico do tipo de negócio — ex: salão no sábado de manhã, restaurante na hora do almoço).</li>
+          </ul>
+        </Secao>
+
+        <Secao numero="05" titulo="Como abordar o dono do negócio">
           <p>
             Não decore um discurso de vendedor. Fale como se estivesse
             avisando um conhecido de algo útil. Um jeito simples de começar:
@@ -110,7 +124,21 @@ export default function ManualRadarPage() {
           </p>
         </Secao>
 
-        <Secao numero="05" titulo="O que explicar sobre o diagnóstico">
+        <Secao numero="06" titulo="O que um bom vendedor de software faz diferente">
+          <p>
+            Vender diagnóstico digital não é vender produto físico. Algumas
+            regras que fazem diferença real:
+          </p>
+          <ul className="list-disc pl-5 flex flex-col gap-2">
+            <li><strong className="text-paper">Escute mais do que fale.</strong> Pergunte como está o movimento, se ele já tentou alguma coisa online antes — a resposta dele te diz exatamente qual parte do diagnóstico vai importar mais pra ele.</li>
+            <li><strong className="text-paper">Não vá com discurso pronto de venda.</strong> Vá com curiosidade genuína sobre o negócio dele. Isso é o oposto de parecer vendedor chato.</li>
+            <li><strong className="text-paper">O diagnóstico é a demonstração, não a venda.</strong> Você não está pedindo pra ele comprar nada na primeira conversa — está oferecendo algo grátis e útil. A venda (se acontecer) vem depois, quando ele já viu valor de verdade.</li>
+            <li><strong className="text-paper">Se ele disser não, pergunte por quê — com calma.</strong> Às vezes não é &quot;não&quot; de verdade, é &quot;não entendi&quot; ou &quot;não é hora&quot;. Isso te ajuda a saber se vale voltar depois.</li>
+            <li><strong className="text-paper">Não insista na hora.</strong> Se ele estiver ocupado atendendo cliente, ofereça voltar em outro momento ou mandar por WhatsApp — pressa espanta.</li>
+          </ul>
+        </Secao>
+
+        <Secao numero="07" titulo="O que explicar sobre o diagnóstico">
           <ul className="list-disc pl-5 flex flex-col gap-2">
             <li>É <strong className="text-paper">100% gratuito</strong>, sem compromisso nenhum.</li>
             <li>Leva poucos minutos — dá pra responder digitando ou falando (tem opção de áudio).</li>
@@ -129,7 +157,7 @@ export default function ManualRadarPage() {
           </div>
         </Secao>
 
-        <Secao numero="06" titulo="O que NÃO prometer">
+        <Secao numero="08" titulo="O que NÃO prometer">
           <p>
             Isso é importante pra sua credibilidade, não só regra da empresa:
           </p>
@@ -140,7 +168,7 @@ export default function ManualRadarPage() {
           </ul>
         </Secao>
 
-        <Secao numero="07" titulo="Como funciona sua comissão, hoje">
+        <Secao numero="09" titulo="Como funciona sua comissão, hoje">
           <p>
             Sendo direto: o sistema já rastreia qual venda veio de qual
             indicação (o &quot;?ref=SEUCODIGO&quot; no link), mas{" "}
@@ -161,7 +189,7 @@ export default function ManualRadarPage() {
           </p>
         </Secao>
 
-        <Secao numero="08" titulo="Perguntas comuns">
+        <Secao numero="10" titulo="Perguntas comuns">
           <p>
             <strong className="text-paper">&quot;E se a pessoa perguntar algo técnico que eu não sei responder?&quot;</strong>
             <br />

@@ -17,6 +17,7 @@ interface NegocioProximo {
   avaliacoes?: number;
   nota?: number;
   categoria?: string;
+  statusHorario?: string;
 }
 
 interface AnaliseRadar {
@@ -181,6 +182,15 @@ export default function RadarPage() {
                 {n.avaliacoes !== undefined && (
                   <p className="text-xs text-paper-dim mt-1">
                     ⭐ {n.nota ?? "—"} ({n.avaliacoes} avaliações)
+                  </p>
+                )}
+                {n.statusHorario && (
+                  <p
+                    className={`text-xs mt-1 font-mono ${
+                      n.statusHorario === "Aberto agora" ? "text-mint" : "text-rust"
+                    }`}
+                  >
+                    {n.statusHorario}
                   </p>
                 )}
               </button>
