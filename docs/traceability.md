@@ -990,3 +990,26 @@ deploy — exatamente o motivo de sempre testar assim, não confiar que
 Testado: typecheck+lint(0 erros)+build de produção limpos (26 rotas).
 Cruzamento de WhatsApp validado com dado real, com e sem DDI, no D1 de
 produção.
+
+## Parecer vira sequência guiada (11/08/2026)
+
+Fonte: Carlos pediu evolução do parecer de prioridade — depois de
+resolvido e comprovado, mostrar o próximo passo da mesma forma, com
+explicação do que fica destravado.
+
+- `lib/gerarParecer.ts`: agora gera até 3 prioridades em sequência
+  (não mais uma só), cada uma com `oQueDestrava` (o que fica possível
+  no negócio assim que aquela prioridade for resolvida)
+- `clientes_indicador` (D1): novas colunas `pareceres_json` (a
+  sequência inteira, gerada uma vez) e `parecer_indice` (qual passo
+  está ativo)
+- `/api/indicadores/parecer`: POST gera a sequência só na primeira
+  vez (não regenera se já existe); PATCH avança o índice quando o
+  vendedor confirma que o passo atual foi resolvido de verdade
+- Card de "Meus Clientes": mostra só o passo atual ("Passo 1 de 3 —
+  ..."), com botão "✓ Marcar resolvido e ver próximo passo" (pede
+  confirmação antes de avançar — nunca avança sozinho)
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (26 rotas).
+Gravação da sequência e avanço de índice validados com dado real no D1
+de produção antes do deploy.

@@ -12,10 +12,16 @@ import { Logo } from "@/components/Logo";
 import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 import { EntradaComPin } from "@/components/EntradaComPin";
 
-interface Parecer {
+interface ItemParecer {
   prioridade: string;
   porQue: string;
+  oQueDestrava: string;
   mensagemPronta: string;
+}
+
+interface EstadoParecer {
+  itens: ItemParecer[];
+  indice: number;
 }
 
 interface ClienteIndicador {
@@ -123,7 +129,7 @@ interface CardClienteProps {
   copiado: boolean;
   compacto?: boolean;
   gerandoParecer: boolean;
-  parecer: Parecer | null;
+  parecer: EstadoParecer | null;
   erroParecer: string | null;
   onIniciarEdicao: () => void;
   onMudarFormEdicao: (f: FormularioCliente) => void;
@@ -132,6 +138,7 @@ interface CardClienteProps {
   onCopiar: () => void;
   onApagar: () => void;
   onGerarParecer: () => void;
+  onAvancarParecer: () => void;
 }
 
 function CardCliente({
@@ -152,6 +159,7 @@ function CardCliente({
   onCopiar,
   onApagar,
   onGerarParecer,
+  onAvancarParecer,
 }: CardClienteProps) {
   const atrasado = c.data_followup && c.data_followup < dataHoje;
   const hojeMarcado = c.data_followup === dataHoje;
@@ -243,14 +251,30 @@ function CardCliente({
             </button>
           )}
           {erroParecer && <p className="text-xs text-rust mt-2">{erroParecer}</p>}
-          {parecer && (
+          {parecer && parecer.indice < parecer.itens.length && (
             <div className="bg-ink border border-amber-dim rounded-lg p-3 flex flex-col gap-2">
               <p className="font-mono text-[10px] tracking-widest uppercase text-amber">
-                Prioridade: {parecer.prioridade}
+                Passo {parecer.indice + 1} de {parecer.itens.length} — {parecer.itens[parecer.indice].prioridade}
               </p>
-              <p className="text-xs text-paper-dim">{parecer.porQue}</p>
-              <p className="text-sm italic border-t border-panel-line pt-2">{parecer.mensagemPronta}</p>
+              <p className="text-xs text-paper-dim">{parecer.itens[parecer.indice].porQue}</p>
+              <p className="text-xs text-mint">
+                Ao resolver: {parecer.itens[parecer.indice].oQueDestrava}
+              </p>
+              <p className="text-sm italic border-t border-panel-line pt-2">
+                {parecer.itens[parecer.indice].mensagemPronta}
+              </p>
+              <button
+                type="button"
+                onClick={onAvancarParecer}
+                disabled={gerandoParecer}
+                className="font-mono text-[10px] uppercase tracking-widest text-amber underline self-start disabled:opacity-40"
+              >
+                ✓ Marcar resolvido e ver próximo passo
+              </button>
             </div>
+          )}
+          {parecer && parecer.indice >= parecer.itens.length && (
+            <p className="text-xs text-mint">✓ Todos os passos identificados foram resolvidos.</p>
           )}
         </div>
       )}
@@ -304,7 +328,7 @@ export default function MeusClientesPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [copiadoId, setCopiadoId] = useState<number | null>(null);
   const [gerandoParecerId, setGerandoParecerId] = useState<number | null>(null);
-  const [pareceres, setPareceres] = useState<Record<number, Parecer>>({});
+  const [pareceres, setPareceres] = useState<Record<number, EstadoParecer>>({});
   const [errosParecer, setErrosParecer] = useState<Record<number, string>>({});
   const [visualizacao, setVisualizacao] = useState<"lista" | "kanban">("lista");
 
@@ -523,9 +547,31 @@ export default function MeusClientesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
       });
-      const data = (await res.json()) as Parecer & { error?: string };
+      const data = (await res.json()) as EstadoParecer & { error?: string };
       if (!res.ok) {
         setErrosParecer((prev) => ({ ...prev, [clienteId]: data.error ?? "Erro ao gerar parecer." }));
+      } else {
+        setPareceres((prev) => ({ ...prev, [clienteId]: data }));
+      }
+    } catch {
+      setErrosParecer((prev) => ({ ...prev, [clienteId]: "Não foi possível conectar ao servidor." }));
+    } finally {
+      setGerandoParecerId(null);
+    }
+  }
+
+  async function avancarParecer(clienteId: number) {
+    if (!window.confirm("Confirma que essa prioridade foi resolvida de verdade? Isso libera o próximo passo.")) return;
+    setGerandoParecerId(clienteId);
+    try {
+      const res = await fetch("/api/indicadores/parecer", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
+      });
+      const data = (await res.json()) as EstadoParecer & { error?: string };
+      if (!res.ok) {
+        setErrosParecer((prev) => ({ ...prev, [clienteId]: data.error ?? "Erro ao avançar." }));
       } else {
         setPareceres((prev) => ({ ...prev, [clienteId]: data }));
       }
@@ -589,6 +635,7 @@ export default function MeusClientesPage() {
       onCopiar: () => copiar(c),
       onApagar: () => apagarCliente(c.id),
       onGerarParecer: () => gerarParecer(c.id),
+      onAvancarParecer: () => avancarParecer(c.id),
     };
   }
 

@@ -1,8 +1,10 @@
 // AUTOSETUP — apps/core/web/src/lib/gerarParecer.ts
 // Preenche as "lacunas" entre o diagnóstico real do cliente e as
-// anotações do vendedor sobre ele, e devolve UM parecer de prioridade
-// — o mesmo tipo de coisa que Claude faz com Carlos quando aponta que
-// "CNPJ é o bloqueio real" em vez de listar 10 pendências soltas.
+// anotações do vendedor sobre ele, e devolve uma SEQUÊNCIA de
+// prioridades — a primeira é mostrada agora, as seguintes só aparecem
+// depois que a anterior for marcada como resolvida de verdade. Mesmo
+// tipo de coisa que Claude faz com Carlos ao apontar um bloqueio real
+// de cada vez, não uma lista de 10 pendências soltas.
 // Fonte: pedido de Carlos (11/08/2026).
 //
 // REGRA DE HONESTIDADE: só usa o que está de fato no diagnóstico
@@ -19,9 +21,10 @@ export interface DadosParecer {
   notasVendedor?: string;
 }
 
-export interface Parecer {
+export interface ItemParecer {
   prioridade: string;
   porQue: string;
+  oQueDestrava: string;
   mensagemPronta: string;
 }
 
@@ -36,19 +39,24 @@ MAIOR DIFICULDADE QUE O PRÓPRIO DONO RELATOU:
 
 ${dados.notasVendedor ? `ANOTAÇÕES REAIS DE QUEM ESTÁ ACOMPANHANDO ESSE CLIENTE:\n"${dados.notasVendedor}"` : "Nenhuma anotação adicional do vendedor sobre esse cliente ainda."}
 
-TAREFA: cruze essas duas fontes (o diagnóstico e as anotações) e identifique UMA ÚNICA prioridade — a coisa mais urgente que esse negócio precisa resolver agora, não uma lista. Pense como alguém dizendo pra um amigo "olha, de tudo que vi, isso aqui é o que mais importa resolver primeiro" — direto, sem rodeio.
+TAREFA: cruze essas duas fontes (o diagnóstico e as anotações) e monte uma SEQUÊNCIA de até 3 prioridades, na ordem em que fazem sentido resolver — cada uma só faz sentido depois da anterior estar resolvida. Pense como alguém dizendo pra um amigo "primeiro resolve isso, porque sem isso o resto não adianta — depois disso resolvido, aí sim parte pro próximo".
 
-REGRA INEGOCIÁVEL: só use o que está de fato escrito no diagnóstico e nas anotações acima. Nunca invente um problema que nenhum dos dois mencionou.
+REGRA INEGOCIÁVEL: só use o que está de fato escrito no diagnóstico e nas anotações acima. Nunca invente um problema que nenhum dos dois mencionou. Se só der pra identificar 1 ou 2 prioridades reais (não force uma terceira artificial), retorne só essas.
 
 Responda ESTRITAMENTE em JSON válido, sem markdown:
 {
-  "prioridade": "a UMA prioridade, em poucas palavras",
-  "porQue": "1-2 frases explicando por que essa é a prioridade real, citando o que embasa isso (diagnóstico e/ou anotação)",
-  "mensagemPronta": "uma mensagem curta, pronta pra mandar pro cliente por WhatsApp, terminando perguntando se ele quer resolver isso agora"
+  "itens": [
+    {
+      "prioridade": "a prioridade desse passo, em poucas palavras",
+      "porQue": "1-2 frases explicando por que essa é a prioridade real nesse momento, citando o que embasa isso",
+      "oQueDestrava": "1 frase — o que fica possível/melhor no negócio assim que essa prioridade for resolvida de verdade",
+      "mensagemPronta": "uma mensagem curta, pronta pra mandar pro cliente por WhatsApp, terminando perguntando se ele quer resolver isso agora"
+    }
+  ]
 }`;
 }
 
-export async function gerarParecer(dados: DadosParecer): Promise<Parecer> {
+export async function gerarParecer(dados: DadosParecer): Promise<ItemParecer[]> {
   const resultado = await completeViaGateway(montarPrompt(dados));
 
   let parsed: unknown;
@@ -58,14 +66,20 @@ export async function gerarParecer(dados: DadosParecer): Promise<Parecer> {
     throw new Error("O modelo não retornou JSON válido.");
   }
 
-  if (typeof parsed !== "object" || parsed === null) {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    !("itens" in parsed) ||
+    !Array.isArray((parsed as { itens: unknown }).itens)
+  ) {
     throw new Error("Formato de resposta inesperado.");
   }
 
-  const p = parsed as Partial<Parecer>;
-  return {
-    prioridade: p.prioridade ?? "",
-    porQue: p.porQue ?? "",
-    mensagemPronta: p.mensagemPronta ?? "",
-  };
+  const itens = (parsed as { itens: Partial<ItemParecer>[] }).itens;
+  return itens.map((i) => ({
+    prioridade: i.prioridade ?? "",
+    porQue: i.porQue ?? "",
+    oQueDestrava: i.oQueDestrava ?? "",
+    mensagemPronta: i.mensagemPronta ?? "",
+  }));
 }
