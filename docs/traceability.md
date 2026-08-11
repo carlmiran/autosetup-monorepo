@@ -861,3 +861,16 @@ prioridade/agendamento, estilo Kanban).
   celular
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
+
+## Ícone de WhatsApp no card (11/08/2026)
+
+Fonte: Carlos pediu que o link de WhatsApp em cada card do "Meus
+Clientes" fosse um ícone, não texto visível — já existia como link de
+texto ("WhatsApp"), agora é um ícone real (SVG inline, sem dependência
+nova), com `aria-label`/`title` pra acessibilidade. Comportamento
+continua o mesmo: abre a conversa direto no WhatsApp do cliente (nunca
+compartilha nada automaticamente), útil pra coletar informação extra,
+entregar material, ou copiar um áudio do cliente pra colar depois no
+campo de anotações (via o botão Editar já existente).
+
+Testado: typecheck+lint(0 erros)+build de produção limpos.
