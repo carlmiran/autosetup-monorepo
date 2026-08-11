@@ -818,3 +818,26 @@ implementado ontem.
 Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
 que o formulário aceita envio sem "maior dificuldade" e continua
 recusando sem os 3 campos mínimos reais.
+
+## Meus Clientes: editar, apagar, compartilhar (10/08/2026)
+
+Fonte: Carlos viu a página real (print do celular, cliente "Fabio Wey"
+cadastrado) e pediu edição completa — hoje só dava pra criar.
+
+- `PATCH /api/indicadores/clientes`: edita nome/WhatsApp/notas/follow-up
+  de um cliente existente — sempre filtrado por `codigo_indicacao`
+  também (um indicador só edita o próprio registro, mesmo sabendo o id
+  de outro)
+- `DELETE /api/indicadores/clientes`: apaga, mesma trava de código
+- `/radar/meus-clientes`: cada cliente ganhou 4 ações — Editar (form
+  inline pré-preenchido), Copiar (formata as informações em texto e
+  copia pra área de transferência — funciona com qualquer app que o
+  indicador queira colar depois), Abrir WhatsApp (link direto
+  `wa.me/` quando tem WhatsApp cadastrado), Apagar (com confirmação)
+
+Bug real de lint corrigido no processo: mesmo padrão de sempre
+(setState síncrono em efeito via função nomeada) — IIFE inline de novo.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
+Ciclo completo (inserir→editar→apagar) testado com dado real no D1 de
+produção antes do deploy.
