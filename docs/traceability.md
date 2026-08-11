@@ -958,3 +958,35 @@ inserido/consultado/removido no D1 de produção antes do deploy. Teste
 local do endpoint de PIN bateu na limitação conhecida do
 `getCloudflareContext` fora do ambiente real (mesma limitação já vista
 antes nesta sessão) — validação real feita direto no D1 de produção.
+
+## Parecer de prioridade — diagnóstico + anotação do vendedor (11/08/2026)
+
+Fonte: Carlos pediu — cruzar o diagnóstico real do cliente com as
+anotações que o vendedor já tem sobre ele, e devolver UMA prioridade
+clara pro cliente resolver (mesmo formato que Claude usa com Carlos:
+apontar o bloqueio real, não listar 10 pendências soltas).
+
+- `lib/gerarParecer.ts`: recebe diagnóstico real (resumo salvo +
+  maior dificuldade) + anotação do vendedor (se houver), devolve UMA
+  prioridade + porquê + mensagem pronta pra mandar no WhatsApp,
+  terminando perguntando se o cliente quer resolver agora. Regra de
+  honestidade: só usa o que está de fato escrito nas duas fontes,
+  nunca inventa problema que nenhuma delas mencionou
+- `/api/indicadores/parecer`: busca o cliente, cruza com `leads` pelo
+  WhatsApp (usando a correção abaixo), chama o motor
+- Botão "✨ Gerar parecer de prioridade" no card de "Meus Clientes" —
+  só aparece quando já existe diagnóstico real casado (reaproveita o
+  cruzamento de funil construído antes)
+
+**Bug real encontrado e corrigido nesta mesma sessão, antes de
+publicar**: a normalização de WhatsApp usada pro cruzamento (aqui e em
+`/api/indicadores/clientes`) só removia caractere não-numérico —
+`5535977776666` (com DDI) e `35977776666` (sem DDI) são o mesmo número
+mas não batiam. Corrigido pra comparar só os últimos 11 dígitos.
+Achado testando com dado real inserido no D1 de produção antes do
+deploy — exatamente o motivo de sempre testar assim, não confiar que
+"deveria funcionar".
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (26 rotas).
+Cruzamento de WhatsApp validado com dado real, com e sem DDI, no D1 de
+produção.

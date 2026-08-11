@@ -12,6 +12,12 @@ import { Logo } from "@/components/Logo";
 import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 import { EntradaComPin } from "@/components/EntradaComPin";
 
+interface Parecer {
+  prioridade: string;
+  porQue: string;
+  mensagemPronta: string;
+}
+
 interface ClienteIndicador {
   id: number;
   nome_cliente: string;
@@ -116,12 +122,16 @@ interface CardClienteProps {
   salvandoEdicao: boolean;
   copiado: boolean;
   compacto?: boolean;
+  gerandoParecer: boolean;
+  parecer: Parecer | null;
+  erroParecer: string | null;
   onIniciarEdicao: () => void;
   onMudarFormEdicao: (f: FormularioCliente) => void;
   onSalvarEdicao: () => void;
   onCancelarEdicao: () => void;
   onCopiar: () => void;
   onApagar: () => void;
+  onGerarParecer: () => void;
 }
 
 function CardCliente({
@@ -132,12 +142,16 @@ function CardCliente({
   salvandoEdicao,
   copiado,
   compacto,
+  gerandoParecer,
+  parecer,
+  erroParecer,
   onIniciarEdicao,
   onMudarFormEdicao,
   onSalvarEdicao,
   onCancelarEdicao,
   onCopiar,
   onApagar,
+  onGerarParecer,
 }: CardClienteProps) {
   const atrasado = c.data_followup && c.data_followup < dataHoje;
   const hojeMarcado = c.data_followup === dataHoje;
@@ -216,6 +230,31 @@ function CardCliente({
       )}
       {c.notas && <p className="text-sm mt-2">{c.notas}</p>}
 
+      {c.fez_diagnostico && !compacto && (
+        <div className="mt-3 pt-3 border-t border-panel-line">
+          {!parecer && (
+            <button
+              type="button"
+              onClick={onGerarParecer}
+              disabled={gerandoParecer}
+              className="font-mono text-[10px] uppercase tracking-widest text-amber border border-amber-dim rounded-md px-2 py-1.5 disabled:opacity-40"
+            >
+              {gerandoParecer ? "Analisando..." : "✨ Gerar parecer de prioridade"}
+            </button>
+          )}
+          {erroParecer && <p className="text-xs text-rust mt-2">{erroParecer}</p>}
+          {parecer && (
+            <div className="bg-ink border border-amber-dim rounded-lg p-3 flex flex-col gap-2">
+              <p className="font-mono text-[10px] tracking-widest uppercase text-amber">
+                Prioridade: {parecer.prioridade}
+              </p>
+              <p className="text-xs text-paper-dim">{parecer.porQue}</p>
+              <p className="text-sm italic border-t border-panel-line pt-2">{parecer.mensagemPronta}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mt-3 pt-3 border-t border-panel-line flex-wrap">
         <button
           type="button"
@@ -264,6 +303,9 @@ export default function MeusClientesPage() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [copiadoId, setCopiadoId] = useState<number | null>(null);
+  const [gerandoParecerId, setGerandoParecerId] = useState<number | null>(null);
+  const [pareceres, setPareceres] = useState<Record<number, Parecer>>({});
+  const [errosParecer, setErrosParecer] = useState<Record<number, string>>({});
   const [visualizacao, setVisualizacao] = useState<"lista" | "kanban">("lista");
 
   const [form, setForm] = useState<FormularioCliente>(formularioVazio);
@@ -472,6 +514,28 @@ export default function MeusClientesPage() {
     }
   }
 
+  async function gerarParecer(clienteId: number) {
+    setGerandoParecerId(clienteId);
+    setErrosParecer((prev) => ({ ...prev, [clienteId]: "" }));
+    try {
+      const res = await fetch("/api/indicadores/parecer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
+      });
+      const data = (await res.json()) as Parecer & { error?: string };
+      if (!res.ok) {
+        setErrosParecer((prev) => ({ ...prev, [clienteId]: data.error ?? "Erro ao gerar parecer." }));
+      } else {
+        setPareceres((prev) => ({ ...prev, [clienteId]: data }));
+      }
+    } catch {
+      setErrosParecer((prev) => ({ ...prev, [clienteId]: "Não foi possível conectar ao servidor." }));
+    } finally {
+      setGerandoParecerId(null);
+    }
+  }
+
   useEffect(() => {
     if (!codigoConfirmado) return;
     (async () => {
@@ -515,12 +579,16 @@ export default function MeusClientesPage() {
       salvandoEdicao,
       copiado: copiadoId === c.id,
       compacto,
+      gerandoParecer: gerandoParecerId === c.id,
+      parecer: pareceres[c.id] ?? null,
+      erroParecer: errosParecer[c.id] || null,
       onIniciarEdicao: () => iniciarEdicao(c),
       onMudarFormEdicao: setFormEdicao,
       onSalvarEdicao: () => salvarEdicao(c.id),
       onCancelarEdicao: cancelarEdicao,
       onCopiar: () => copiar(c),
       onApagar: () => apagarCliente(c.id),
+      onGerarParecer: () => gerarParecer(c.id),
     };
   }
 

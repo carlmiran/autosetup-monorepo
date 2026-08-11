@@ -13,8 +13,13 @@ import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verificarRateLimit } from "@/lib/rateLimit";
 
+/** Normaliza pra comparação — pega só os últimos 11 dígitos (DDD +
+ * número), ignorando se tem "55" (DDI) na frente ou não. Bug real
+ * pego em teste: "5535977776666" e "35977776666" são o mesmo número,
+ * mas não batiam com normalização ingênua (só remover não-dígito). */
 function normalizarWhatsapp(v: string): string {
-  return v.replace(/\D/g, "");
+  const somenteDigitos = v.replace(/\D/g, "");
+  return somenteDigitos.slice(-11);
 }
 
 export async function GET(request: Request) {
