@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 
 function Secao({ numero, titulo, children }: { numero: string; titulo: string; children: React.ReactNode }) {
   return (
@@ -36,6 +37,7 @@ export default function ManualRadarPage() {
           </p>
         </div>
       </header>
+      <AvisoIndicadores />
 
       <main className="mx-auto max-w-2xl px-6 py-10 flex flex-col gap-10">
         <Secao numero="01" titulo="O que é o AutoSetup, em uma frase">

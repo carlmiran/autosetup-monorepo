@@ -9,6 +9,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 
 interface NegocioProximo {
   id: string;
@@ -131,6 +132,7 @@ export default function RadarPage() {
           </Link>
         </div>
       </header>
+      <AvisoIndicadores />
 
       <main className="mx-auto max-w-xl px-6 py-10">
         <div className="flex flex-col gap-3 mb-6">

@@ -3,11 +3,15 @@
 // AUTOSETUP — apps/core/web/src/app/radar/meu-desempenho/page.tsx
 // Painel pessoal do indicador — resolve o maior gargalo identificado
 // em 11/08/2026: quem indica trabalhava sem ver o próprio resultado.
-// Sem login, identificado só pelo código, mesmo padrão do resto.
+// Protegido por PIN (mesmo componente de /radar/meus-clientes) porque
+// mostra dado de comissão — sensível o bastante pra não ficar aberto
+// só digitando um código de texto livre.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { AvisoIndicadores } from "@/components/AvisoIndicadores";
+import { EntradaComPin } from "@/components/EntradaComPin";
 
 interface Desempenho {
   diagnosticosGerados: number;
@@ -28,30 +32,44 @@ function Numero({ valor, rotulo, destaque }: { valor: string; rotulo: string; de
 }
 
 export default function MeuDesempenhoPage() {
-  const [codigo, setCodigo] = useState("");
+  const [codigoInicial] = useState(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
+  );
   const [codigoConfirmado, setCodigoConfirmado] = useState("");
   const [dados, setDados] = useState<Desempenho | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function consultar() {
-    if (!codigo.trim()) return;
-    setLoading(true);
-    setErro(null);
-    setCodigoConfirmado(codigo.trim());
-    try {
-      const res = await fetch(`/api/indicadores/desempenho?codigo=${encodeURIComponent(codigo.trim())}`);
-      const data = (await res.json()) as Desempenho & { error?: string };
-      if (!res.ok) {
-        setErro((data as { error?: string }).error ?? "Erro ao carregar.");
-      } else {
-        setDados(data);
+  useEffect(() => {
+    if (!codigoConfirmado) return;
+    (async () => {
+      setLoading(true);
+      setErro(null);
+      try {
+        const res = await fetch(`/api/indicadores/desempenho?codigo=${encodeURIComponent(codigoConfirmado)}`);
+        const data = (await res.json()) as Desempenho & { error?: string };
+        if (!res.ok) {
+          setErro((data as { error?: string }).error ?? "Erro ao carregar.");
+        } else {
+          setDados(data);
+        }
+      } catch {
+        setErro("Não foi possível conectar ao servidor.");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setErro("Não foi possível conectar ao servidor.");
-    } finally {
-      setLoading(false);
-    }
+    })();
+  }, [codigoConfirmado]);
+
+  if (!codigoConfirmado) {
+    return (
+      <EntradaComPin
+        titulo="Meu Desempenho"
+        descricao="Digite seu código de indicador e o PIN pra ver o que suas indicações já geraram."
+        codigoInicial={codigoInicial}
+        onEntrar={(c) => setCodigoConfirmado(c)}
+      />
+    );
   }
 
   return (
@@ -60,32 +78,14 @@ export default function MeuDesempenhoPage() {
         <Logo size={32} />
         <div className="text-center">
           <h1 className="font-display text-xl text-paper">Meu Desempenho</h1>
-          <p className="text-sm text-paper-dim mt-2 max-w-sm mx-auto">
-            Veja o que suas indicações já geraram, com o seu código.
-          </p>
+          <p className="text-xs text-paper-dim mt-1">Código: {codigoConfirmado}</p>
         </div>
       </header>
+      <AvisoIndicadores />
 
       <main className="mx-auto max-w-md px-6 py-10 flex flex-col gap-6">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Seu código de indicador"
-            className="flex-1 border border-panel-line bg-panel text-paper rounded-md px-3 py-2.5 text-sm focus-visible:outline-amber"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={consultar}
-            disabled={loading}
-            className="font-sans font-semibold bg-amber text-ink rounded-md px-4 py-2.5 text-sm hover:brightness-110 transition-all disabled:opacity-50"
-          >
-            {loading ? "..." : "Ver"}
-          </button>
-        </div>
-
-        {erro && <p className="text-sm text-rust">{erro}</p>}
+        {loading && <p className="text-sm text-paper-dim text-center">Carregando...</p>}
+        {erro && <p className="text-sm text-rust text-center">{erro}</p>}
 
         {dados && (
           <>
@@ -127,10 +127,6 @@ export default function MeuDesempenhoPage() {
               </p>
             )}
           </>
-        )}
-
-        {!dados && codigoConfirmado && !loading && !erro && (
-          <p className="text-sm text-paper-dim text-center">Nenhum dado encontrado pra esse código ainda.</p>
         )}
       </main>
     </>

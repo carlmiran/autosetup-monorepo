@@ -9,6 +9,8 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import { Logo } from "@/components/Logo";
+import { AvisoIndicadores } from "@/components/AvisoIndicadores";
+import { EntradaComPin } from "@/components/EntradaComPin";
 
 interface ClienteIndicador {
   id: number;
@@ -17,6 +19,8 @@ interface ClienteIndicador {
   notas: string | null;
   data_followup: string | null;
   criado_em: string;
+  fez_diagnostico?: boolean;
+  data_diagnostico?: string | null;
 }
 
 interface FormularioCliente {
@@ -205,6 +209,11 @@ function CardCliente({
         )}
       </div>
       {c.whatsapp_cliente && <p className="text-xs text-paper-dim mt-1">{c.whatsapp_cliente}</p>}
+      {c.fez_diagnostico && (
+        <p className="text-xs text-mint mt-1">
+          ✓ Fez o diagnóstico{c.data_diagnostico ? ` em ${new Date(c.data_diagnostico).toLocaleDateString("pt-BR")}` : ""}
+        </p>
+      )}
       {c.notas && <p className="text-sm mt-2">{c.notas}</p>}
 
       <div className="flex items-center gap-3 mt-3 pt-3 border-t border-panel-line flex-wrap">
@@ -247,12 +256,10 @@ function CardCliente({
 }
 
 export default function MeusClientesPage() {
-  const [codigo, setCodigo] = useState(() =>
+  const [codigoInicial] = useState(() =>
     typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
   );
-  const [codigoConfirmado, setCodigoConfirmado] = useState(() =>
-    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
-  );
+  const [codigoConfirmado, setCodigoConfirmado] = useState("");
   const [clientes, setClientes] = useState<ClienteIndicador[]>([]);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -291,11 +298,6 @@ export default function MeusClientesPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function entrar() {
-    if (!codigo.trim()) return;
-    setCodigoConfirmado(codigo.trim());
   }
 
   async function adicionarCliente(e: React.FormEvent) {
@@ -493,31 +495,12 @@ export default function MeusClientesPage() {
 
   if (!codigoConfirmado) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 text-center">
-        <Logo size={32} />
-        <div>
-          <h1 className="font-display text-xl text-paper">Meus Clientes</h1>
-          <p className="text-sm text-paper-dim mt-2 max-w-sm">
-            Digite seu código de indicador pra ver (ou começar) sua lista.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <input
-            type="text"
-            placeholder="Seu código"
-            className="border border-panel-line bg-panel text-paper rounded-md px-3 py-2.5 text-sm focus-visible:outline-amber"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={entrar}
-            className="font-sans font-semibold bg-amber text-ink rounded-md px-6 py-3 text-sm hover:brightness-110 transition-all"
-          >
-            Entrar
-          </button>
-        </div>
-      </main>
+      <EntradaComPin
+        titulo="Meus Clientes"
+        descricao="Digite seu código de indicador e um PIN de 4 números pra ver (ou começar) sua lista."
+        codigoInicial={codigoInicial}
+        onEntrar={(c) => setCodigoConfirmado(c)}
+      />
     );
   }
 
@@ -570,6 +553,7 @@ export default function MeusClientesPage() {
           </button>
         </div>
       </header>
+      <AvisoIndicadores />
 
       <main className={visualizacao === "lista" ? "mx-auto max-w-xl px-6 py-10 flex flex-col gap-8" : "px-4 py-10 flex flex-col gap-8"}>
         <div className={visualizacao === "lista" ? "" : "mx-auto max-w-xl w-full"}>

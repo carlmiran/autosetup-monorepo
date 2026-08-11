@@ -2,10 +2,20 @@
 // Lista de clientes do próprio vendedor/indicador — identificado só
 // pelo código de indicação (sem login, mesmo padrão informal já usado
 // no resto do programa). Fonte: pedido de Carlos (06/08/2026).
+//
+// 11/08/2026: enriquecido com funil real — cruza cada cliente com
+// `leads` pelo WhatsApp normalizado (único campo em comum confiável
+// entre as duas tabelas) pra mostrar se ele já fez o diagnóstico de
+// verdade. Best-effort: só funciona pra quem tem WhatsApp cadastrado
+// dos dois lados; nunca inventa status quando não dá pra confirmar.
 
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verificarRateLimit } from "@/lib/rateLimit";
+
+function normalizarWhatsapp(v: string): string {
+  return v.replace(/\D/g, "");
+}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -25,9 +35,38 @@ export async function GET(request: Request) {
           "FROM clientes_indicador WHERE codigo_indicacao = ? ORDER BY data_followup ASC, criado_em DESC",
       )
       .bind(codigo)
-      .all();
+      .all<{
+        id: number;
+        nome_cliente: string;
+        whatsapp_cliente: string | null;
+        notas: string | null;
+        data_followup: string | null;
+        criado_em: string;
+      }>();
 
-    return NextResponse.json({ clientes: resultado.results ?? [] });
+    const clientes = resultado.results ?? [];
+
+    // Busca todos os WhatsApp de leads reais de uma vez (não um SELECT
+    // por cliente) — mais barato e evita N+1 query.
+    const leads = await db
+      .prepare("SELECT whatsapp_contato, criado_em FROM leads WHERE whatsapp_contato IS NOT NULL")
+      .all<{ whatsapp_contato: string; criado_em: string }>();
+    const mapaLeads = new Map<string, string>();
+    for (const l of leads.results ?? []) {
+      mapaLeads.set(normalizarWhatsapp(l.whatsapp_contato), l.criado_em);
+    }
+
+    const clientesEnriquecidos = clientes.map((c) => {
+      const chave = c.whatsapp_cliente ? normalizarWhatsapp(c.whatsapp_cliente) : null;
+      const dataDiagnostico = chave ? mapaLeads.get(chave) : undefined;
+      return {
+        ...c,
+        fez_diagnostico: Boolean(dataDiagnostico),
+        data_diagnostico: dataDiagnostico ?? null,
+      };
+    });
+
+    return NextResponse.json({ clientes: clientesEnriquecidos });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao buscar clientes.";
     return NextResponse.json({ error: message }, { status: 502 });

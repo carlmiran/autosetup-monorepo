@@ -922,3 +922,39 @@ individual (Meus Clientes) ainda não cruzado com leads/pagamentos reais.
 Testado: typecheck+lint(0 erros)+build de produção limpos (22 rotas).
 Cálculo de comissão validado com dado real inserido/consultado/removido
 no D1 de produção antes do deploy.
+
+## Três gargalos resolvidos: PIN, avisos, funil real (11/08/2026)
+
+Fonte: Carlos pediu "construa tudo que for necessário" pros 3 gargalos
+restantes identificados no turno anterior.
+
+**1. Colisão de código (PIN de 4 dígitos)**
+- `indicadores_registro` (D1): codigo + pin. Primeira vez que um código
+  é usado, reivindica com um PIN escolhido na hora; da próxima vez,
+  precisa do mesmo PIN — nunca deixa duas pessoas usarem o mesmo texto
+  sem perceber
+- `/api/indicadores/registro` + componente `EntradaComPin` (reutilizado
+  em `/radar/meus-clientes` e `/radar/meu-desempenho`, as duas páginas
+  com dado sensível — comissão e lista pessoal)
+- Link com `?codigo=` agora só pré-preenche o campo, não pula mais o
+  PIN — preservar a proteção mesmo vindo de link direto
+
+**2. Canal de aviso Carlos→indicadores**
+- `avisos` (D1) + `/api/avisos` (GET público, POST interno) +
+  `/admin/avisos` (Carlos publica, não linkado publicamente)
+- Componente `AvisoIndicadores` — mural, não notificação push; mostrado
+  em `/radar`, `/radar/manual`, `/radar/meus-clientes`,
+  `/radar/meu-desempenho`. Só um aviso ativo por vez
+
+**3. Funil de conversão real por cliente**
+- `/api/indicadores/clientes` agora cruza cada cliente com `leads` pelo
+  WhatsApp normalizado (único campo em comum confiável) — mostra "✓ Fez
+  o diagnóstico em [data]" no card quando encontra correspondência
+  real. Sem inventar status quando não dá pra confirmar
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (25 rotas).
+PIN, aviso e normalização de WhatsApp validados com dado real
+inserido/consultado/removido no D1 de produção antes do deploy. Teste
+local do endpoint de PIN bateu na limitação conhecida do
+`getCloudflareContext` fora do ambiente real (mesma limitação já vista
+antes nesta sessão) — validação real feita direto no D1 de produção.
