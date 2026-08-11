@@ -898,3 +898,27 @@ contato de qualquer lugar, pré-filtrado).
   limita abuso, não uso legítimo de importação em lote)
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
+
+## Painel pessoal de desempenho do indicador (11/08/2026)
+
+Fonte: Carlos pediu identificação de gargalos pra ferramenta de
+vendedores — maior gargalo identificado: indicador trabalhava sem ver
+o próprio resultado (só Carlos via `/admin/comissoes`).
+
+- `/api/indicadores/desempenho`: agrega dado que já existia
+  (`leads`/`pagamentos` filtrados por `codigo_indicacao`) — diagnósticos
+  gerados, quantos demonstraram interesse, vendas confirmadas, comissão
+  total/paga/pendente (20%, mesmo cálculo já usado em `/admin/comissoes`)
+- `/radar/meu-desempenho`: página real, sem login (por código), 4
+  números principais + detalhe de comissão + aviso honesto de que
+  pagamento ainda é manual
+- Linkado a partir de `/radar`
+
+Outros 3 gargalos identificados e registrados, não construídos ainda:
+colisão de código entre indicadores (sem checagem de unicidade), falta
+de canal de aviso Carlos→indicadores, funil de conversão por cliente
+individual (Meus Clientes) ainda não cruzado com leads/pagamentos reais.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (22 rotas).
+Cálculo de comissão validado com dado real inserido/consultado/removido
+no D1 de produção antes do deploy.

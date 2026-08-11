@@ -126,6 +126,9 @@ export default function RadarPage() {
           <Link href="/radar/meus-clientes" className="text-xs underline text-amber">
             Meus clientes e follow-ups
           </Link>
+          <Link href="/radar/meu-desempenho" className="text-xs underline text-amber">
+            Meu desempenho e comissão
+          </Link>
         </div>
       </header>
 
