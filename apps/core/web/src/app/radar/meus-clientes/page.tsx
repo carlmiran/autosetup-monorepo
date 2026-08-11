@@ -3,11 +3,11 @@
 // AUTOSETUP — apps/core/web/src/app/radar/meus-clientes/page.tsx
 // Lista pessoal de clientes do indicador — sem login, identificado só
 // pelo código dele. Fonte: pedido de Carlos (06/08, 10/08, 11/08/2026):
-// criar/editar/apagar/compartilhar, e duas visualizações — Lista e
-// Kanban por status de follow-up (Atrasado/Hoje/Agendado/Sem data) —
-// reaproveitando o mesmo dado já calculado, sem mudar nada no banco.
+// criar/editar/apagar/compartilhar, duas visualizações (Lista/Kanban),
+// ícone de WhatsApp, e importação de planilha (scraper) em lote.
 
 import { useEffect, useState } from "react";
+import Papa from "papaparse";
 import { Logo } from "@/components/Logo";
 
 interface ClienteIndicador {
@@ -55,6 +55,14 @@ function statusDe(c: ClienteIndicador, dataHoje: string): StatusFollowup {
 
 function normalizarWhatsapp(v: string): string {
   return v.replace(/\D/g, "");
+}
+
+/** Tenta achar a coluna certa pelo nome do cabeçalho da planilha —
+ * scraper de terceiro nunca usa nome padronizado, então isso é
+ * heurística, não certeza. Sempre mostrado pro usuário conferir antes
+ * de importar de verdade. */
+function detectarColuna(colunas: string[], padroes: RegExp): string {
+  return colunas.find((c) => padroes.test(c)) ?? "";
 }
 
 function textoParaCompartilhar(c: ClienteIndicador): string {
@@ -258,6 +266,15 @@ export default function MeusClientesPage() {
   const [formEdicao, setFormEdicao] = useState<FormularioCliente>(formularioVazio);
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
+  const [mostrarImportacao, setMostrarImportacao] = useState(false);
+  const [linhasCsv, setLinhasCsv] = useState<Record<string, string>[]>([]);
+  const [colunasCsv, setColunasCsv] = useState<string[]>([]);
+  const [colNome, setColNome] = useState("");
+  const [colWhatsapp, setColWhatsapp] = useState("");
+  const [colNotas, setColNotas] = useState("");
+  const [importando, setImportando] = useState(false);
+  const [progressoImportacao, setProgressoImportacao] = useState<{ feito: number; total: number; falhas: number } | null>(null);
+
   async function carregar(codigoBusca: string) {
     setLoading(true);
     setErro(null);
@@ -375,6 +392,72 @@ export default function MeusClientesPage() {
     } catch {
       setErro("Não foi possível conectar ao servidor.");
     }
+  }
+
+  function lerArquivoCsv(arquivo: File) {
+    setErro(null);
+    Papa.parse<Record<string, string>>(arquivo, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (resultado) => {
+        const colunas = resultado.meta.fields ?? [];
+        if (colunas.length === 0 || resultado.data.length === 0) {
+          setErro("Não consegui ler nenhuma linha dessa planilha.");
+          return;
+        }
+        setColunasCsv(colunas);
+        setLinhasCsv(resultado.data);
+        setColNome(detectarColuna(colunas, /nome|negocio|negócio|empresa|company|name/i) || colunas[0]);
+        setColWhatsapp(detectarColuna(colunas, /whats|celular|telefone|phone|fone/i));
+        setColNotas(detectarColuna(colunas, /nota|obs|coment|categ|nicho|endere/i));
+        setProgressoImportacao(null);
+      },
+      error: () => {
+        setErro("Não consegui ler esse arquivo — confirma que é um CSV real.");
+      },
+    });
+  }
+
+  async function importarPlanilha() {
+    if (!colNome || linhasCsv.length === 0) return;
+    setImportando(true);
+    setErro(null);
+    let feito = 0;
+    let falhas = 0;
+
+    for (const linha of linhasCsv) {
+      const nome = linha[colNome]?.trim();
+      if (!nome) {
+        falhas++;
+        setProgressoImportacao({ feito, total: linhasCsv.length, falhas });
+        continue;
+      }
+      try {
+        const res = await fetch("/api/indicadores/clientes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            codigo: codigoConfirmado,
+            nomeCliente: nome,
+            whatsappCliente: colWhatsapp ? linha[colWhatsapp]?.trim() || undefined : undefined,
+            notas: colNotas ? linha[colNotas]?.trim() || undefined : undefined,
+          }),
+        });
+        if (res.ok) {
+          feito++;
+        } else {
+          falhas++;
+        }
+      } catch {
+        falhas++;
+      }
+      setProgressoImportacao({ feito, total: linhasCsv.length, falhas });
+    }
+
+    setImportando(false);
+    setLinhasCsv([]);
+    setColunasCsv([]);
+    carregar(codigoConfirmado);
   }
 
   async function copiar(c: ClienteIndicador) {
@@ -526,6 +609,116 @@ export default function MeusClientesPage() {
               {salvando ? "Salvando..." : "Salvar cliente"}
             </button>
           </form>
+
+          <div className="border border-panel-line rounded-lg p-4 bg-panel flex flex-col gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => setMostrarImportacao((v) => !v)}
+              className="font-mono text-xs tracking-widest uppercase text-amber text-left"
+            >
+              {mostrarImportacao ? "▾" : "▸"} Importar planilha (CSV)
+            </button>
+
+            {mostrarImportacao && (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs text-paper-dim">
+                  Sobe um CSV (de scraper ou qualquer planilha exportada). A
+                  gente tenta adivinhar as colunas certas — confere antes de
+                  importar.
+                </p>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => {
+                    const arquivo = e.target.files?.[0];
+                    if (arquivo) lerArquivoCsv(arquivo);
+                  }}
+                  className="text-sm text-paper-dim file:mr-3 file:font-sans file:font-semibold file:bg-amber file:text-ink file:rounded-md file:px-3 file:py-2 file:border-0 file:text-sm"
+                />
+
+                {colunasCsv.length > 0 && (
+                  <>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      <label className="flex flex-col gap-1">
+                        Coluna do nome (obrigatório)
+                        <select
+                          className="border border-panel-line bg-ink text-paper rounded-md px-2 py-1.5"
+                          value={colNome}
+                          onChange={(e) => setColNome(e.target.value)}
+                        >
+                          {colunasCsv.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        Coluna do WhatsApp (opcional)
+                        <select
+                          className="border border-panel-line bg-ink text-paper rounded-md px-2 py-1.5"
+                          value={colWhatsapp}
+                          onChange={(e) => setColWhatsapp(e.target.value)}
+                        >
+                          <option value="">— nenhuma —</option>
+                          {colunasCsv.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        Coluna das anotações (opcional)
+                        <select
+                          className="border border-panel-line bg-ink text-paper rounded-md px-2 py-1.5"
+                          value={colNotas}
+                          onChange={(e) => setColNotas(e.target.value)}
+                        >
+                          <option value="">— nenhuma —</option>
+                          {colunasCsv.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="border border-panel-line rounded-md p-2 text-xs text-paper-dim overflow-x-auto">
+                      <p className="font-mono uppercase tracking-widest text-amber mb-1">
+                        Prévia ({linhasCsv.length} linhas encontradas)
+                      </p>
+                      {linhasCsv.slice(0, 3).map((linha, i) => (
+                        <p key={i} className="truncate">
+                          {linha[colNome] || "(sem nome)"}
+                          {colWhatsapp && linha[colWhatsapp] ? ` · ${linha[colWhatsapp]}` : ""}
+                        </p>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={importarPlanilha}
+                      disabled={importando}
+                      className="font-sans font-semibold bg-amber text-ink rounded-md px-4 py-2.5 text-sm hover:brightness-110 transition-all disabled:opacity-50"
+                    >
+                      {importando
+                        ? `Importando... ${progressoImportacao?.feito ?? 0}/${linhasCsv.length}`
+                        : `Importar ${linhasCsv.length} contatos`}
+                    </button>
+                  </>
+                )}
+
+                {progressoImportacao && !importando && (
+                  <p className="text-xs text-mint">
+                    Importação concluída: {progressoImportacao.feito} adicionados
+                    {progressoImportacao.falhas > 0 && `, ${progressoImportacao.falhas} falharam`}.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {erro && <p className="text-sm text-rust mt-4">{erro}</p>}
           {loading && <p className="text-sm text-paper-dim mt-4">Carregando...</p>}

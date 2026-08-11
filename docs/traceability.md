@@ -874,3 +874,27 @@ entregar material, ou copiar um áudio do cliente pra colar depois no
 campo de anotações (via o botão Editar já existente).
 
 Testado: typecheck+lint(0 erros)+build de produção limpos.
+
+## Importação de planilha (CSV) em Meus Clientes (11/08/2026)
+
+Fonte: Carlos pediu subir uma planilha de contatos (feita via scraper)
+e virar cards em lote — esclarecido que não é redundante com o Radar
+(fontes diferentes: Radar acha negócio perto de agora, planilha traz
+contato de qualquer lugar, pré-filtrado).
+
+- `papaparse` adicionado como dependência real (parser de CSV robusto —
+  lida com aspas/vírgula dentro de campo, comum em planilha de
+  scraper)
+- `/radar/meus-clientes`: seção "Importar planilha (CSV)" — sobe
+  arquivo, detecta automaticamente qual coluna é nome/WhatsApp/notas
+  por heurística de nome de cabeçalho (sempre mostrado pro usuário
+  conferir/trocar antes de importar, nunca assume certeza), prévia das
+  3 primeiras linhas, botão de importar com progresso real
+  (feito/total, falhas reportadas)
+- Importação reaproveita o mesmo endpoint de criar cliente já
+  existente (POST), um por um — sem endpoint novo de bulk-insert
+- Rate limit do endpoint de clientes elevado de 60 pra 300/hora (essa
+  rota não chama IA nenhuma, só grava no D1 — custo real é zero, só
+  limita abuso, não uso legítimo de importação em lote)
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).

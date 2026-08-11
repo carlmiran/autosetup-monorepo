@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const limite = await verificarRateLimit(request, { rota: "indicador-clientes", maximo: 60, janelaMinutos: 60 });
+  const limite = await verificarRateLimit(request, { rota: "indicador-clientes", maximo: 300, janelaMinutos: 60 });
   if (!limite.permitido) {
     return NextResponse.json({ error: "Muitas tentativas. Espere um pouco." }, { status: 429 });
   }
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const limite = await verificarRateLimit(request, { rota: "indicador-clientes", maximo: 60, janelaMinutos: 60 });
+  const limite = await verificarRateLimit(request, { rota: "indicador-clientes", maximo: 300, janelaMinutos: 60 });
   if (!limite.permitido) {
     return NextResponse.json({ error: "Muitas tentativas. Espere um pouco." }, { status: 429 });
   }
