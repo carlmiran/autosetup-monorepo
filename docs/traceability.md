@@ -841,3 +841,23 @@ Bug real de lint corrigido no processo: mesmo padrão de sempre
 Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
 Ciclo completo (inserir→editar→apagar) testado com dado real no D1 de
 produção antes do deploy.
+
+## Visualização Kanban em Meus Clientes (11/08/2026)
+
+Fonte: Carlos pediu visualizações diferentes (cards, etiquetas de
+prioridade/agendamento, estilo Kanban).
+
+- `/radar/meus-clientes` ganhou alternador **Lista / Kanban** no
+  cabeçalho — mesmo dado, duas formas de ver, sem mudança nenhuma no
+  banco
+- Kanban usa 4 colunas calculadas a partir do mesmo campo que já
+  existia (`data_followup`): **Atrasado** (vermelho), **Hoje** (âmbar),
+  **Agendado** (verde), **Sem data** (neutro) — cada coluna mostra a
+  contagem de clientes
+- Card virou componente reutilizável (`CardCliente`), usado igual nas
+  duas visualizações — evita duplicar lógica de editar/copiar/
+  WhatsApp/apagar
+- Colunas roláveis horizontalmente (`overflow-x-auto`), pensado pra
+  celular
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (21 rotas).
