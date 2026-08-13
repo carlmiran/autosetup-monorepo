@@ -145,14 +145,22 @@ async function salvarLead(
 }
 
 export async function POST(request: Request) {
+  // Limite elevado de 5 pra 25/hora em 13/08/2026 — o valor anterior
+  // bloqueou Carlos no meio de uma abordagem comercial real (ele
+  // testou o próprio link antes/durante, e esgotou a cota antes da
+  // demonstração de verdade acontecer). Custo real por diagnóstico é
+  // baixo (~US$0,05-0,15 com busca), 25/hora ainda protege contra
+  // abuso sério sem travar uso legítimo — e reduz o risco de duas
+  // pessoas diferentes num mesmo IP compartilhado (CGNAT, comum no
+  // Brasil) se atrapalharem.
   const limite = await verificarRateLimit(request, {
     rota: "diagnostico",
-    maximo: 5,
+    maximo: 25,
     janelaMinutos: 60,
   });
   if (!limite.permitido) {
     return NextResponse.json(
-      { error: "Muitas tentativas em pouco tempo. Espere um pouco e tente de novo." },
+      { error: "Muitos diagnósticos gerados nesse IP na última hora. Espere um pouco e tente de novo — se isso aconteceu no meio de uma demonstração real, avisa que a gente ajusta." },
       { status: 429 },
     );
   }

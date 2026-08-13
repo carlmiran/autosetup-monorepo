@@ -1013,3 +1013,31 @@ explicação do que fica destravado.
 Testado: typecheck+lint(0 erros)+build de produção limpos (26 rotas).
 Gravação da sequência e avanço de índice validados com dado real no D1
 de produção antes do deploy.
+
+## Bug real corrigido: limite de diagnóstico bloqueou venda real (13/08/2026)
+
+Fonte: Carlos reportou — abordou um cliente real, mandou o link, foi
+testar ele mesmo e recebeu erro de limite excedido no meio do
+questionário. Bloqueou uso legítimo durante uma abordagem comercial de
+verdade.
+
+**Causa raiz encontrada**: `/api/diagnostico` tinha limite de 5
+diagnósticos/hora por IP — baixo demais pra um cenário real onde a
+mesma pessoa testa/demonstra várias vezes antes de abordar, e sem
+considerar que múltiplas pessoas diferentes podem compartilhar o mesmo
+IP público no Brasil (CGNAT das operadoras), fazendo teste de uma
+pessoa consumir cota de outra sem relação nenhuma.
+
+**Corrigido**: limite elevado de 5 pra 25/hora. Custo real por
+diagnóstico é baixo (~US$0,05-0,15 com pesquisa), então 25/hora ainda
+protege contra abuso sério (pior caso ~US$2-4/hora de um único IP) sem
+travar uso legítimo. Mensagem de erro também melhorada, convidando a
+pessoa a avisar se acontecer de novo numa demonstração real.
+
+Outras rotas do mesmo fluxo (perguntas-nicho 10/h, transcrever 20/h)
+já estavam em níveis razoáveis — não mexidas, o problema era
+específico do envio final.
+
+Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
+no D1 de produção que não há bloqueio ativo pro IP relatado no momento
+(contagem atual bem abaixo do novo limite).
