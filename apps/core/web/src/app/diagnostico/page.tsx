@@ -263,33 +263,12 @@ export default function DiagnosticoPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <SecaoDivisoria numero="01" titulo="Contato" />
-          <div className="border border-panel-line rounded-lg p-4 flex flex-col gap-3 bg-panel">
-            <p className="text-xs text-paper-dim">
-              Pra te enviar o resultado e, se fizer sentido, tirar dúvidas
-              depois. Nunca usamos esses dados pra outra coisa.
-            </p>
-            <label className="flex flex-col gap-1 text-sm">
-              Seu nome
-              <input
-                className={inputClass()}
-                value={form.nomeContato}
-                onChange={(e) => setForm({ ...form, nomeContato: e.target.value })}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Seu WhatsApp (com DDD)
-              <input
-                type="tel"
-                placeholder="(35) 99999-0000"
-                className={inputClass()}
-                value={form.whatsappContato}
-                onChange={(e) => setForm({ ...form, whatsappContato: e.target.value })}
-              />
-            </label>
-          </div>
-
-          <SecaoDivisoria numero="02" titulo="Sobre o negócio" />
+          <SecaoDivisoria numero="01" titulo="Perguntas essenciais" />
+          <p className="text-xs text-paper-dim -mt-2">
+            Só isso já gera um diagnóstico real. O resto do formulário é
+            opcional — quanto mais você responder, mais afiado o resultado,
+            mas essas 5 perguntas bastam pra começar.
+          </p>
 
           <label className="flex flex-col gap-1 text-sm">
             Nome do negócio
@@ -367,7 +346,40 @@ export default function DiagnosticoPage() {
             </div>
           )}
 
-          <SecaoDivisoria numero="03" titulo="Presença digital" />
+          <label className="flex flex-col gap-1 text-sm">
+            Seu WhatsApp (com DDD)
+            <span className="text-xs text-paper-dim">
+              Pra te enviar o resultado e, se fizer sentido, tirar dúvidas
+              depois. Nunca usamos esse dado pra outra coisa.
+            </span>
+            <input
+              type="tel"
+              required
+              placeholder="(35) 99999-0000"
+              className={inputClass()}
+              value={form.whatsappContato}
+              onChange={(e) => setForm({ ...form, whatsappContato: e.target.value })}
+            />
+          </label>
+
+          <CampoTextoComAudio
+            label="Qual sua maior dificuldade hoje pra atrair ou converter clientes?"
+            ajuda="Pense em algo concreto que aconteceu recentemente — não precisa ser bonito, precisa ser real."
+            required
+            value={form.maiorDificuldade}
+            onChange={(v) => setForm({ ...form, maiorDificuldade: v })}
+          />
+
+          <label className="flex flex-col gap-1 text-sm">
+            Seu nome (opcional)
+            <input
+              className={inputClass()}
+              value={form.nomeContato}
+              onChange={(e) => setForm({ ...form, nomeContato: e.target.value })}
+            />
+          </label>
+
+          <SecaoDivisoria numero="02" titulo="Presença digital" />
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-paper-dim">
@@ -461,19 +473,12 @@ export default function DiagnosticoPage() {
             </label>
           </div>
 
-          <SecaoDivisoria numero="04" titulo="O dia a dia" />
+          <SecaoDivisoria numero="03" titulo="O dia a dia" />
           <p className="text-xs text-paper-dim -mt-2">
-            Estas são as perguntas mais importantes — quanto mais real e
-            detalhada a resposta, melhor o diagnóstico. Pode digitar ou
-            apertar o botão de gravar e responder falando, do seu jeito.
+            Quanto mais real e detalhada a resposta, melhor o diagnóstico.
+            Pode digitar ou apertar o botão de gravar e responder falando, do
+            seu jeito.
           </p>
-
-          <CampoTextoComAudio
-            label="Qual sua maior dificuldade hoje pra atrair ou converter clientes?"
-            ajuda="Pense em algo concreto que aconteceu recentemente — não precisa ser bonito, precisa ser real. Se isso não se aplica à sua situação, pode deixar em branco."
-            value={form.maiorDificuldade}
-            onChange={(v) => setForm({ ...form, maiorDificuldade: v })}
-          />
 
           <CampoTextoComAudio
             label="Como é o seu dia a dia no negócio?"
@@ -496,7 +501,7 @@ export default function DiagnosticoPage() {
             onChange={(v) => setForm({ ...form, sobrecarga: v })}
           />
 
-          <SecaoDivisoria numero="05" titulo="Onde você quer chegar" />
+          <SecaoDivisoria numero="04" titulo="Onde você quer chegar" />
 
           <CampoTextoComAudio
             label="Você acha que seu negócio está indo bem? Está satisfeito com os rendimentos hoje?"
@@ -512,7 +517,7 @@ export default function DiagnosticoPage() {
             onChange={(v) => setForm({ ...form, metaFinanceira: v })}
           />
 
-          <SecaoDivisoria numero="06" titulo="Operação" />
+          <SecaoDivisoria numero="05" titulo="Operação" />
 
           <CampoTextoComAudio
             label="Quantas pessoas trabalham com você hoje, e quantos clientes/pedidos você atende por mês, mais ou menos?"

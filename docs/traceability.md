@@ -1068,3 +1068,24 @@ público, confirmado pelo relato do Fábio em campo).
 Testado: typecheck+lint(0 erros)+build de produção limpos (23 rotas).
 Envio mínimo (só os 5 campos) confirmado passando pela validação real
 do backend.
+
+## Formulário completo reorganizado: essenciais separadas (13/08/2026)
+
+Fonte: Carlos pediu pra gerar as perguntas essenciais separadamente e
+tirar do formulário antigo o que já é respondido no bloco essencial —
+evita repetição entre `/diagnostico` e `/diagnostico/rapido`.
+
+- `/diagnostico`: nova seção "01 — Perguntas essenciais" no topo, com
+  exatamente os mesmos 5 campos de `/diagnostico/rapido` (nome do
+  negócio, cidade, nicho, WhatsApp, maior dificuldade) — agora
+  `whatsappContato` e `maiorDificuldade` viraram obrigatórios também
+  aqui, consistente com a versão rápida
+- Antiga seção "Contato" removida — mesclada nas essenciais (WhatsApp
+  virou obrigatório, nome do contato ficou como campo opcional dentro
+  do mesmo bloco)
+- Campo de "maior dificuldade" removido de onde estava antes (seção "O
+  dia a dia") — não é mais perguntado duas vezes
+- Seções renumeradas 01-05 (Perguntas essenciais, Presença digital, O
+  dia a dia, Onde você quer chegar, Operação)
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (23 rotas).
