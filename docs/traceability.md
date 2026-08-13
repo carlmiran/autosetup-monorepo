@@ -1089,3 +1089,28 @@ evita repetição entre `/diagnostico` e `/diagnostico/rapido`.
   dia a dia, Onde você quer chegar, Operação)
 
 Testado: typecheck+lint(0 erros)+build de produção limpos (23 rotas).
+
+## Gerar próxima mensagem — sem depender de diagnóstico (13/08/2026)
+
+Fonte: Carlos relatou o gargalo real — pra continuar uma conversa de
+venda, saía do AutoSetup, colava a conversa manualmente no ChatGPT/
+Gemini pedindo argumentação e fechamento. O "parecer de prioridade"
+que já existia só funciona com diagnóstico casado — não cobria a
+maioria dos clientes, que ainda não chegaram nessa etapa.
+
+- `lib/gerarProximaMensagem.ts`: gera a próxima mensagem sugerida
+  usando as anotações do vendedor (histórico da conversa) + diagnóstico
+  real quando existir (opcional, nunca bloqueia). Sem anotação nenhuma,
+  sugere abertura honesta (mesmo tom do Manual do Indicador). Mesma
+  regra de honestidade de sempre: nunca inventa urgência falsa nem
+  promete o que o AutoSetup não faz
+- `/api/indicadores/proxima-mensagem`: busca cliente + anotação
+  (sempre) + diagnóstico casado por WhatsApp (se houver, não obrigatório)
+- Botão "💬 Gerar próxima mensagem" em **todo** card de "Meus Clientes"
+  (diferente do "parecer", que só aparece com diagnóstico) — com botão
+  de gerar de novo, caso a sugestão não sirva
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (25 rotas).
+Confirmado no D1 de produção que cliente sem diagnóstico casado
+consegue ser encontrado e seguiria pro motor sem bloqueio (não exige
+diagnóstico, diferente do endpoint de parecer).

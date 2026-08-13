@@ -139,6 +139,10 @@ interface CardClienteProps {
   onApagar: () => void;
   onGerarParecer: () => void;
   onAvancarParecer: () => void;
+  gerandoMensagem: boolean;
+  mensagemSugerida: { contexto: string; mensagemSugerida: string } | null;
+  erroMensagem: string | null;
+  onGerarMensagem: () => void;
 }
 
 function CardCliente({
@@ -160,6 +164,10 @@ function CardCliente({
   onApagar,
   onGerarParecer,
   onAvancarParecer,
+  gerandoMensagem,
+  mensagemSugerida,
+  erroMensagem,
+  onGerarMensagem,
 }: CardClienteProps) {
   const atrasado = c.data_followup && c.data_followup < dataHoje;
   const hojeMarcado = c.data_followup === dataHoje;
@@ -237,6 +245,38 @@ function CardCliente({
         </p>
       )}
       {c.notas && <p className="text-sm mt-2">{c.notas}</p>}
+
+      {!compacto && (
+        <div className="mt-3 pt-3 border-t border-panel-line">
+          {!mensagemSugerida && (
+            <button
+              type="button"
+              onClick={onGerarMensagem}
+              disabled={gerandoMensagem}
+              className="font-mono text-[10px] uppercase tracking-widest text-mint border border-mint-dim rounded-md px-2 py-1.5 disabled:opacity-40"
+            >
+              {gerandoMensagem ? "Pensando..." : "💬 Gerar próxima mensagem"}
+            </button>
+          )}
+          {erroMensagem && <p className="text-xs text-rust mt-2">{erroMensagem}</p>}
+          {mensagemSugerida && (
+            <div className="bg-ink border border-mint-dim rounded-lg p-3 flex flex-col gap-2">
+              <p className="text-xs text-paper-dim">{mensagemSugerida.contexto}</p>
+              <p className="text-sm italic border-t border-panel-line pt-2">
+                {mensagemSugerida.mensagemSugerida}
+              </p>
+              <button
+                type="button"
+                onClick={onGerarMensagem}
+                disabled={gerandoMensagem}
+                className="font-mono text-[10px] uppercase tracking-widest text-mint underline self-start disabled:opacity-40"
+              >
+                {gerandoMensagem ? "Pensando..." : "↻ Gerar de novo"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {c.fez_diagnostico && !compacto && (
         <div className="mt-3 pt-3 border-t border-panel-line">
@@ -330,6 +370,9 @@ export default function MeusClientesPage() {
   const [gerandoParecerId, setGerandoParecerId] = useState<number | null>(null);
   const [pareceres, setPareceres] = useState<Record<number, EstadoParecer>>({});
   const [errosParecer, setErrosParecer] = useState<Record<number, string>>({});
+  const [gerandoMensagemId, setGerandoMensagemId] = useState<number | null>(null);
+  const [mensagens, setMensagens] = useState<Record<number, { contexto: string; mensagemSugerida: string }>>({});
+  const [errosMensagem, setErrosMensagem] = useState<Record<number, string>>({});
   const [visualizacao, setVisualizacao] = useState<"lista" | "kanban">("lista");
 
   const [form, setForm] = useState<FormularioCliente>(formularioVazio);
@@ -582,6 +625,31 @@ export default function MeusClientesPage() {
     }
   }
 
+  async function gerarMensagem(clienteId: number) {
+    setGerandoMensagemId(clienteId);
+    setErrosMensagem((prev) => ({ ...prev, [clienteId]: "" }));
+    try {
+      const res = await fetch("/api/indicadores/proxima-mensagem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
+      });
+      const data = (await res.json()) as { contexto?: string; mensagemSugerida?: string; error?: string };
+      if (!res.ok) {
+        setErrosMensagem((prev) => ({ ...prev, [clienteId]: data.error ?? "Erro ao gerar mensagem." }));
+      } else {
+        setMensagens((prev) => ({
+          ...prev,
+          [clienteId]: { contexto: data.contexto ?? "", mensagemSugerida: data.mensagemSugerida ?? "" },
+        }));
+      }
+    } catch {
+      setErrosMensagem((prev) => ({ ...prev, [clienteId]: "Não foi possível conectar ao servidor." }));
+    } finally {
+      setGerandoMensagemId(null);
+    }
+  }
+
   useEffect(() => {
     if (!codigoConfirmado) return;
     (async () => {
@@ -636,6 +704,10 @@ export default function MeusClientesPage() {
       onApagar: () => apagarCliente(c.id),
       onGerarParecer: () => gerarParecer(c.id),
       onAvancarParecer: () => avancarParecer(c.id),
+      gerandoMensagem: gerandoMensagemId === c.id,
+      mensagemSugerida: mensagens[c.id] ?? null,
+      erroMensagem: errosMensagem[c.id] || null,
+      onGerarMensagem: () => gerarMensagem(c.id),
     };
   }
 
