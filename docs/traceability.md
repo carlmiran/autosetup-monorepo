@@ -1041,3 +1041,30 @@ específico do envio final.
 Testado: typecheck+lint(0 erros)+build de produção limpos. Confirmado
 no D1 de produção que não há bloqueio ativo pro IP relatado no momento
 (contagem atual bem abaixo do novo limite).
+
+## Diagnóstico rápido — 5 perguntas (13/08/2026)
+
+Fonte: Carlos pediu versão curta do diagnóstico, endereçando frustração
+real e recorrente (formulário completo é longo demais pra parte do
+público, confirmado pelo relato do Fábio em campo).
+
+- `/diagnostico/rapido`: 5 perguntas (nome do negócio, cidade, nicho,
+  WhatsApp, maior dificuldade), cada uma com opção de gravar/transcrever
+  (mesmo componente `CampoTextoComAudio` já usado no formulário
+  completo e na entrevista de RH)
+- Envia pro mesmo `/api/diagnostico` real — não é simulação, é o
+  mesmo motor, mesmo banco, mesma qualidade de resposta
+- WhatsApp mantido como pergunta necessária (não cosmética): sem ele,
+  o cruzamento de funil e o parecer de prioridade em
+  `/radar/meus-clientes` não conseguem achar esse diagnóstico depois
+- Nicho continua texto livre — multinicho preservado, nada específico
+  de hospedagem ou qualquer outro segmento
+- Resultado mostrado numa versão mais enxuta (resumo, pontos
+  favoráveis, oportunidades, comparação com concorrente, plano de 7
+  dias, desconto se qualificar) — não duplica toda a UI do formulário
+  completo
+- Link pro formulário completo, pra quem preferir mais detalhe
+
+Testado: typecheck+lint(0 erros)+build de produção limpos (23 rotas).
+Envio mínimo (só os 5 campos) confirmado passando pela validação real
+do backend.
