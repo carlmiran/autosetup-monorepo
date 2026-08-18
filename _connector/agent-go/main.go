@@ -43,6 +43,7 @@ func executarRevogacao(cfg *Config, apiBaseURL string) {
 func main() {
 	instanciaFlag := flag.String("instancia", "", "nome da instância (ex.: sede, anexo) — isola config/token/pasta quando há mais de uma instalação na mesma máquina/conta. Também pode vir por AUTOSETUP_CONNECTOR_INSTANCIA.")
 	revogarFlag := flag.Bool("revogar", false, "revoga o token no backend e sai (usado pelo desinstalador)")
+	prefillArquivoFlag := flag.String("prefill-arquivo", "", "caminho de um JSON com codigo_pareamento/pasta_autorizada prontos, só pra agilizar a digitação numa sessão remota com alguém real no teclado — NUNCA pula o aceite de termos nem a confirmação de escopo, que continuam sempre interativos. Também pode vir por AUTOSETUP_CONNECTOR_PREFILL_ARQUIVO, ou pelas variáveis AUTOSETUP_CONNECTOR_CODIGO_PAREAMENTO/AUTOSETUP_CONNECTOR_PASTA diretamente.")
 	flag.Parse()
 
 	instancia := *instanciaFlag
@@ -72,7 +73,7 @@ func main() {
 	var token string
 	if cfg == nil || !cfg.EscopoConfirmado {
 		log.Println("Primeira execução — iniciando pareamento...")
-		cfg, token, err = executarOnboarding(apiBaseURL)
+		cfg, token, err = executarOnboarding(apiBaseURL, *prefillArquivoFlag)
 		if err != nil {
 			log.Fatalf("onboarding falhou: %v", err)
 		}

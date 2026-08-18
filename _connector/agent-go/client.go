@@ -34,11 +34,15 @@ type respostaPareamento struct {
 }
 
 // Parear chama POST /api/connector/parear com o código gerado manualmente
-// para o cliente (ex.: CASA-FABIO-001).
-func (c *Client) Parear(codigoPareamento, pastaAutorizada string) (*respostaPareamento, error) {
+// para o cliente (ex.: CASA-FABIO-001). consentimentoEm é o momento exato
+// em que a pessoa confirmou "sim" no prompt interativo de termos — nunca
+// o horário de chegada no servidor, capturado no instante real do aceite
+// (ver onboarding.go).
+func (c *Client) Parear(codigoPareamento, pastaAutorizada string, consentimentoEm time.Time) (*respostaPareamento, error) {
 	body, _ := json.Marshal(map[string]string{
 		"codigo_pareamento": codigoPareamento,
 		"pasta_autorizada":  pastaAutorizada,
+		"consentimento_em":  consentimentoEm.UTC().Format(time.RFC3339),
 	})
 
 	req, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/connector/parear", bytes.NewReader(body))
