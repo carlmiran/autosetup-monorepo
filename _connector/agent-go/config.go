@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Config é persistida em texto simples (não sensível — o token fica
@@ -17,12 +18,44 @@ type Config struct {
 	TermosAceitos    bool   `json:"termos_aceitos"`
 }
 
+// instanciaAtual isola config/token/pasta quando há mais de uma instalação
+// do Connector na mesma máquina/conta Windows (ex.: cliente com 2
+// unidades/propriedades, um agente pra cada). Definida uma única vez no
+// início de main() via definirInstancia(), antes de qualquer chamada a
+// configDir()/credTarget().
+var instanciaAtual = "default"
+
+// definirInstancia normaliza e trava o nome da instância pro resto da
+// execução. Nunca deixa vazio (cai pra "default", mantendo compatível o
+// caso de instalação única sem --instancia).
+func definirInstancia(nome string) {
+	instanciaAtual = sanitizarInstancia(nome)
+}
+
+// sanitizarInstancia restringe o nome a caracteres seguros tanto pra
+// nome de pasta (evita path traversal tipo "..\..\algo") quanto pro
+// formato do target do Windows Credential Manager (que usa ":" como
+// separador — ver credential_windows.go).
+func sanitizarInstancia(nome string) string {
+	var b strings.Builder
+	for _, r := range strings.TrimSpace(nome) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
+			b.WriteRune(r)
+		}
+	}
+	if b.Len() == 0 {
+		return "default"
+	}
+	return b.String()
+}
+
 func configDir() (string, error) {
 	base, err := os.UserConfigDir() // Windows: %APPDATA%
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(base, "AutoSetupConnector")
+	dir := filepath.Join(base, "AutoSetupConnector", instanciaAtual)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}

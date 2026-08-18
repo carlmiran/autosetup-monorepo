@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"time"
@@ -40,6 +41,17 @@ func executarRevogacao(cfg *Config, apiBaseURL string) {
 }
 
 func main() {
+	instanciaFlag := flag.String("instancia", "", "nome da instância (ex.: sede, anexo) — isola config/token/pasta quando há mais de uma instalação na mesma máquina/conta. Também pode vir por AUTOSETUP_CONNECTOR_INSTANCIA.")
+	revogarFlag := flag.Bool("revogar", false, "revoga o token no backend e sai (usado pelo desinstalador)")
+	flag.Parse()
+
+	instancia := *instanciaFlag
+	if instancia == "" {
+		instancia = os.Getenv("AUTOSETUP_CONNECTOR_INSTANCIA")
+	}
+	definirInstancia(instancia)
+	log.Printf("instância: %s", instanciaAtual)
+
 	apiBaseURL := os.Getenv("AUTOSETUP_CONNECTOR_API")
 	if apiBaseURL == "" {
 		apiBaseURL = apiBaseURLPadrao
@@ -52,7 +64,7 @@ func main() {
 
 	// Chamado pelo desinstalador (Passo 7) — revoga o token no backend
 	// e sai, sem entrar no fluxo normal de watcher/bandeja.
-	if len(os.Args) > 1 && os.Args[1] == "--revogar" {
+	if *revogarFlag {
 		executarRevogacao(cfg, apiBaseURL)
 		return
 	}

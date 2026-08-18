@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os/exec"
 	"runtime"
 	"sync/atomic"
@@ -14,9 +15,13 @@ var pausado atomic.Bool
 
 func executarBandeja(cfg *Config, ultimaSincronizacao func() string, aoSair func()) {
 	systray.Run(func() {
-		systray.SetTitle("AutoSetup Connector")
-		systray.SetTooltip("AutoSetup Connector — sincronização ativa")
+		systray.SetTitle("AutoSetup Connector — " + instanciaAtual)
+		// Tooltip é o que diferencia visualmente os ícones na bandeja quando
+		// há mais de uma instância rodando ao mesmo tempo (ex.: sede + anexo).
+		systray.SetTooltip(fmt.Sprintf("AutoSetup Connector — %s (%s)", instanciaAtual, cfg.PropertyID))
 
+		itemInstancia := systray.AddMenuItem("Instância: "+instanciaAtual, "")
+		itemInstancia.Disable()
 		itemStatus := systray.AddMenuItem("Empresa: "+cfg.PropertyID, "")
 		itemStatus.Disable()
 		itemPasta := systray.AddMenuItem("Pasta: "+cfg.PastaAutorizada, "")
