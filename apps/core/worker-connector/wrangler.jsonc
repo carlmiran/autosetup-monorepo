@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "autosetup-worker-connector",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"], // necessário para o parser xlsx
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "autosetup-leads",
+      "database_id": "6020ad64-35e8-4e90-a0b1-46020eb4b53b"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CONNECTOR_UPLOADS",
+      "bucket_name": "autosetup-connector-uploads"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "SYNC_QUEUE", "queue": "connector-sync-queue" }
+    ],
+    "consumers": [
+      { "queue": "connector-sync-queue", "max_batch_size": 10, "max_retries": 5 }
+    ]
+  },
+  "vars": {
+    "ALERT_EMAIL_FROM": "connector@autosetup.digital"
+  }
+  // RESEND_API_KEY -> `wrangler secret put RESEND_API_KEY`
+  // ALERT_EMAIL_TO -> `wrangler secret put ALERT_EMAIL_TO` (e-mail não é
+  //   secreto por natureza, mas cadastrado como secret aqui pra evitar
+  //   mais um valor real commitado neste arquivo — ver
+  //   docs/secrets-registry.md)
+  // LENS_REFRESH_URL -> opcional, endpoint interno de regeneração do
+  //   diagnóstico LENS. Sem efeito se não configurado.
+}

@@ -1,0 +1,37 @@
+# =====================================================================
+# ATENÇÃO: este arquivo é um esqueleto. Se este código for integrado
+# a um Worker já existente no monorepo AutoSetup Core, mescle apenas
+# as seções [[d1_databases]] / [[r2_buckets]] / [[queues.producers]] /
+# [[queues.consumers]] abaixo com os bindings e IDs reais já em uso —
+# não crie um Worker novo se já existir um Worker do Core que possa
+# receber essas rotas.
+# =====================================================================
+
+name = "autosetup-connector"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]  # necessário para o parser xlsx
+
+[[d1_databases]]
+binding = "DB"
+database_name = "SUBSTITUIR_PELO_NOME_REAL"
+database_id = "SUBSTITUIR_PELO_ID_REAL"
+
+[[r2_buckets]]
+binding = "CONNECTOR_UPLOADS"
+bucket_name = "SUBSTITUIR_PELO_BUCKET_REAL"
+
+[[queues.producers]]
+binding = "SYNC_QUEUE"
+queue = "connector-sync-queue"
+
+[[queues.consumers]]
+queue = "connector-sync-queue"
+max_batch_size = 10
+max_retries = 5
+
+[vars]
+ALERT_EMAIL_FROM = "connector@autosetup.digital"
+# ALERT_EMAIL_TO   -> configurar via `wrangler secret put` ou aqui se não for sensível
+# RESEND_API_KEY   -> configurar via `wrangler secret put RESEND_API_KEY`
+# LENS_REFRESH_URL -> opcional, endpoint interno de regeneração do diagnóstico

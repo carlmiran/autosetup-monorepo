@@ -13,3 +13,7 @@ coverage/
 !.vscode/extensions.json
 .open-next/
 .wrangler/
+
+# AutoSetup Connector — binários compilados (artefato de build, não código)
+_connector/agent-go/*.exe
+_connector/installer/Output/
