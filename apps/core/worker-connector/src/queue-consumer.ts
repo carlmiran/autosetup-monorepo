@@ -216,7 +216,7 @@ async function registrarErro(env: Env, job: SyncQueueMessage, erro: string): Pro
   if (!env.RESEND_API_KEY || !env.ALERT_EMAIL_TO) return;
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const resendResp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -229,6 +229,15 @@ async function registrarErro(env: Env, job: SyncQueueMessage, erro: string): Pro
         text: `Arquivo: ${job.filename}\nProperty: ${job.property_id}\nR2 key: ${job.r2_key}\n\nErro: ${erro}`,
       }),
     });
+    // fetch só rejeita em falha de rede — status HTTP de erro (ex.: domínio
+    // do remetente não verificado) não lança exceção, então precisa checar
+    // resendResp.ok explicitamente pra não tratar recusa da API como sucesso.
+    const resendBody = await resendResp.text();
+    if (!resendResp.ok) {
+      console.error(`Resend recusou o alerta (HTTP ${resendResp.status}): ${resendBody}`);
+    } else {
+      console.log(`Resend aceitou o alerta (HTTP ${resendResp.status}): ${resendBody}`);
+    }
   } catch (err) {
     console.error("Falha ao enviar alerta por e-mail (não bloqueante):", err);
   }

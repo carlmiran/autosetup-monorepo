@@ -26,7 +26,14 @@
     ]
   },
   "vars": {
-    "ALERT_EMAIL_FROM": "connector@autosetup.digital"
+    // "autosetup.digital" não está verificado na conta Resend (confirmado
+    // via teste real: API recusa com HTTP 403 "domain is not verified").
+    // Usando o domínio de teste da própria Resend, que não exige
+    // verificação — mesmo padrão já usado em outro lugar do projeto
+    // (notificação de pagamento). Trocar de volta pra
+    // "connector@autosetup.digital" se/quando o domínio for verificado
+    // em https://resend.com/domains.
+    "ALERT_EMAIL_FROM": "onboarding@resend.dev"
   }
   // RESEND_API_KEY -> `wrangler secret put RESEND_API_KEY`
   // ALERT_EMAIL_TO -> `wrangler secret put ALERT_EMAIL_TO` (e-mail não é
