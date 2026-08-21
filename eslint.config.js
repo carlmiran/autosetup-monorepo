@@ -67,6 +67,13 @@ export default [
         },
       ],
       "no-unused-vars": "off",
+      // "no-undef" não enxerga globals ambientes declarados em .d.ts (ex.:
+      // D1Database/ScheduledEvent/ExecutionContext de
+      // @cloudflare/workers-types, usados pelos Workers de
+      // apps/core/worker-*) — o TypeScript já cobre isso com mais precisão
+      // via typecheck. Recomendação oficial do typescript-eslint quando não
+      // se usa lint com informação de tipo (sem "parserOptions.project").
+      "no-undef": "off",
     },
   },
 ];
