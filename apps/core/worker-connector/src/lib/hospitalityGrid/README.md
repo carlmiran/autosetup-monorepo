@@ -39,11 +39,14 @@ como estava, só o parser tabular decide o que sincroniza de verdade hoje.
 
 ## Validado contra arquivos reais (não só o exemplo sintético)
 
-Testado em modo dry-run contra 3 planilhas `.xlsx` reais de terceiros
-(dado real e denso, múltiplas abas, sem nenhuma relação com o piloto do
-Fábio — usadas só como material de generalização, nomes de arquivo/aba
-nunca entraram no código). Isso expôs e corrigiu **5 bugs genéricos
-reais** que o exemplo sintético não pegava, todos com teste de regressão:
+Testado em modo dry-run contra 3 planilhas `.xlsx` reais (dado real e
+denso, múltiplas abas). Uma delas é o arquivo real do piloto — confirmado
+depois do teste, não antes; até então tinha sido tratada só como material
+de generalização, igual as outras duas. Nomes de arquivo/aba nunca
+entraram no código, mesmo depois de confirmado — a regra de generalizar
+sem hardcode continua valendo, o arquivo ser "o real" não muda isso.
+Isso expôs e corrigiu **5 bugs genéricos reais** que o exemplo sintético
+não pegava, todos com teste de regressão:
 
 1. Falso positivo de mês/ano: rótulo de espaço cuja substring batia com
    abreviação de mês (ex.: um nome de espaço contendo as 3 letras de
@@ -77,16 +80,19 @@ reais** que o exemplo sintético não pegava, todos com teste de regressão:
    espaço em maiúsculas — cobre template real preenchido só com nomes de
    espaço, sem nenhuma linha de campo ainda digitada).
 
-**Ainda não testado**: o arquivo `.xlsx` real do Fábio especificamente —
-os 3 arquivos usados pra generalizar são de outro(s) negócio(s), com
-estrutura semelhante mas não idêntica. A planilha sintética em
-`scripts/fixtures/exemplo-grid-fabio.xlsx` continua sendo uma
-reconstrução, não uma cópia do arquivo dele. Antes de aprovar pro piloto
-de verdade, rode:
-
-```bash
-npx tsx scripts/dry-run.ts caminho/para/arquivo-real-do-fabio.xlsx
-```
+**Validado contra o arquivo real do piloto** — uma das 8 abas (dado real
+e denso, receita/espaços/observações extraídos corretamente pelo grid
+parser) é a que mais provavelmente representa a operação principal.
+**Pendência real, não técnica**: o arquivo tem 8 abas, cada uma nomeada
+por uma contraparte/pessoa diferente — não ficou claro qual(is)
+mapeia(m) pras duas instâncias já configuradas no Connector
+(`CASA-FABIO-001`/`002`, sede/anexo). Confirmar isso com o cliente antes
+de decidir se o piloto sincroniza só a aba principal ou várias. Três
+outras abas caíram em `UNKNOWN` de forma correta (não são grid nem
+tabular — uma é despesas gerais em texto livre, confirmado esperado;
+outra é outro domínio de negócio; a terceira usa um layout de resumo por
+período não coberto por nenhum dos dois parsers, candidato a parser
+futuro, não implementado agora).
 
 ## O que NÃO foi implementado (próximo passo, não bloqueia o piloto)
 
