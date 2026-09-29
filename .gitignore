@@ -14,9 +14,14 @@ coverage/
 .open-next/
 .wrangler/
 
-# AutoSetup Connector — binários compilados (artefato de build, não código)
-_connector/agent-go/*.exe
+# Binários compilados (artefato de build, não código) — instaladores do
+# Connector são servidos a partir do R2, nunca do git (ver
+# apps/core/web/src/app/downloads/[arquivo]/route.ts).
+*.exe
 _connector/installer/Output/
 # Arquivo de prefill de código/pasta — preparado por instalação/cliente
 # específico (código de pareamento + pasta real), nunca deve ir pro histórico.
 _connector/installer/pareamento-prefill.json
+
+# Claude Code — permissões pessoais (não compartilhar)
+.claude/settings.local.json

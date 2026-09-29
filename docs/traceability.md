@@ -1387,3 +1387,26 @@ passar por engenharia. Fonte: pedido de Carlos.
   configurar `CONNECTOR_ADMIN_SECRET` em produção; `typecheck`/`lint`
   do `apps/core/web` limpos localmente, mas a rota não foi exercitada
   contra D1 real (sem os dois passos acima, não tem como).
+
+## Instalador do Connector servido pelo R2, não pelo git (29/09/2026)
+
+Fonte: pedido de Carlos — não commitar o `.exe` (6,9 MB), servir do R2.
+
+- `*.exe` no `.gitignore` (global). A cópia em
+  `apps/core/web/public/downloads/` foi removida — era byte a byte o
+  build `-sede` (SHA-256 conferido), que continua em
+  `_connector/installer/Output/`.
+- **Bucket `autosetup-connector-uploads` continua privado**: ele guarda
+  planilhas de clientes, então tornar o bucket público estava fora de
+  questão. Em vez disso, `apps/core/web` ganhou o binding R2
+  `CONNECTOR_UPLOADS` e a rota `src/app/downloads/[arquivo]/route.ts`,
+  que só serve nomes de uma allowlist, cada um mapeado pra uma chave fixa
+  sob `public/downloads/` — a chave nunca é montada a partir da URL.
+- URL pública inalterada (`/downloads/AutoSetupConnector-Setup-1.0.0.exe`,
+  a mesma que `/api/admin/connector/criar` devolve). `typecheck`, `lint` e
+  `next build` limpos.
+
+**Pendência real, ação de Carlos**: o upload pro R2 não foi feito — o
+`wrangler` desta máquina estava com login expirado. Sem ele a rota
+responde 404. Depois de `npx wrangler login`:
+`npx wrangler r2 object put autosetup-connector-uploads/public/downloads/AutoSetupConnector-Setup-1.0.0.exe --file=_connector/installer/Output/AutoSetupConnector-Setup-1.0.0-sede.exe --content-type=application/octet-stream --remote`

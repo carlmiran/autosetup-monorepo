@@ -14,6 +14,15 @@
       "database_name": "autosetup-leads",
       "database_id": "6020ad64-35e8-4e90-a0b1-46020eb4b53b"
     }
+  ],
+  "r2_buckets": [
+    {
+      // Mesmo bucket do worker-connector. É PRIVADO (guarda planilhas de
+      // clientes) — o web só lê as chaves da allowlist em
+      // src/app/downloads/[arquivo]/route.ts (prefixo public/downloads/).
+      "binding": "CONNECTOR_UPLOADS",
+      "bucket_name": "autosetup-connector-uploads"
+    }
   ]
   // Segredos (OPENAI_API_KEY, etc.) NÃO vão aqui — são cadastrados
   // direto no painel da Cloudflare (Workers & Pages > este projeto >
