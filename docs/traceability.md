@@ -1250,7 +1250,7 @@ Fonte: código do Connector (backend Worker + agente Go + instalador Inno
 Setup) recebido pronto de uma sessão paralela (pasta `_connector/`,
 extraída de `autosetup-connector-v1.zip`), com a Casa do Fábio como
 primeiro uso real, não piloto de validação manual. Ver
-`autosetup-connector-plano-implementacao (1).md` pela especificação
+`docs/plano-connector-implementacao.md` pela especificação
 original (Passos 1-8) e `_connector/README.md` pelo estado em que o
 código chegou (typecheck/build isolados passaram, nunca testado contra
 Cloudflare/D1 reais).
