@@ -147,7 +147,7 @@ export interface ContextoMesAno {
 /**
  * Procura em qualquer célula da planilha um indício de mês/ano (nome do
  * mês por extenso/abreviado, ou mm/aaaa) — nunca assume posição fixa.
- * Sem isso, GuestObservation/DailyRevenue ficam só com `diaDoMes`
+ * Sem isso, CounterpartObservation/DailyRevenue ficam só com `diaDoMes`
  * (sem `dataIso`) — nunca inventa ano/mês que não apareceu em lugar nenhum.
  */
 /**

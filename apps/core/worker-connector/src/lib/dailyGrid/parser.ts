@@ -1,10 +1,10 @@
 // =====================================================================
-// HospitalityGridParser (Fase 4).
+// DailyGridParser (Fase 4).
 //
 // Interpreta o grid visual por dia/mês (colunas = dias, linhas = espaços,
 // com blocos Qtdd/Valor/Extras/Total e listas verticais de nomes abaixo
 // de cada coluna de dia). Tudo descoberto estruturalmente — nunca
-// posição fixa de linha/coluna, nunca inventa checkin/checkout que a
+// posição fixa de linha/coluna, nunca inventa início/fim de período que a
 // planilha não declara, nunca corrige Qtdd usando a contagem de nomes
 // (ou vice-versa): registra os dois números e um aviso.
 // =====================================================================
@@ -21,7 +21,7 @@ import {
   type ContextoMesAno,
   type SequenciaDeDias,
 } from "./gridUtils";
-import type { BillingNote, DailyRevenue, GridInterpretation, GuestObservation, Space } from "./types";
+import type { BillingNote, CounterpartObservation, DailyRevenue, GridInterpretation, Space } from "./types";
 
 interface SubLinhaAcumulada {
   qtdd?: unknown;
@@ -30,7 +30,7 @@ interface SubLinhaAcumulada {
   total?: unknown;
 }
 
-export function parseHospitalityGrid(linhas: unknown[][], nomeContexto?: string): GridInterpretation {
+export function parseDailyGrid(linhas: unknown[][], nomeContexto?: string): GridInterpretation {
   const avisosGerais: string[] = [];
   const contexto = encontrarContextoMesAno(linhas);
   if (!contexto) {
@@ -43,7 +43,7 @@ export function parseHospitalityGrid(linhas: unknown[][], nomeContexto?: string)
   if (sequenciasDeDias.length === 0) {
     return {
       espacos: [],
-      observacoesHospedes: [],
+      observacoesContrapartes: [],
       receitasDiarias: [],
       notasCobranca: [],
       avisosGerais: [...avisosGerais, "nenhuma sequência de dias encontrada — não foi possível interpretar como grid"],
@@ -52,7 +52,7 @@ export function parseHospitalityGrid(linhas: unknown[][], nomeContexto?: string)
   }
 
   const espacos: Space[] = [];
-  const observacoesHospedes: GuestObservation[] = [];
+  const observacoesContrapartes: CounterpartObservation[] = [];
   const receitasDiarias: DailyRevenue[] = [];
   const notasCobranca: BillingNote[] = [];
 
@@ -79,7 +79,7 @@ export function parseHospitalityGrid(linhas: unknown[][], nomeContexto?: string)
     const fimFaixa = linhasDeDiasOrdenadas[idx + 1]?.linhaIndice ?? linhas.length;
     processarBlocoQuinzenal(header, linhas, inicioFaixa, fimFaixa, contexto, linhasAdjacentesAHeaders, nomeContexto, {
       espacos,
-      observacoesHospedes,
+      observacoesContrapartes,
       receitasDiarias,
       notasCobranca,
     });
@@ -87,7 +87,7 @@ export function parseHospitalityGrid(linhas: unknown[][], nomeContexto?: string)
 
   const confidenceGeral = calcularConfidenceGeral(espacos, receitasDiarias, contexto);
 
-  return { espacos, observacoesHospedes, receitasDiarias, notasCobranca, avisosGerais, confidenceGeral };
+  return { espacos, observacoesContrapartes, receitasDiarias, notasCobranca, avisosGerais, confidenceGeral };
 }
 
 function processarBlocoQuinzenal(
@@ -100,7 +100,7 @@ function processarBlocoQuinzenal(
   nomeContexto: string | undefined,
   acumulador: {
     espacos: Space[];
-    observacoesHospedes: GuestObservation[];
+    observacoesContrapartes: CounterpartObservation[];
     receitasDiarias: DailyRevenue[];
     notasCobranca: BillingNote[];
   }
@@ -110,7 +110,7 @@ function processarBlocoQuinzenal(
 
   let espacoAtual: Space | null = null;
   let subLinhas: Record<number, SubLinhaAcumulada> = {}; // por índice de coluna do dia
-  const nomesPorColuna: Record<number, GuestObservation[]> = {};
+  const nomesPorColuna: Record<number, CounterpartObservation[]> = {};
 
   const fecharEspacoAtual = () => {
     if (!espacoAtual) return;
@@ -172,9 +172,10 @@ function processarBlocoQuinzenal(
 
     // Serial de data do Excel na coluna de rótulo = linha de metadado de
     // cabeçalho (ex.: marca o início de outro bloco/quinzena), nunca nome
-    // de espaço nem de hóspede — achado real: sem isso, o texto ao lado
-    // da data (ex.: "15 - 30") virava "hóspede" fantasma no bloco aberto
-    // anterior. Fecha o bloco atual (se houver) e ignora a linha.
+    // de espaço nem de contraparte — achado real: sem isso, o texto ao
+    // lado da data (ex.: "15 - 30") virava "contraparte" fantasma no
+    // bloco aberto anterior. Fecha o bloco atual (se houver) e ignora a
+    // linha.
     if (pareceSerialDeDataExcel(rotuloCelula) || linhasAdjacentesAHeaders.has(i)) {
       fecharEspacoAtual();
       continue;
@@ -219,7 +220,7 @@ function processarBlocoQuinzenal(
       continue;
     }
 
-    // Rótulo vazio: linha de nomes de hóspede, se houver espaço aberto.
+    // Rótulo vazio: linha de nomes de contraparte, se houver espaço aberto.
     if (espacoAtual) {
       header.colunas.forEach((col, idx) => {
         const dia = header.dias[idx]!;
@@ -229,11 +230,11 @@ function processarBlocoQuinzenal(
         if (!nome) return;
         // Um valor puramente numérico numa linha de nomes é quase sempre
         // uma linha de resumo/total mal alinhada (ex.: "0" repetido por
-        // coluna), nunca o nome de um hóspede — achado real testando
+        // coluna), nunca o nome de uma contraparte — achado real testando
         // contra planilha de terceiro (linha de totais logo após o último
-        // bloco de espaço, sem rótulo próprio, virava "hóspede" chamado "0").
+        // bloco de espaço, sem rótulo próprio, virava "contraparte" chamada "0").
         if (/^-?\d+([.,]\d+)?$/.test(nome)) return;
-        const obs: GuestObservation = {
+        const obs: CounterpartObservation = {
           nome,
           espaco: espacoAtual!.nome,
           diaDoMes: dia,
@@ -241,7 +242,7 @@ function processarBlocoQuinzenal(
           rawText: String(valor),
           confidence: 0.75,
         };
-        acumulador.observacoesHospedes.push(obs);
+        acumulador.observacoesContrapartes.push(obs);
         (nomesPorColuna[col] ??= []).push(obs);
       });
     }

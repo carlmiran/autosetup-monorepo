@@ -1,23 +1,29 @@
-# Interpretador Inteligente de Planilhas — escopo implementado (piloto do Fábio)
+# Interpretador Inteligente de Planilhas — escopo implementado (validado no piloto do Fábio)
 
 Recorte mínimo da especificação de 10 fases recebida de outra sessão/comitê,
-suficiente pra validar o piloto do Fábio com segurança. **Não integrado ao
-fluxo real do Connector ainda** — `queue-consumer.ts` continua exatamente
-como estava, só o parser tabular decide o que sincroniza de verdade hoje.
+suficiente pra validar o piloto do Fábio com segurança. Detecção e extração
+são **estruturais** (forma do grid: sequência de dias, blocos
+Qtdd/Valor/Extras/Total, rótulos de linha) — nada aqui depende de vocabulário
+de nenhum nicho específico, então serve pra qualquer negócio que organize
+dado por dia/categoria numa planilha, não só hospedagem (ver nota de
+generalização no fim deste arquivo). **Não integrado ao fluxo real do
+Connector ainda** — `queue-consumer.ts` continua exatamente como estava, só
+o parser tabular decide o que sincroniza de verdade hoje.
 
 ## O que existe
 
-- `types.ts` (Fase 2) — `Space`, `GuestObservation`, `DailyRevenue`,
+- `types.ts` (Fase 2) — `Space`, `CounterpartObservation`, `DailyRevenue`,
   `BillingNote`. De propósito **não** é o modelo canônico completo
   (client/property/payment/etc.) da especificação original.
 - `classifier.ts` (Fase 3) — `classifyDocument()`, determinístico, sem
-  IA/LLM. Distingue `TABULAR` / `HOSPITALITY_GRID` / `UNKNOWN` por
+  IA/LLM. Distingue `TABULAR` / `DAILY_GRID` / `UNKNOWN` por
   pontuação de sinais estruturais (sequência de dias, rótulos
   Qtdd/Valor/Extras/Total, rótulos de espaço, anotação de
-  vencimento/pagamento) — nunca por posição fixa de linha/coluna.
-- `parser.ts` (Fase 4) — `parseHospitalityGrid()`. Interpreta o grid,
-  extrai espaços, observações de hóspede (nome+dia+espaço, **nunca**
-  infere checkin/checkout), receita diária por espaço, e notas de
+  vencimento/pagamento) — nunca por posição fixa de linha/coluna, nunca por
+  palavra de um nicho específico.
+- `parser.ts` (Fase 4) — `parseDailyGrid()`. Interpreta o grid,
+  extrai espaços, observações de contraparte (nome+dia+espaço, **nunca**
+  infere início/fim de período), receita diária por espaço, e notas de
   cobrança como texto bruto. Regra inegociável aplicada em código: nunca
   inventa dado — se Qtdd declarada não bate com a contagem real de
   nomes, registra os dois números e um aviso, não corrige um pelo outro.
@@ -28,11 +34,11 @@ como estava, só o parser tabular decide o que sincroniza de verdade hoje.
   segunda variante roda contra todas as abas de um arquivo, não só a
   primeira.
 - `scripts/gerar-planilha-exemplo.ts` — gera uma planilha `.xlsx`
-  sintética recriando a estrutura descrita originalmente (grid por
+  sintética recriando a estrutura da planilha real do Fábio (grid por
   dia/mês, blocos quinzenais, Qtdd/Valor/EXTRAS/Total, nomes empilhados,
   notas de vencimento/pagamento) — fixture de regressão, não uma cópia de
   nenhum arquivo real.
-- `scripts/test-hospitality-grid.ts` — 19 testes cobrindo os cenários
+- `scripts/test-daily-grid.ts` — 19 testes cobrindo os cenários
   originais mais as regressões encontradas testando contra arquivos
   reais (ver seção abaixo). Sem framework de teste novo — asserções
   simples, `process.exit(1)` na primeira falha.
@@ -57,11 +63,11 @@ não pegava, todos com teste de regressão:
    generalizado reaproveitando `XLSX.SSF.parse_date_code` (mesma função
    já usada no parser tabular).
 3. Linha de resumo/total com valores puramente numéricos (ex.: "0"
-   repetido por coluna) virava "hóspede" com nome numérico — nenhum
-   hóspede se chama um número, filtro genérico adicionado.
+   repetido por coluna) virava "contraparte" com nome numérico — nenhuma
+   contraparte se chama um número, filtro genérico adicionado.
 4. Linha de metadado de cabeçalho (nome do mês + dias da semana
    abreviados, ou data serial, precedendo a linha numérica 1-31) virava
-   rótulo de espaço ou nome de hóspede fantasma — corrigido
+   rótulo de espaço ou nome de contraparte fantasma — corrigido
    estruturalmente (qualquer linha adjacente a QUALQUER cabeçalho de
    dias é sempre metadado, não conteúdo), sem depender de reconhecer
    nome de mês/dia da semana como texto específico.
@@ -72,7 +78,7 @@ não pegava, todos com teste de regressão:
    em vez de perder o dado.
 6. Classificador: sequência de dias sozinha (sem nenhum rótulo
    Qtdd/Valor/Extras/Total reconhecido) classificava como
-   `HOSPITALITY_GRID` mesmo sendo outro domínio (ex.: controle de
+   `DAILY_GRID` mesmo sendo outro domínio (ex.: controle de
    funcionários, rótulos tipo "Nº Func."); e o inverso — rótulo
    "Valor"/"Total" sozinho, sem sequência de dias, também classificava
    errado (é cabeçalho de tabela comum). Agora exige sequência de dias
@@ -94,21 +100,55 @@ outra é outro domínio de negócio; a terceira usa um layout de resumo por
 período não coberto por nenhum dos dois parsers, candidato a parser
 futuro, não implementado agora).
 
+## Generalização de nome/schema (não muda lógica nem capacidade)
+
+Este módulo era originalmente chamado `hospitalityGrid`/`HospitalityGridParser`
+e o tipo de classificação era `HOSPITALITY_GRID`. Renomeado pra
+`dailyGrid`/`DailyGridParser`/`DAILY_GRID` porque a auditoria confirmou que
+a detecção e a extração nunca dependeram de vocabulário de hospedagem — são
+puramente estruturais (sequência de dias do mês, blocos Qtdd/Valor/Extras/Total,
+rótulos de linha). O nome antigo era só um artefato de ter sido validado
+primeiro contra um cliente de hospedagem (Casa do Fábio), não uma limitação
+do código. `GuestObservation` virou `CounterpartObservation` pelo mesmo
+motivo — representa "nome associado a um dia", não necessariamente um
+hóspede.
+
+**Tabelas D1 para quando a sincronização real for implementada** (ver seção
+seguinte — hoje isso **não existe**, nem em migration nem em código; o grid
+interpretado não é gravado em lugar nenhum ainda). Quando essa sincronização
+for construída, usar desde o início os nomes genéricos, não os de hospedagem:
+
+| Conceito (`types.ts`)         | Nome de tabela sugerido | Não usar |
+|---|---|---|
+| `DailyRevenue` (Qtdd/Valor/Extras/Total por espaço+dia) | `receitas_diarias` | ~~`ocupacao_diaria`~~ |
+| `CounterpartObservation` (nome+dia+espaço) | `contrapartes_observadas` | ~~`hospedes_observados`~~ |
+| `BillingNote` (texto bruto de vencimento/pagamento) | `anotacoes_faturamento` | — (já genérico) |
+
+Fora do escopo desta rodada, mas identificado na auditoria: as tabelas
+**tabulares** já existentes e em produção (`reservas`, `hospedes`, `quartos`,
+`tarifas`, definidas em `../schemas.ts` e na migration `0001_connector.sql`)
+são genuinamente específicas de hospedagem (colunas `checkin`/`checkout`/
+`quarto`) — isso é um sistema diferente do grid diário, não foi tocado aqui.
+
 ## O que NÃO foi implementado (próximo passo, não bloqueia o piloto)
 
 Documentado aqui pra não se perder, não pra travar nada:
 
 - Sincronização real com a nuvem pro formato novo (`queue-consumer.ts`
   não foi tocado — o grid interpretado não vira linha em nenhuma tabela
-  D1 ainda; hoje é só relatório de dry-run).
+  D1 ainda; hoje é só relatório de dry-run). Quando for implementado, usar
+  os nomes de tabela da seção acima.
 - Motor de validação formal com taxonomia de warnings (hoje é só
   string livre em `avisos`/`avisosGerais`).
 - Idempotência/dedup avançada além do hash de arquivo que já existe no
   agente Go (upsert por chave natural, como as tabelas tabulares já
   fazem, não foi desenhado pro formato grid).
 - Observabilidade/logging estruturado completo.
-- Outros parsers da especificação original (`FinancialGridParser`,
-  `AgendaParser`, etc.).
+- Outros parsers da especificação original (ex.: um parser específico pra
+  agenda de barbearia) — só faz sentido construir quando houver um segundo
+  cliente real de outro nicho pra validar contra dado real, do jeito que foi
+  feito com o Fábio. Por enquanto a generalização feita aqui é só de
+  nome/schema, não de capacidade nova.
 - Uso de LLM pra resolver ambiguidade — tudo aqui é determinístico de
   propósito.
 - Modelo canônico completo (client/property/payment/etc.) — só o
@@ -121,5 +161,5 @@ cd apps/core/worker-connector
 npx tsx scripts/gerar-planilha-exemplo.ts   # gera o fixture sintético (só precisa rodar 1x, ou de novo se mudar)
 npx tsx scripts/dry-run.ts scripts/fixtures/exemplo-grid-fabio.xlsx       # 1 aba
 npx tsx scripts/dry-run-todas-abas.ts caminho/para/arquivo-com-varias-abas.xlsx
-npx tsx scripts/test-hospitality-grid.ts
+npx tsx scripts/test-daily-grid.ts
 ```

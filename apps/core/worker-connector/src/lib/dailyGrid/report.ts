@@ -40,7 +40,7 @@ export function gerarRelatorioDryRun(params: ParametrosRelatorio): string {
 
   if (classificacao.tipo === "UNKNOWN" || !interpretacao) {
     linha("Classificado como UNKNOWN.");
-    linha("Formato não reconhecido por nenhum parser (nem tabular, nem grid de hospedagem).");
+    linha("Formato não reconhecido por nenhum parser (nem tabular, nem grid diário).");
     linha("Nada foi interpretado, nada foi enviado — o Connector não quebra, só não sabe ler este arquivo ainda.");
     linha("=".repeat(72));
     return out.join("\n");
@@ -72,7 +72,7 @@ export function gerarRelatorioDryRun(params: ParametrosRelatorio): string {
   linha(`Extras identificados (soma de "EXTRAS"): R$ ${extrasTotal.toFixed(2)}`);
   linha("");
 
-  linha(`Observações de hóspede (nome + dia + espaço): ${interpretacao.observacoesHospedes.length}`);
+  linha(`Observações de contraparte (nome + dia + espaço): ${interpretacao.observacoesContrapartes.length}`);
   linha("");
 
   linha(`Notas de cobrança (vencimento/pagamento), texto bruto: ${interpretacao.notasCobranca.length}`);

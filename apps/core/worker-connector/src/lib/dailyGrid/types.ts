@@ -2,10 +2,13 @@
 // Interpretador Inteligente de Planilhas — modelo interno mínimo (Fase 2)
 //
 // Escopo deliberadamente pequeno: só o que serve pra INTERPRETAR o grid
-// de hospedagem do Fábio e mostrar um relatório humano-legível (dry run,
-// Fase 7). NÃO é o modelo canônico completo (client/property/payment/
-// etc.) da especificação de 10 fases — isso fica documentado como
-// próximo passo, não implementado agora (ver README.md deste diretório).
+// diário por categoria/dia (validado com o piloto da Casa do Fábio,
+// hospedagem) e mostrar um relatório humano-legível (dry run, Fase 7).
+// A detecção e a extração são estruturais, não específicas de nenhum
+// nicho — ver classifier.ts e o README deste diretório. NÃO é o modelo
+// canônico completo (client/property/payment/etc.) da especificação de
+// 10 fases — isso fica documentado como próximo passo, não implementado
+// agora (ver README.md deste diretório).
 //
 // Regra que atravessa todo este módulo: nunca inventar dado que a
 // planilha não declara explicitamente. Sempre que um valor for
@@ -17,9 +20,10 @@
 export type Confidence = number;
 
 /**
- * Um espaço/quarto identificado pelo rótulo de linha (ex.: "Q1", "BRUNA",
- * "SALAFRENTE"). Puramente o rótulo + onde foi encontrado — não infere
- * capacidade, tipo, nem nada que a planilha não diga.
+ * Um espaço/categoria identificado pelo rótulo de linha (ex.: "Q1", "BRUNA",
+ * "SALAFRENTE" — pode ser um quarto, uma cadeira, um funcionário, qualquer
+ * categoria que o negócio organize por dia). Puramente o rótulo + onde foi
+ * encontrado — não infere capacidade, tipo, nem nada que a planilha não diga.
  */
 export interface Space {
   nome: string;
@@ -29,14 +33,16 @@ export interface Space {
 }
 
 /**
- * Uma pessoa aparecendo hospedada num espaço, num dia específico —
+ * Uma contraparte (pessoa/entidade — hóspede, cliente, o que o negócio
+ * chamar) aparecendo associada a um espaço, num dia específico —
  * exatamente o que a planilha mostra (nome na lista vertical abaixo da
- * coluna daquele dia). NUNCA infere checkin/checkout: se a pessoa
- * aparece em 3 dias seguidos, isso vira 3 GuestObservation, não uma
- * reserva com data de entrada/saída — essa inferência fica pro
- * relatório humano ou pra uma fase futura, não pro parser.
+ * coluna daquele dia). NUNCA infere início/fim de período: se a mesma
+ * contraparte aparece em 3 dias seguidos, isso vira 3
+ * CounterpartObservation, não um período com data de entrada/saída —
+ * essa inferência fica pro relatório humano ou pra uma fase futura, não
+ * pro parser.
  */
-export interface GuestObservation {
+export interface CounterpartObservation {
   /** Texto do nome como está na célula — inclui sufixos tipo "+1", nunca reescrito. */
   nome: string;
   espaco: string;
@@ -63,7 +69,7 @@ export interface DailyRevenue {
   valorUnitario: number | null;
   extras: number | null;
   total: number | null;
-  /** Quantos GuestObservation existem pra este espaco+dia (contagem real, não a Qtdd declarada). */
+  /** Quantos CounterpartObservation existem pra este espaco+dia (contagem real, não a Qtdd declarada). */
   qtddNomesEncontrados: number;
   avisos: string[];
   confidence: Confidence;
@@ -90,10 +96,10 @@ export interface BillingNote {
   confidence: Confidence;
 }
 
-/** Resultado agregado da interpretação de um grid de hospedagem inteiro. */
+/** Resultado agregado da interpretação de um grid diário inteiro. */
 export interface GridInterpretation {
   espacos: Space[];
-  observacoesHospedes: GuestObservation[];
+  observacoesContrapartes: CounterpartObservation[];
   receitasDiarias: DailyRevenue[];
   notasCobranca: BillingNote[];
   /** Avisos gerais, não presos a uma célula/bloco específico (ex.: mês/ano não identificado). */

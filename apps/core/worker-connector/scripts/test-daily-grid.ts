@@ -7,19 +7,19 @@
 // aborta com exit code 1 no primeiro teste que falhar. Roda em segundos,
 // sem I/O além de ler o fixture gerado por gerar-planilha-exemplo.ts.
 //
-// Uso: npx tsx scripts/test-hospitality-grid.ts
+// Uso: npx tsx scripts/test-daily-grid.ts
 // =====================================================================
 
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as XLSX from "xlsx";
-import { classifyDocument } from "../src/lib/hospitalityGrid/classifier";
-import { encontrarContextoMesAno } from "../src/lib/hospitalityGrid/gridUtils";
-import { parseHospitalityGrid } from "../src/lib/hospitalityGrid/parser";
+import { classifyDocument } from "../src/lib/dailyGrid/classifier";
+import { encontrarContextoMesAno } from "../src/lib/dailyGrid/gridUtils";
+import { parseDailyGrid } from "../src/lib/dailyGrid/parser";
 
 type Linha = (string | number | null)[];
 
-console.log("Testes — Interpretador de Planilhas (grid de hospedagem)\n");
+console.log("Testes — Interpretador de Planilhas (grid diário)\n");
 
 let falhas = 0;
 let total = 0;
@@ -54,14 +54,16 @@ teste("planilha tabular (reservas) é classificada como TABULAR, não GRID", () 
 });
 
 // ---------------------------------------------------------------------
-// 2) Grid do Fábio é classificado corretamente como HOSPITALITY_GRID
+// 2) Grid do Fábio (fixture de hospedagem) é classificado corretamente
+//    como DAILY_GRID — a classificação é estrutural, não sabe que é
+//    hospedagem, só reconhece a forma do grid.
 // ---------------------------------------------------------------------
-teste("grid de hospedagem (fixture do Fábio) é classificado como HOSPITALITY_GRID", () => {
+teste("grid diário (fixture do Fábio) é classificado como DAILY_GRID", () => {
   const caminho = path.join(__dirname, "fixtures", "exemplo-grid-fabio.xlsx");
   assert(fs.existsSync(caminho), `fixture não encontrado em ${caminho} — rode gerar-planilha-exemplo.ts primeiro`);
   const linhas = lerXlsx(caminho);
   const r = classifyDocument(linhas);
-  assert(r.tipo === "HOSPITALITY_GRID", `esperado HOSPITALITY_GRID, veio ${r.tipo} (sinais: ${r.sinais.join("; ")})`);
+  assert(r.tipo === "DAILY_GRID", `esperado DAILY_GRID, veio ${r.tipo} (sinais: ${r.sinais.join("; ")})`);
 });
 
 // ---------------------------------------------------------------------
@@ -70,7 +72,7 @@ teste("grid de hospedagem (fixture do Fábio) é classificado como HOSPITALITY_G
 teste("rótulo 'Qtd' e 'Qtde' (variação de 'Qtdd') são reconhecidos", () => {
   for (const rotulo of ["Qtd", "Qtde", "QTDD", "qtdd"]) {
     const linhas = gridMinimo({ rotuloQtdd: rotulo });
-    const r = parseHospitalityGrid(linhas);
+    const r = parseDailyGrid(linhas);
     assert(r.receitasDiarias.length > 0, `rótulo "${rotulo}" não gerou nenhuma receita diária`);
     assert(r.receitasDiarias[0]!.qtdd === 2, `rótulo "${rotulo}": esperado qtdd=2, veio ${r.receitasDiarias[0]!.qtdd}`);
   }
@@ -81,7 +83,7 @@ teste("rótulo 'Qtd' e 'Qtde' (variação de 'Qtdd') são reconhecidos", () => {
 // ---------------------------------------------------------------------
 teste("bloco sem linha EXTRAS não quebra, extras fica null", () => {
   const linhas = gridMinimo({ comExtras: false });
-  const r = parseHospitalityGrid(linhas);
+  const r = parseDailyGrid(linhas);
   assert(r.receitasDiarias.length > 0, "nenhuma receita diária interpretada");
   assert(r.receitasDiarias[0]!.extras === null, `esperado extras=null, veio ${r.receitasDiarias[0]!.extras}`);
   assert(r.receitasDiarias[0]!.total !== null, "total não deveria ser afetado pela ausência de EXTRAS");
@@ -136,7 +138,7 @@ teste("meses com 28/29/30/31 dias — dia inexistente no mês não vira dataIso 
   ];
   for (const c of casos) {
     const linhas = gridComContextoMes(c.mesTexto, 31); // sempre tenta gerar até dia 31
-    const r = parseHospitalityGrid(linhas);
+    const r = parseDailyGrid(linhas);
     const diaValido = r.receitasDiarias.find((x) => x.diaDoMes === c.ultimoDiaValido);
     assert(diaValido !== undefined, `${c.mesTexto}: dia ${c.ultimoDiaValido} deveria existir`);
     assert(diaValido.dataIso !== null, `${c.mesTexto}: dia ${c.ultimoDiaValido} deveria ter dataIso válida`);
@@ -155,8 +157,8 @@ teste("meses com 28/29/30/31 dias — dia inexistente no mês não vira dataIso 
 // ---------------------------------------------------------------------
 teste('nome com "+1" é preservado (rawText e nome intactos)', () => {
   const linhas = gridMinimo({ nomesDia1: ["Carlos +1"] });
-  const r = parseHospitalityGrid(linhas);
-  const obs = r.observacoesHospedes.find((o) => o.nome.includes("+1"));
+  const r = parseDailyGrid(linhas);
+  const obs = r.observacoesContrapartes.find((o) => o.nome.includes("+1"));
   assert(obs !== undefined, "observação com '+1' não foi encontrada");
   assert(obs.nome === "Carlos +1", `nome deveria ser "Carlos +1", veio "${obs.nome}"`);
 });
@@ -166,7 +168,7 @@ teste('nome com "+1" é preservado (rawText e nome intactos)', () => {
 // ---------------------------------------------------------------------
 teste("Qtdd diferente da contagem de nomes gera aviso, não bloqueia nem corrige", () => {
   const linhas = gridMinimo({ nomesDia1: ["SoUmNome"], qtddDia1Override: 5 });
-  const r = parseHospitalityGrid(linhas);
+  const r = parseDailyGrid(linhas);
   const receita = r.receitasDiarias.find((x) => x.diaDoMes === 1);
   assert(receita !== undefined, "receita do dia 1 não foi interpretada");
   assert(receita.qtdd === 5, `qtdd não deveria ser alterado, deveria continuar 5 (o que a planilha disse), veio ${receita.qtdd}`);
@@ -176,10 +178,10 @@ teste("Qtdd diferente da contagem de nomes gera aviso, não bloqueia nem corrige
 
 // ---------------------------------------------------------------------
 // Regressão real: linha de resumo/total (valores puramente numéricos,
-// sem rótulo próprio) logo após um bloco de espaço não vira "hóspede"
+// sem rótulo próprio) logo após um bloco de espaço não vira "contraparte"
 // chamado "0" — achado testando contra planilha real de terceiro.
 // ---------------------------------------------------------------------
-teste('linha de valores puramente numéricos não vira "hóspede" com nome numérico', () => {
+teste('linha de valores puramente numéricos não vira "contraparte" com nome numérico', () => {
   const linhas: Linha[] = [
     ["Agosto 2026"],
     [null, 1, 2, 3, 4, 5],
@@ -190,18 +192,18 @@ teste('linha de valores puramente numéricos não vira "hóspede" com nome numé
     [null, "Real Nome", null, null, null, null],
     [null, 0, 0, 0, 0, 0], // linha de resumo/total mal alinhada, sem rótulo
   ];
-  const r = parseHospitalityGrid(linhas);
-  const nomesNumericos = r.observacoesHospedes.filter((o) => /^\d+$/.test(o.nome));
+  const r = parseDailyGrid(linhas);
+  const nomesNumericos = r.observacoesContrapartes.filter((o) => /^\d+$/.test(o.nome));
   assert(nomesNumericos.length === 0, `nenhum nome deveria ser puramente numérico, veio: ${JSON.stringify(nomesNumericos)}`);
-  assert(r.observacoesHospedes.some((o) => o.nome === "Real Nome"), 'nome real "Real Nome" deveria continuar sendo capturado normalmente');
+  assert(r.observacoesContrapartes.some((o) => o.nome === "Real Nome"), 'nome real "Real Nome" deveria continuar sendo capturado normalmente');
 });
 
 // ---------------------------------------------------------------------
 // Regressão real: linha de metadado de cabeçalho (data serial do Excel
 // na coluna de rótulo, ex.: início de outra quinzena) não vira nome de
-// hóspede — achado testando contra planilha real de terceiro.
+// contraparte — achado testando contra planilha real de terceiro.
 // ---------------------------------------------------------------------
-teste("linha de metadado (serial de data na coluna de rótulo) não vira nome de hóspede", () => {
+teste("linha de metadado (serial de data na coluna de rótulo) não vira nome de contraparte", () => {
   const linhas: Linha[] = [
     ["Agosto 2026"],
     [null, 1, 2, 3, 4, 5],
@@ -212,10 +214,10 @@ teste("linha de metadado (serial de data na coluna de rótulo) não vira nome de
     [null, "Real Nome", null, null, null, null],
     [46023, "5 - 10", null, null, null, null], // metadado de outro bloco, não linha de nomes
   ];
-  const r = parseHospitalityGrid(linhas);
-  const nomeSuspeito = r.observacoesHospedes.find((o) => o.nome.includes(" - "));
-  assert(nomeSuspeito === undefined, `linha de metadado não deveria virar observação de hóspede, veio: ${JSON.stringify(nomeSuspeito)}`);
-  assert(r.observacoesHospedes.some((o) => o.nome === "Real Nome"), 'nome real "Real Nome" deveria continuar sendo capturado normalmente');
+  const r = parseDailyGrid(linhas);
+  const nomeSuspeito = r.observacoesContrapartes.find((o) => o.nome.includes(" - "));
+  assert(nomeSuspeito === undefined, `linha de metadado não deveria virar observação de contraparte, veio: ${JSON.stringify(nomeSuspeito)}`);
+  assert(r.observacoesContrapartes.some((o) => o.nome === "Real Nome"), 'nome real "Real Nome" deveria continuar sendo capturado normalmente');
 });
 
 // ---------------------------------------------------------------------
@@ -231,19 +233,19 @@ teste("bloco sem rótulo de espaço explícito abre espaço implícito usando o 
     ["Valor", 65, 65, 65, 65, 65],
     ["Total", 65, 65, 65, 65, 65],
   ];
-  const r = parseHospitalityGrid(linhas, "Nome Da Aba");
+  const r = parseDailyGrid(linhas, "Nome Da Aba");
   assert(r.espacos.length === 1, `esperava 1 espaço implícito, veio ${r.espacos.length}`);
   assert(r.espacos[0]!.nome === "Nome Da Aba", `nome do espaço implícito deveria ser o contexto, veio "${r.espacos[0]!.nome}"`);
   assert(r.receitasDiarias.length > 0, "receita não deveria ser descartada só por faltar rótulo de espaço");
 
-  const semContexto = parseHospitalityGrid(linhas);
+  const semContexto = parseDailyGrid(linhas);
   assert(semContexto.espacos[0]!.nome === "(sem rótulo)", `sem contexto, deveria cair no placeholder genérico, veio "${semContexto.espacos[0]!.nome}"`);
 });
 
 // ---------------------------------------------------------------------
 // Regressão real: linha de metadado de cabeçalho (nome do mês + dias da
 // semana abreviados, ex.: "OUTUBRO", "2ª", "3ª"...) logo antes da
-// sequência numérica de dias não vira rótulo de espaço nem hóspede —
+// sequência numérica de dias não vira rótulo de espaço nem contraparte —
 // achado testando contra arquivo real com vários meses na mesma aba.
 // ---------------------------------------------------------------------
 teste("linha de metadado de cabeçalho (nome de mês + dias da semana) antes do header numérico é ignorada", () => {
@@ -261,7 +263,7 @@ teste("linha de metadado de cabeçalho (nome de mês + dias da semana) antes do 
     ["Valor", 65, 65, 65, 65, 65],
     ["Total", 65, 65, 65, 65, 65],
   ];
-  const r = parseHospitalityGrid(linhas);
+  const r = parseDailyGrid(linhas);
   const rotuloEspurio = r.espacos.find((e) => e.nome === "OUTUBRO");
   assert(rotuloEspurio === undefined, `"OUTUBRO" não deveria virar rótulo de espaço, espaços: ${JSON.stringify(r.espacos.map((e) => e.nome))}`);
   assert(r.espacos.some((e) => e.nome === "ESPACO1") && r.espacos.some((e) => e.nome === "ESPACO2"), "os dois espaços reais deveriam continuar sendo detectados");
@@ -269,11 +271,11 @@ teste("linha de metadado de cabeçalho (nome de mês + dias da semana) antes do 
 
 // ---------------------------------------------------------------------
 // Regressão real: sequência de dias sozinha (sem nenhum rótulo Qtdd/
-// Valor/Extras/Total reconhecido) não basta pra classificar como grid de
-// hospedagem — outros domínios (ex.: folha de pagamento por dia) também
+// Valor/Extras/Total reconhecido) não basta pra classificar como grid
+// diário — outros domínios (ex.: folha de pagamento por dia) também
 // organizam dado por dia do mês, com rótulos diferentes.
 // ---------------------------------------------------------------------
-teste("sequência de dias sem nenhum rótulo Qtdd/Valor/Extras/Total reconhecido não vira HOSPITALITY_GRID", () => {
+teste("sequência de dias sem nenhum rótulo Qtdd/Valor/Extras/Total reconhecido não vira DAILY_GRID", () => {
   const linhas: Linha[] = [
     ["OUTRO DOMINIO"],
     [null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -281,23 +283,23 @@ teste("sequência de dias sem nenhum rótulo Qtdd/Valor/Extras/Total reconhecido
     ["Campo B", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   ];
   const r = classifyDocument(linhas);
-  assert(r.tipo !== "HOSPITALITY_GRID", `não deveria classificar como HOSPITALITY_GRID sem rótulo de bloco reconhecido, veio ${r.tipo}`);
+  assert(r.tipo !== "DAILY_GRID", `não deveria classificar como DAILY_GRID sem rótulo de bloco reconhecido, veio ${r.tipo}`);
 });
 
 // ---------------------------------------------------------------------
 // Regressão real: rótulo "Valor"/"Total" sozinho, sem NENHUMA sequência
-// de dias, não vira HOSPITALITY_GRID — é cabeçalho de tabela comum (ex.:
+// de dias, não vira DAILY_GRID — é cabeçalho de tabela comum (ex.:
 // "Data / Nº pessoas / Valor / Total" em colunas), formato tabular
 // diferente, não coberto pelos schemas atuais.
 // ---------------------------------------------------------------------
-teste('rótulo "Valor"/"Total" sem nenhuma sequência de dias não vira HOSPITALITY_GRID', () => {
+teste('rótulo "Valor"/"Total" sem nenhuma sequência de dias não vira DAILY_GRID', () => {
   const linhas: Linha[] = [
     ["Data", "Nº pessoas", "Valor", "Total"],
     [45816, 15, 55, 825],
     [45817, 15, 55, 825],
   ];
   const r = classifyDocument(linhas);
-  assert(r.tipo !== "HOSPITALITY_GRID", `sem sequência de dias, não deveria virar HOSPITALITY_GRID, veio ${r.tipo} (sinais: ${r.sinais.join("; ")})`);
+  assert(r.tipo !== "DAILY_GRID", `sem sequência de dias, não deveria virar DAILY_GRID, veio ${r.tipo} (sinais: ${r.sinais.join("; ")})`);
 });
 
 // ---------------------------------------------------------------------
@@ -316,7 +318,7 @@ teste("planilha vazia não lança exceção (classifier e parser)", () => {
   const linhas: Linha[] = [];
   const r = classifyDocument(linhas);
   assert(r.tipo === "UNKNOWN", `planilha vazia deveria ser UNKNOWN, veio ${r.tipo}`);
-  const interpretacao = parseHospitalityGrid(linhas);
+  const interpretacao = parseDailyGrid(linhas);
   assert(interpretacao.espacos.length === 0, "planilha vazia não deveria gerar espaços");
 });
 

@@ -10,9 +10,9 @@
 
 import * as fs from "node:fs";
 import * as XLSX from "xlsx";
-import { classifyDocument } from "../src/lib/hospitalityGrid/classifier";
-import { parseHospitalityGrid } from "../src/lib/hospitalityGrid/parser";
-import { gerarRelatorioDryRun } from "../src/lib/hospitalityGrid/report";
+import { classifyDocument } from "../src/lib/dailyGrid/classifier";
+import { parseDailyGrid } from "../src/lib/dailyGrid/parser";
+import { gerarRelatorioDryRun } from "../src/lib/dailyGrid/report";
 
 function main(): void {
   const caminho = process.argv[2];
@@ -39,7 +39,7 @@ function main(): void {
     const linhas: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
 
     const classificacao = classifyDocument(linhas);
-    const interpretacao = classificacao.tipo === "HOSPITALITY_GRID" ? parseHospitalityGrid(linhas, nomeAba) : null;
+    const interpretacao = classificacao.tipo === "DAILY_GRID" ? parseDailyGrid(linhas, nomeAba) : null;
 
     console.log(gerarRelatorioDryRun({ arquivo: `${caminho} [aba: ${nomeAba}]`, classificacao, interpretacao }));
     console.log("");

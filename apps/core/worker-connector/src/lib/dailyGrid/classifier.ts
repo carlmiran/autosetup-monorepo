@@ -2,7 +2,7 @@
 // DocumentClassifier (Fase 3) — determinístico, sem IA/LLM.
 //
 // Distingue TABULAR (o parser atual de queue-consumer.ts continua
-// cuidando desse caso, nada muda) de HOSPITALITY_GRID (novo parser,
+// cuidando desse caso, nada muda) de DAILY_GRID (novo parser,
 // parser.ts) de UNKNOWN (não quebra nada, só sinaliza — quem chama
 // decide o que fazer, ex.: registrar erro sem travar a fila).
 //
@@ -13,7 +13,7 @@
 import { SCHEMAS, normalizarCabecalho } from "../schemas";
 import { classificarRotuloLinha, encontrarSequenciasDeDias, pareceNotaDeCobranca, textoDaLinha } from "./gridUtils";
 
-export type TipoDocumento = "TABULAR" | "HOSPITALITY_GRID" | "UNKNOWN";
+export type TipoDocumento = "TABULAR" | "DAILY_GRID" | "UNKNOWN";
 
 export interface ResultadoClassificacao {
   tipo: TipoDocumento;
@@ -95,7 +95,7 @@ export function classifyDocument(linhas: unknown[][]): ResultadoClassificacao {
   // não é grid, é só cabeçalho de tabela comum (ex.: "Data / Nº pessoas /
   // Valor / Total" em colunas, um padrão tabular diferente, não coberto
   // pelos schemas atuais). Achado real: sem essa exigência, uma planilha
-  // tabular clássica com colunas "Valor"/"Total" caía em HOSPITALITY_GRID
+  // tabular clássica com colunas "Valor"/"Total" caía em DAILY_GRID
   // só por essas duas palavras, mesmo sem nenhum dia do mês em lugar
   // nenhum — parser não achava nada pra interpretar (confidence 0%, tudo
   // vazio), pior que admitir UNKNOWN.
@@ -105,7 +105,7 @@ export function classifyDocument(linhas: unknown[][]): ResultadoClassificacao {
   // reconhecido, OU vários candidatos de rótulo de espaço em maiúsculas
   // (>=3 — template real pode estar preenchido só com os nomes dos
   // espaços, sem nenhuma linha de campo ainda digitada, e mesmo assim é
-  // genuinamente um grid de hospedagem). Achado real: um domínio
+  // genuinamente um grid diário válido). Achado real: um domínio
   // diferente (controle de funcionários, rótulos tipo "TT $$") também
   // organiza dado por dia mas não tem candidatos de espaço suficientes
   // nem rótulo reconhecido — cai corretamente fora daqui.
@@ -114,7 +114,7 @@ export function classifyDocument(linhas: unknown[][]): ResultadoClassificacao {
 
   let tipo: TipoDocumento;
   if (pontuacaoGrid >= LIMIAR_MINIMO && pontuacaoGrid > pontuacaoTabular && temRotuloDeBlocoReconhecido) {
-    tipo = "HOSPITALITY_GRID";
+    tipo = "DAILY_GRID";
   } else if (pontuacaoTabular >= 1 && pontuacaoTabular >= pontuacaoGrid) {
     tipo = "TABULAR";
   } else {

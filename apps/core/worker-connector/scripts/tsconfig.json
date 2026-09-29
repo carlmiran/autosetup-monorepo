@@ -6,5 +6,5 @@
     "moduleResolution": "Bundler",
     "types": ["node"]
   },
-  "include": ["**/*.ts", "../src/lib/hospitalityGrid/**/*.ts", "../src/lib/schemas.ts"]
+  "include": ["**/*.ts", "../src/lib/dailyGrid/**/*.ts", "../src/lib/schemas.ts"]
 }
