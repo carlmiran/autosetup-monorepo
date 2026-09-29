@@ -24,6 +24,7 @@ Vercel, se for o destino escolhido). Nunca em `.env` commitado.
 | `RESEND_API_KEY` | Envio de e-mail transacional (Resend) — notificação de pagamento, `worker-licitacoes` e `worker-connector` (alerta de erro de parsing) | decisão de 02/08/2026 |
 | `NOTIFICATION_FROM_EMAIL` | Remetente dos e-mails do `worker-licitacoes` (não é secret, mas vive junto) | worker-licitacoes |
 | `ALERT_EMAIL_TO` | E-mail que recebe alerta de erro de parsing do `worker-connector` (não é secret, mas cadastrado como secret no Worker pra evitar valor real commitado em `wrangler.jsonc`) | AutoSetup Connector V1 (17/08/2026) |
+| `CONNECTOR_ADMIN_SECRET` | Senha compartilhada que protege `/admin/connector` e `/api/admin/connector/criar` (self-service de código de pareamento) no `apps/core/web` — não é autenticação de verdade (sem login/sessão no projeto), é proporcional ao padrão já usado no resto do produto | Self-service de pareamento do Connector (19/09/2026) |
 | `ANTHROPIC_API_KEY` | LLM Gateway — provider Anthropic | IMP-LLM-001 |
 | `GEMINI_API_KEY` | LLM Gateway — provider Gemini | IMP-LLM-001 |
 | `GROQ_API_KEY` | LLM Gateway — provider Groq | IMP-LLM-001 |

@@ -1114,3 +1114,276 @@ Testado: typecheck+lint(0 erros)+build de produção limpos (25 rotas).
 Confirmado no D1 de produção que cliente sem diagnóstico casado
 consegue ser encontrado e seguiria pro motor sem bloqueio (não exige
 diagnóstico, diferente do endpoint de parecer).
+
+## Prospector Autônomo + Radar de Licitações — scaffolding real (12/08/2026)
+
+Fonte: Carlos trouxe dois rascunhos prontos (código + README com schema
+proposto) pra dois módulos novos, pediu organização real no monorepo,
+revisão dos imports placeholder e adição do schema D1 à migration, antes
+de configurar os cron triggers.
+
+- **Dois Workers Cloudflare novos e reais**: `apps/core/worker-prospector`
+  e `apps/core/worker-licitacoes` — primeiros Workers agendados do
+  monorepo com `wrangler.jsonc` próprio (diferente do `worker-runner`,
+  que é um script Node/tsx de smoke test, não um deploy real). Ambos
+  fazem bind no mesmo D1 `autosetup-leads` já usado por `apps/core/web`.
+- **Import de `llmAdapter` corrigido pra real**: os dois módulos agora
+  usam `@autosetup/adapter-llm` (`llmAdapter.connect`/`completeViaGateway`),
+  mesmo padrão já usado em `apps/core/web/src/app/api/indicadores/parecer/route.ts`
+  — não mais `fetch` direto pra OpenAI.
+- **`calcularOpportunityScore` NÃO existe no monorepo** — descoberta
+  importante durante a revisão: o rascunho do Prospector presumia uma
+  fórmula numérica de "Opportunity Score" já validada e reaproveitável
+  do `/radar`. Não existe; `apps/core/web/src/lib/radar.ts` faz análise
+  qualitativa via IA, sem score numérico. Mantido um heurístico local
+  (`calcularScore()`) explicitamente marcado como placeholder — decisão
+  de formalizar isso (e onde) fica pendente, registrada nos dois READMEs
+  dos módulos.
+- **Schema D1 novo, ainda não aplicado**: `radar_pendentes`
+  (worker-prospector) e `licitacao_perfil`/`licitacao_encontrada`
+  (worker-licitacoes), cada um em `migrations/0001_*.sql` dentro do
+  próprio módulo — o monorepo não tem pipeline de migration D1 (histórico
+  é sempre `wrangler d1 execute` manual documentado aqui), então os
+  arquivos seguem esse mesmo padrão manual, só que agora com o SQL
+  versionado em vez de só narrado neste log.
+- `docs/secrets-registry.md`: adicionadas as linhas que faltavam
+  (`GOOGLE_PLACES_API_KEY`, `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL`)
+  — já eram usadas por `apps/core/web` mas nunca tinham sido registradas.
+- **`[triggers].crons` deixado de fora dos dois `wrangler.jsonc` de
+  propósito** — decisões de negócio pendentes (documentadas nos READMEs
+  de cada módulo: tabela `indicador_regiao` inexistente, teto de custo,
+  notificação, cadastro de perfil, preço, volume de e-mail) precisam ser
+  resolvidas antes de definir frequência/horário real.
+
+**Pendências reais, ação de Carlos**: rodar `pnpm install` (novos
+pacotes ainda não instalados), aplicar as duas migrations no D1 de
+produção via `wrangler d1 execute --remote`, decidir os itens de negócio
+listados nos READMEs, e só depois configurar `[triggers].crons` +
+segredos de cada Worker no painel da Cloudflare. Nada disso foi testado
+de ponta a ponta neste sandbox (nem `pnpm install`, nem `wrangler dev`) —
+só a estrutura e o TypeScript foram revisados por leitura.
+
+## Decisões do Prospector/Licitações + migrations aplicadas em produção (12–14/08/2026)
+
+Fonte: Carlos tomou as 3 decisões pendentes e pediu a implementação real +
+aplicação das migrations, primeiro local (validado) depois em produção
+(autorização explícita, comando mostrado antes de rodar).
+
+- **Região do Prospector — geolocalização OU manual**: `indicador_regiao`
+  redesenhada (`origem`, `endereco_referencia`, `lat`, `lng`, `raio_km`,
+  chave primária `codigo_indicador` — uma região por indicador). Fluxo real
+  novo: `/radar/minha-regiao` (protegido pelo mesmo PIN de
+  `/radar/meus-clientes`), com botão de geolocalização (mesmo padrão do
+  `/radar`) e campo de texto pra cidade/bairro. `api/indicadores/regiao`
+  (GET/POST) faz o upsert; entrada manual é geocodificada no servidor via
+  `geocodificarTexto()` (novo, em `lib/googlePlaces.ts`) reaproveitando o
+  Places Text Search já em uso — decisão deliberada de não integrar a
+  Geocoding API separada do Google Cloud (evita mais uma API pra habilitar
+  na conta). Link adicionado no hub `/radar`.
+- **Cadastro de perfil de Licitações**: adiado por decisão explícita — nada
+  construído, registrado nos dois READMEs.
+- **Preço de Licitações**: confirmado como oferta separada, preço próprio,
+  fora dos planos do AutoSetup — valor específico ainda em aberto.
+- `pnpm install` real rodado neste sandbox (via `corepack pnpm`, já que o
+  binário `pnpm` puro não estava no PATH) — 648 pacotes. Achado real no
+  processo: `@cloudflare/workers-types` tinha ficado como `^4` nos dois
+  `package.json` novos, mas o `wrangler@4` instalado pede `^5` como peer —
+  corrigido.
+- **Bug real de lint pego no processo**: `eslint.config.js` da raiz usava
+  `no-undef`, que não reconhece globals ambientes de `.d.ts` (`D1Database`,
+  `ScheduledEvent`, `ExecutionContext` do `@cloudflare/workers-types`) —
+  nunca tinha aparecido antes porque `apps/core/web` usa seu próprio
+  `eslint.config.mjs`, e nenhum outro pacote sob o config raiz usava esses
+  tipos. Corrigido desligando `no-undef` pra arquivos `.ts` (recomendação
+  oficial do typescript-eslint sem lint com informação de tipo — o `tsc`
+  já cobre isso). Revalidado sem regressão em `worker-runner` e
+  `packages/adapters/llm`.
+- **Migrations testadas primeiro no D1 local** de cada worker (`--local`,
+  sem tocar produção nem exigir login) — tabelas confirmadas via
+  `sqlite_master` antes de ir pra produção.
+- **Migrations aplicadas de verdade no D1 de produção** (`autosetup-leads`)
+  via `wrangler d1 execute --remote`, depois de Carlos autenticar
+  (`wrangler login`, conta `teodoromiranda@gmail.com`) e confirmar o
+  comando exato antes de cada execução. `radar_pendentes`,
+  `indicador_regiao`, `licitacao_perfil`, `licitacao_encontrada`
+  confirmadas via `sqlite_master` contra o banco remoto real.
+
+**Pendências reais, ação de Carlos**: configurar `[triggers].crons` nos
+dois `wrangler.jsonc` (frequência/horário), cadastrar os segredos de cada
+Worker no painel da Cloudflare (`OPENAI_API_KEY` em ambos,
+`GOOGLE_PLACES_API_KEY` no Prospector, `RESEND_API_KEY` +
+`NOTIFICATION_FROM_EMAIL` no Licitações — `GOOGLE_PLACES_API_KEY` também
+precisa estar configurada em `apps/core/web` pro fluxo de
+`/radar/minha-regiao` geocodificar endereço manual). `/radar/minha-regiao`
+foi validada só por typecheck+lint, não testada num navegador real.
+
+## Deploy inicial dos dois Workers novos (14/08/2026)
+
+Fonte: Carlos pediu pra registrar a `OPENAI_API_KEY` nos dois Workers.
+Bloqueio real encontrado: o painel da Cloudflare só permite configurar
+"Variables and Secrets" de um Worker que já existe na conta — nenhum dos
+dois tinha sido implantado ainda. Carlos confirmou fazer o deploy inicial.
+
+- `wrangler deploy` real rodado nos dois — **sem cron trigger e sem
+  nenhum secret configurado ainda**, então ambos ficam dormentes (não
+  processam nada, não geram custo) até os próximos passos.
+- `autosetup-worker-prospector` →
+  `https://autosetup-worker-prospector.teodoromiranda.workers.dev`
+- `autosetup-worker-licitacoes` →
+  `https://autosetup-worker-licitacoes.teodoromiranda.workers.dev`
+- **Regra aplicada, não quebrada**: não rodei `wrangler secret put` nem
+  pedi o valor da chave em chat — mesma regra de ouro já registrada em
+  `docs/secrets-registry.md` (segredo nunca passa por texto de chat ou
+  chamada de ferramenta de IA). Passei o passo a passo do painel
+  (Settings → Variables and Secrets → Add → tipo "Secret") pra Carlos
+  fazer diretamente.
+
+**Pendência real, ação de Carlos**: cadastrar `OPENAI_API_KEY` nos dois
+Workers pelo painel (passo a passo já passado), depois
+`GOOGLE_PLACES_API_KEY` no Prospector e `RESEND_API_KEY` +
+`NOTIFICATION_FROM_EMAIL` no Licitações, e só então configurar
+`[triggers].crons`.
+
+## AutoSetup Connector V1 — deploy real + agente Windows (17/08/2026)
+
+Fonte: código do Connector (backend Worker + agente Go + instalador Inno
+Setup) recebido pronto de uma sessão paralela (pasta `_connector/`,
+extraída de `autosetup-connector-v1.zip`), com a Casa do Fábio como
+primeiro uso real, não piloto de validação manual. Ver
+`autosetup-connector-plano-implementacao (1).md` pela especificação
+original (Passos 1-8) e `_connector/README.md` pelo estado em que o
+código chegou (typecheck/build isolados passaram, nunca testado contra
+Cloudflare/D1 reais).
+
+- **Nenhum "Worker do Core" existe neste monorepo** para receber as
+  rotas — a arquitetura real já estabelecida aqui é Worker próprio por
+  domínio, todos compartilhando o D1 `autosetup-leads`
+  (`autosetup-web`, `autosetup-worker-licitacoes`,
+  `autosetup-worker-prospector`). Decisão: seguir o mesmo padrão em vez
+  de forçar a integração num Worker Next.js/OpenNext (que exigiria
+  reescrever as rotas fetch-handler pro formato de route handler do
+  Next, e essa não era a forma como o código chegou). Worker novo real:
+  `apps/core/worker-connector`.
+- **Infra real criada/confirmada na conta Cloudflare**: bucket R2
+  `autosetup-connector-uploads` (já existia), queue
+  `connector-sync-queue` (criada agora), D1 reaproveitado
+  (`autosetup-leads`, mesmo `database_id` dos outros Workers).
+- **Migration real aplicada** (`apps/core/worker-connector/migrations/0001_connector.sql`)
+  via `wrangler d1 execute autosetup-leads --remote` — tabelas
+  `connectors`, `connector_pairing_codes`, `connector_sync_errors`,
+  `reservas`, `hospedes`, `quartos`, `tarifas` confirmadas.
+- **Correções reais feitas no código herdado** para bater com o rigor
+  de tipo deste monorepo (`tsconfig.base.json` usa
+  `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`, mais
+  estrito que o `tsconfig.json` isolado do pacote original) —
+  `src/queue-consumer.ts` tinha 4 acessos de índice não guardados
+  (cabeçalho da planilha, aba do XLSX, grupos de regex de data BR) que
+  passavam no tsconfig solto do pacote mas não no daqui. Corrigido com
+  guards explícitos, não com `any`/supressão. Também um
+  `no-useless-escape` real em `schemas.ts` (`\-` desnecessário dentro de
+  `[\s\-]`). `typecheck` + `lint` limpos depois.
+- **Deploy real**: `autosetup-worker-connector` →
+  `https://autosetup-worker-connector.teodoromiranda.workers.dev`.
+- **Ponta a ponta validado com dado real**, duas vezes (a segunda depois
+  de Carlos corrigir que a Casa do Fábio tem 2 unidades, não 1): código
+  de pareamento de teste → `/api/connector/parear` → token → upload de
+  `reservas.xlsx` real via `/api/connector/sync` com hash SHA-256
+  conferido → fila processou → linha estruturada confirmada em
+  `reservas` via `wrangler d1 execute --command "SELECT..."` → conector
+  de teste revogado, linha/objeto R2/código de teste removidos depois.
+  Nenhum dado de teste ficou no banco de produção.
+- **Códigos de pareamento reais inseridos** (D1 `autosetup-leads`,
+  tabela `connector_pairing_codes`, `usado = 0`, prontos pra instalação
+  real): `CASA-FABIO-001` → `casa-do-fabio-sede`, `CASA-FABIO-002` →
+  `casa-do-fabio-anexo`.
+- **Agente Go recompilado** com a URL real do Worker (era placeholder
+  `https://connector.autosetup.digital`) —
+  `_connector/agent-go/main.go` ajustado, rebuild
+  `GOOS=windows GOARCH=amd64 CGO_ENABLED=0` confirmado (PE32+ válido).
+- **Go e Inno Setup instalados nesta máquina via winget** (nenhum dos
+  dois estava presente) — instalação de sistema, não só do projeto;
+  confirmado com Carlos antes de cada instalação. Instalador final
+  gerado de verdade: `_connector/installer/Output/AutoSetupConnector-Setup-1.0.0.exe`.
+- **Regra de segredo aplicada, não quebrada**: `RESEND_API_KEY` e
+  `ALERT_EMAIL_TO` **não foram configurados** por decisão de Carlos
+  nesta sessão (feature de alerta por e-mail fica inerte até ele
+  cadastrar os dois direto no painel da Cloudflare — o código já trata
+  a ausência sem quebrar nada, só não envia o e-mail de erro de
+  parsing).
+
+**O que ainda não foi feito, registrado como pendência real**:
+- `RESEND_API_KEY` + `ALERT_EMAIL_TO` no painel da Cloudflare (Worker
+  `autosetup-worker-connector` → Settings → Variables and Secrets).
+- `agent-go/` e `installer/` continuam em `_connector/` (fora de
+  `apps/core/`) — só o `backend/` foi migrado pra dentro do monorepo
+  formal. Decisão de organização (mover ou não pra
+  `apps/core/connector-agent` etc.) fica em aberto, não decidida
+  unilateralmente aqui.
+- Piloto real com o Fábio (Passo 8 do plano): orientar a criar a
+  estrutura de pastas, instalar em cada unidade com o código
+  correspondente, acompanhar o SmartScreen (instalador sem assinatura
+  de código, aviso esperado), confirmar sincronização real.
+- `LENS_REFRESH_URL` não configurado (opcional, sem efeito se ausente)
+  — contrato do endpoint de regeneração do LENS não existe/não foi
+  definido.
+
+## Self-service de código de pareamento do Connector (19/09/2026)
+
+Antes disso, criar `property_id` + código de pareamento novo (ex.: pro
+piloto do Fábio) exigia `INSERT` manual via `wrangler d1 execute`
+(ver seção anterior) — bloqueava qualquer vendedor/cliente remoto sem
+passar por engenharia. Fonte: pedido de Carlos.
+
+- **Auditoria feita antes de desenhar** (não construir sem entender o
+  terreno primeiro): confirmado que (1) não existe nenhum sistema de
+  login em lugar nenhum do monorepo — `/admin/*` hoje é só URL não
+  linkada, sem checagem nenhuma; (2) o instalador só existia localmente
+  em `_connector/installer/Output/`, nunca hospedado publicamente; (3)
+  `property_id` é uma string solta, sem `FOREIGN KEY` nem vínculo com
+  `leads`/`pagamentos` — confirmado lendo `connector_pairing_codes` e o
+  fluxo de `parear.ts`.
+- **Achado real que simplificou o desenho**: os dois `.exe` existentes
+  (`-sede`/`-anexo`) diferem só no `/DInstanceName` passado em tempo de
+  compilação (`_connector/installer/installer.iss`) — controla só a
+  pasta/nome da instância local, não tem pareamento nem propriedade
+  embutida (confirmado: nenhum `pareamento-prefill.json` foi usado nos
+  builds reais). Ou seja, o build "-sede" já É o instalador genérico —
+  não precisa recompilar por cliente. Copiado pra
+  `apps/core/web/public/downloads/AutoSetupConnector-Setup-1.0.0.exe`
+  como download público único.
+- **Nova rota**: `POST /api/admin/connector/criar` em `apps/core/web`
+  (não no `worker-connector`) — o app web já tem binding pro mesmo D1
+  `autosetup-leads`, então escreve direto em `connector_pairing_codes`
+  sem infra nova. Gera `property_id` + código (slug do nome do negócio,
+  sufixo numérico sequencial por negócio pra evitar colisão de PK ao
+  rodar de novo) por unidade informada.
+- **Formulário**: `apps/core/web/src/app/admin/connector/page.tsx` — não
+  linkado publicamente, mesmo padrão de `/admin/clientes`. Protegido por
+  senha compartilhada (`CONNECTOR_ADMIN_SECRET`, comparação em tempo
+  constante) — não é login de verdade, proporcional ao resto do projeto
+  que também não tem (ver auditoria acima). Campo opcional "código do
+  indicador" pra rastrear comissão, sem forçar vínculo relacional (não
+  existe hoje campo confiável em comum, mesma limitação já documentada
+  pra `leads`/`pagamentos`).
+- **Migration incremental real**:
+  `apps/core/worker-connector/migrations/0003_pareamento_indicador.sql`
+  — `ALTER TABLE connector_pairing_codes ADD COLUMN codigo_indicacao
+  TEXT` (nullable, não apaga nada). **Pendência real**: não foi aplicada
+  no D1 de produção ainda — precisa rodar
+  `npx wrangler d1 execute autosetup-leads --remote --file=./migrations/0003_pareamento_indicador.sql`
+  manualmente antes da rota funcionar (mesmo processo já usado pras
+  migrations 0001/0002).
+- **`CONNECTOR_ADMIN_SECRET` não configurado** por decisão de escopo
+  (regra de segredo: quem digita o valor real é sempre uma pessoa, ver
+  `docs/secrets-registry.md`) — a rota já trata a ausência sem quebrar
+  feio (responde 503 com mensagem explícita), mas fica inerte até
+  `wrangler secret put CONNECTOR_ADMIN_SECRET` ser rodado.
+- **Limitação conhecida, não implementada agora**: o formulário cobre o
+  caso comum (1 negócio, 1 ou N unidades nomeadas manualmente). Não
+  cobre nenhum cadastro automático de cliente maior nem integração com
+  `leads`/`pagamentos` além do campo de texto livre — ver auditoria
+  (achado 3) sobre por que isso não foi forçado.
+- **O que ainda falta pra ir ao ar**: rodar a migration 0003 e
+  configurar `CONNECTOR_ADMIN_SECRET` em produção; `typecheck`/`lint`
+  do `apps/core/web` limpos localmente, mas a rota não foi exercitada
+  contra D1 real (sem os dois passos acima, não tem como).
