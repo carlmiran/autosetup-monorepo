@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "autosetup-worker-prospector",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "autosetup-leads",
+      "database_id": "6020ad64-35e8-4e90-a0b1-46020eb4b53b"
+    }
+  ]
+  // [triggers].crons NÃO configurado de propósito — decisões de negócio
+  // ainda pendentes (ver README.md deste módulo) precisam ser resolvidas
+  // antes de definir a frequência/horário real. Ver docs/traceability.md
+  // pro padrão de segredos: OPENAI_API_KEY e GOOGLE_PLACES_API_KEY vão
+  // direto no painel da Cloudflare (Workers & Pages > este projeto >
+  // Settings > Variables and Secrets), nunca aqui.
+}

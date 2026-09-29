@@ -130,6 +130,9 @@ export default function RadarPage() {
           <Link href="/radar/meu-desempenho" className="text-xs underline text-amber">
             Meu desempenho e comissão
           </Link>
+          <Link href="/radar/minha-regiao" className="text-xs underline text-amber">
+            Minha área de atuação (Prospector)
+          </Link>
         </div>
       </header>
       <AvisoIndicadores />

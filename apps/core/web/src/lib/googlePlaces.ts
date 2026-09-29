@@ -117,6 +117,62 @@ export async function buscarNegociosProximos(
   }
 }
 
+export interface LocalizacaoResolvida {
+  lat: number;
+  lng: number;
+  enderecoFormatado?: string;
+}
+
+/** Resolve um texto livre (cidade/bairro) pra coordenadas reais — usada
+ * pelo cadastro manual de região do Prospector (indicador que prefere
+ * digitar onde atua em vez de compartilhar a localização do navegador).
+ * Reaproveita o mesmo endpoint de Text Search já usado em
+ * `buscarConcorrentesGooglePlaces`, em vez de integrar a Geocoding API
+ * separada — evita depender de uma API nova do Google Cloud ainda não
+ * habilitada na conta. Fonte: decisão de Carlos (12/08/2026). */
+export async function geocodificarTexto(texto: string): Promise<LocalizacaoResolvida | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "places.location,places.formattedAddress",
+      },
+      body: JSON.stringify({
+        textQuery: texto,
+        languageCode: "pt-BR",
+        maxResultCount: 1,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("[googlePlaces] erro no geocode:", res.status, await res.text());
+      return null;
+    }
+
+    const data = (await res.json()) as {
+      places?: { location?: { latitude?: number; longitude?: number }; formattedAddress?: string }[];
+    };
+    const primeiro = data.places?.[0];
+    if (primeiro?.location?.latitude === undefined || primeiro?.location?.longitude === undefined) {
+      return null;
+    }
+
+    return {
+      lat: primeiro.location.latitude,
+      lng: primeiro.location.longitude,
+      enderecoFormatado: primeiro.formattedAddress,
+    };
+  } catch (err) {
+    console.error("[googlePlaces] falha no geocode:", err);
+    return null;
+  }
+}
+
 export async function buscarConcorrentesGooglePlaces(
   nicho: string,
   cidade: string,
