@@ -1,6 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "autosetup-web",
+  // Tem que bater com o Worker real que serve o site (Workers Builds
+  // conectado ao repo) — antes era "autosetup-web", que não existia, e
+  // `wrangler secret put`/`deploy` daqui iam pro Worker errado.
+  "name": "autosetup-monorepo",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
