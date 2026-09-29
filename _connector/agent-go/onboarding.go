@@ -68,7 +68,7 @@ func executarOnboarding(apiBaseURL, prefillArquivo string) (*Config, string, err
 
 	codigo := prefill.CodigoPareamento
 	if codigo == "" {
-		codigo, err = lerLinhaInterativa(reader, "\nCódigo de pareamento (ex.: CASA-FABIO-001): ")
+		codigo, err = lerLinhaInterativa(reader, "\nCódigo de pareamento (ex.: NEGOCIO-001): ")
 		if err != nil {
 			return nil, "", err
 		}
