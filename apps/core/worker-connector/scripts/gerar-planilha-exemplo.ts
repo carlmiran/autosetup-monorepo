@@ -1,6 +1,6 @@
 // =====================================================================
-// Gera uma planilha .xlsx SINTÉTICA que recria a estrutura descrita da
-// planilha real do Fábio (grid por dia/mês, blocos quinzenais, linhas
+// Gera uma planilha .xlsx SINTÉTICA que recria a estrutura de uma
+// planilha real de controle diário (grid por dia/mês, blocos quinzenais, linhas
 // Qtdd/Valor/EXTRAS/Total, listas de nomes por coluna de dia, notas de
 // vencimento/pagamento) — usada pra testar o parser ENQUANTO o arquivo
 // real não chega. Assim que o arquivo real existir, o dry-run deve
@@ -8,7 +8,7 @@
 // estruturais que este exemplo não previu — é esperado).
 //
 // Uso: npx tsx scripts/gerar-planilha-exemplo.ts
-// Gera: scripts/fixtures/exemplo-grid-fabio.xlsx
+// Gera: scripts/fixtures/exemplo-grid-diario.xlsx
 // =====================================================================
 
 import * as fs from "node:fs";
@@ -79,7 +79,7 @@ function gerar(): Linha[] {
   const NUM_COLUNAS = 32; // col 0 = label, col 1..31 = dias (agosto tem 31)
 
   const linhas: Linha[] = [];
-  linhas.push(["Casa do Fábio — Controle de Hospedagem", null]);
+  linhas.push(["Empresa Exemplo — Controle Diário", null]);
   linhas.push(["Agosto 2026", null]); // contexto de mês/ano
   linhas.push([]); // separador
 
@@ -94,7 +94,7 @@ function gerar(): Linha[] {
         nomeEspaco: "Q1",
         dias: dias1,
         valorUnitario: 65,
-        nomesPorDia: dias1.map((d) => (d === 3 ? [] : d === 8 ? ["Ana"] : ["Maria", "Joao"])),
+        nomesPorDia: dias1.map((d) => (d === 3 ? [] : d === 8 ? ["Pessoa C"] : ["Pessoa A", "Pessoa B"])),
         extrasPorDia: new Map([[2, 10], [10, 20]]),
         incluirExtras: true,
       },
@@ -111,7 +111,7 @@ function gerar(): Linha[] {
         nomeEspaco: "Q2",
         dias: dias1,
         valorUnitario: 65,
-        nomesPorDia: dias1.map((d) => (d % 4 === 0 ? ["Carlos +1"] : ["Beatriz"])),
+        nomesPorDia: dias1.map((d) => (d % 4 === 0 ? ["Pessoa D +1"] : ["Pessoa E"])),
         incluirExtras: false,
       },
       NUM_COLUNAS,
@@ -119,14 +119,14 @@ function gerar(): Linha[] {
     )
   );
 
-  // BRUNA — bloco com Qtdd propositalmente diferente da contagem de nomes no dia 5 (testa aviso, sem correção automática).
+  // ESTUDIO — bloco com Qtdd propositalmente diferente da contagem de nomes no dia 5 (testa aviso, sem correção automática).
   linhas.push(
     ...construirBlocoEspaco(
       {
-        nomeEspaco: "BRUNA",
+        nomeEspaco: "ESTUDIO",
         dias: dias1,
         valorUnitario: 65,
-        nomesPorDia: dias1.map((d) => (d === 5 ? ["Wesley"] : d === 11 ? ["Nina", "Otto"] : [])),
+        nomesPorDia: dias1.map((d) => (d === 5 ? ["Pessoa F"] : d === 11 ? ["Pessoa G", "Pessoa H"] : [])),
         qtddOverride: new Map([[5, 3]]), // planilha diz 3, só tem 1 nome — aviso, não conserto
         incluirExtras: true,
       },
@@ -145,10 +145,10 @@ function gerar(): Linha[] {
   linhas.push(
     ...construirBlocoEspaco(
       {
-        nomeEspaco: "SALAFRENTE",
+        nomeEspaco: "SALAAZUL",
         dias: dias2,
         valorUnitario: 65,
-        nomesPorDia: dias2.map((d) => (d === 31 ? ["Regina +2"] : d % 5 === 0 ? [] : ["Yara"])),
+        nomesPorDia: dias2.map((d) => (d === 31 ? ["Pessoa I +2"] : d % 5 === 0 ? [] : ["Pessoa J"])),
         incluirExtras: true,
         extrasPorDia: new Map([[20, 15]]),
       },
@@ -168,7 +168,7 @@ function main(): void {
 
   const dir = path.join(__dirname, "fixtures");
   fs.mkdirSync(dir, { recursive: true });
-  const destino = path.join(dir, "exemplo-grid-fabio.xlsx");
+  const destino = path.join(dir, "exemplo-grid-diario.xlsx");
   XLSX.writeFile(wb, destino);
   console.log(`Gerado: ${destino}`);
 }

@@ -1,7 +1,7 @@
-# Interpretador Inteligente de Planilhas — escopo implementado (validado no piloto do Fábio)
+# Interpretador Inteligente de Planilhas — escopo implementado (validado no cliente piloto)
 
 Recorte mínimo da especificação de 10 fases recebida de outra sessão/comitê,
-suficiente pra validar o piloto do Fábio com segurança. Detecção e extração
+suficiente pra validar o cliente piloto com segurança. Detecção e extração
 são **estruturais** (forma do grid: sequência de dias, blocos
 Qtdd/Valor/Extras/Total, rótulos de linha) — nada aqui depende de vocabulário
 de nenhum nicho específico, então serve pra qualquer negócio que organize
@@ -34,7 +34,7 @@ o parser tabular decide o que sincroniza de verdade hoje.
   segunda variante roda contra todas as abas de um arquivo, não só a
   primeira.
 - `scripts/gerar-planilha-exemplo.ts` — gera uma planilha `.xlsx`
-  sintética recriando a estrutura da planilha real do Fábio (grid por
+  sintética recriando a estrutura da planilha real do cliente piloto (grid por
   dia/mês, blocos quinzenais, Qtdd/Valor/EXTRAS/Total, nomes empilhados,
   notas de vencimento/pagamento) — fixture de regressão, não uma cópia de
   nenhum arquivo real.
@@ -92,7 +92,7 @@ parser) é a que mais provavelmente representa a operação principal.
 **Pendência real, não técnica**: o arquivo tem 8 abas, cada uma nomeada
 por uma contraparte/pessoa diferente — não ficou claro qual(is)
 mapeia(m) pras duas instâncias já configuradas no Connector
-(`CASA-FABIO-001`/`002`, sede/anexo). Confirmar isso com o cliente antes
+(códigos `-001`/`-002` do cliente piloto, sede/anexo). Confirmar isso com o cliente antes
 de decidir se o piloto sincroniza só a aba principal ou várias. Três
 outras abas caíram em `UNKNOWN` de forma correta (não são grid nem
 tabular — uma é despesas gerais em texto livre, confirmado esperado;
@@ -108,7 +108,7 @@ e o tipo de classificação era `HOSPITALITY_GRID`. Renomeado pra
 a detecção e a extração nunca dependeram de vocabulário de hospedagem — são
 puramente estruturais (sequência de dias do mês, blocos Qtdd/Valor/Extras/Total,
 rótulos de linha). O nome antigo era só um artefato de ter sido validado
-primeiro contra um cliente de hospedagem (Casa do Fábio), não uma limitação
+primeiro contra um cliente de hospedagem (o cliente piloto), não uma limitação
 do código. `GuestObservation` virou `CounterpartObservation` pelo mesmo
 motivo — representa "nome associado a um dia", não necessariamente um
 hóspede.
@@ -147,7 +147,7 @@ Documentado aqui pra não se perder, não pra travar nada:
 - Outros parsers da especificação original (ex.: um parser específico pra
   agenda de barbearia) — só faz sentido construir quando houver um segundo
   cliente real de outro nicho pra validar contra dado real, do jeito que foi
-  feito com o Fábio. Por enquanto a generalização feita aqui é só de
+  feito com o cliente piloto. Por enquanto a generalização feita aqui é só de
   nome/schema, não de capacidade nova.
 - Uso de LLM pra resolver ambiguidade — tudo aqui é determinístico de
   propósito.
@@ -159,7 +159,7 @@ Documentado aqui pra não se perder, não pra travar nada:
 ```bash
 cd apps/core/worker-connector
 npx tsx scripts/gerar-planilha-exemplo.ts   # gera o fixture sintético (só precisa rodar 1x, ou de novo se mudar)
-npx tsx scripts/dry-run.ts scripts/fixtures/exemplo-grid-fabio.xlsx       # 1 aba
+npx tsx scripts/dry-run.ts scripts/fixtures/exemplo-grid-diario.xlsx      # 1 aba
 npx tsx scripts/dry-run-todas-abas.ts caminho/para/arquivo-com-varias-abas.xlsx
 npx tsx scripts/test-daily-grid.ts
 ```

@@ -4,7 +4,7 @@
 // Versão curta do diagnóstico — 5 perguntas, mesmo motor real por
 // trás (/api/diagnostico), mesmo padrão de campo com áudio. Fonte:
 // pedido de Carlos (13/08/2026) — frustração recorrente e real de
-// gente como o Fábio achando o formulário completo longo demais.
+// gente como o cliente piloto achando o formulário completo longo demais.
 //
 // Mantido do formulário antigo só o essencial: nome do negócio,
 // cidade e nicho (os 3 já obrigatórios de verdade no backend) + o

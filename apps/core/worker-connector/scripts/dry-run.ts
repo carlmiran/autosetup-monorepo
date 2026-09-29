@@ -2,7 +2,7 @@
 // Dry run (Fase 7) — roda o classificador + parser contra um arquivo
 // .xlsx/.csv REAL, local, e imprime um relatório humano-legível. NUNCA
 // envia nada pro backend (não chama D1/R2/fetch nenhum) — é seguro
-// rodar contra o arquivo real do Fábio assim que ele chegar.
+// rodar contra o arquivo real de um cliente.
 //
 // Uso:
 //   npx tsx scripts/dry-run.ts caminho/para/arquivo.xlsx

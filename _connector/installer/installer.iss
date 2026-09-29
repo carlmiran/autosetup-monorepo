@@ -17,7 +17,8 @@
 ;   iscc /DInstanceName=sede  installer.iss
 ;   iscc /DInstanceName=anexo installer.iss
 ;
-; Sem passar /DInstanceName, usa "sede" como padrão (instalação única).
+; Sem passar /DInstanceName, usa "principal" como padrão (instalação única,
+; é o build genérico publicado em /downloads).
 ; O nome vira parâmetro de linha de comando (--instancia=NOME) do próprio
 ; agente, que isola config.json/hash-cache.json/fila-pendente.json (pasta
 ; %APPDATA%\AutoSetupConnector\<instancia>\) e o token no Windows
@@ -35,7 +36,7 @@
 ; e o agente usa esses dois valores pra pular só os prompts de código de
 ; pareamento e pasta (ver agent-go/onboarding.go). Formato do arquivo:
 ;   {
-;     "codigo_pareamento": "CASA-FABIO-002",
+;     "codigo_pareamento": "NEGOCIO-001",
 ;     "pasta_autorizada": "C:\\AutoSetup\\Dados"
 ;   }
 ; O aceite de termos e a confirmação da lista de arquivos ANTES do
@@ -50,7 +51,7 @@
 ; =====================================================================
 
 #ifndef InstanceName
-  #define InstanceName "sede"
+  #define InstanceName "principal"
 #endif
 
 #define MyAppName "AutoSetup Connector"

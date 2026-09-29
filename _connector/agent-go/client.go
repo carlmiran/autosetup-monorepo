@@ -34,7 +34,7 @@ type respostaPareamento struct {
 }
 
 // Parear chama POST /api/connector/parear com o código gerado manualmente
-// para o cliente (ex.: CASA-FABIO-001). consentimentoEm é o momento exato
+// para o cliente (ex.: NEGOCIO-001). consentimentoEm é o momento exato
 // em que a pessoa confirmou "sim" no prompt interativo de termos — nunca
 // o horário de chegada no servidor, capturado no instante real do aceite
 // (ver onboarding.go).

@@ -51,13 +51,14 @@ você não configurar — não inventei o contrato real do endpoint de
 regeneração do LENS porque não tenho essa informação; se existir,
 é só apontar a URL.
 
-## 2. Gerar o código de pareamento da Casa do Fábio
+## 2. Gerar o código de pareamento do cliente
 
-Antes do piloto, insira manualmente o código (Passo 8):
+Hoje isso é feito pelo formulário `/admin/connector` do `apps/core/web`.
+O equivalente manual (histórico, usado no cliente piloto — Passo 8):
 
 ```sql
 INSERT INTO connector_pairing_codes (codigo, property_id)
-VALUES ('CASA-FABIO-001', '<property_id real da Casa do Fábio no seu banco>');
+VALUES ('NEGOCIO-001', '<property_id real do cliente no seu banco>');
 ```
 
 ## 3. Agente Go — ajustar antes de gerar o instalador
@@ -94,9 +95,9 @@ manualmente com "Mais informações" → "Executar assim mesmo".
 
 - [ ] Deploy do backend feito e testado com um arquivo de teste
       (Passos 1–5 de ponta a ponta) **antes** de instalar no Windows
-      do Fábio — é a ordem que o plano original pediu explicitamente.
-- [ ] Código `CASA-FABIO-001` inserido no D1.
-- [ ] Orientar o Fábio a criar a pasta com subpastas
+      do cliente piloto — é a ordem que o plano original pediu explicitamente.
+- [ ] Código de pareamento do cliente piloto inserido no D1.
+- [ ] Orientar o cliente piloto a criar a pasta com subpastas
       Reservas/Hóspedes/Quartos/Tarifas e mover os arquivos existentes
       para lá.
 - [ ] Acompanhar a instalação por telefone/WhatsApp, guiando o
@@ -119,5 +120,5 @@ manualmente com "Mais informações" → "Executar assim mesmo".
   especificou se deveria ser uma janela gráfica (GUI) — se você quiser
   isso, é um passo a mais (ex. Fyne ou Walk) que não constrói sozinho
   de forma confiável sem testar em Windows real.
-- **Nome real do property_id da Casa do Fábio**: só você tem esse
+- **Nome real do property_id do cliente piloto**: só você tem esse
   dado no seu banco — preencha no INSERT do item 2 acima.

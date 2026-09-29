@@ -186,7 +186,7 @@ export function encontrarContextoMesAno(linhas: unknown[][]): ContextoMesAno | n
       }
 
       // Borda de palavra de verdade — sem isso, "mar" (abreviação de março)
-      // bate como substring dentro de "MARIAH" (rótulo de espaço, não mês),
+      // bate como substring dentro de "MARQUISE" (rótulo de espaço, não mês),
       // achado real testando contra planilha de terceiro. Normaliza só
       // acento/caixa aqui (não normalizarCabecalho, que troca espaço/hífen
       // por "_" e quebraria a semântica de \b).

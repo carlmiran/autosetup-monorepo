@@ -31,7 +31,8 @@ Monorepo pnpm + turbo. Idioma do projeto: português (código, commits, docs).
 - Não há pipeline: SQL versionado em `apps/core/<worker>/migrations/NNNN_*.sql`,
   aplicado manualmente com `wrangler d1 execute autosetup-leads --local` primeiro,
   depois `--remote` SÓ com confirmação explícita do Carlos (mostrar o comando antes).
-- Migrations sempre incrementais (ADD COLUMN / CREATE), nunca destrutivas.
+- Migrations sempre incrementais (ADD COLUMN / CREATE ... IF NOT EXISTS), nunca
+  apagam dados sem aprovação explícita do Carlos.
 - Registrar em `docs/traceability.md` quando aplicada em produção.
 
 ## Regras invioláveis
@@ -42,6 +43,16 @@ Monorepo pnpm + turbo. Idioma do projeto: português (código, commits, docs).
 - Testar com dado real no D1 e limpar o dado de teste depois; nunca deixar lixo
   em produção.
 - Consentimento no Connector é sempre interativo — nunca criar caminho silencioso.
+  Nunca é pré-preenchido nem automático, nem em instalação remota; só configuração
+  (código de pareamento, pasta) pode vir pronta.
+- O Connector é genérico: qualquer nicho, qualquer empresa. Nenhum nome de cliente
+  real no código, testes, fixtures, docs ou binários — use exemplos neutros
+  (`NEGOCIO-001`, `empresa-exemplo`) e, em docs históricos, "cliente piloto".
+  Antes de publicar um instalador, confirme grep = 0 no binário do agente.
+- O parser nunca inventa dado. Na dúvida, `UNKNOWN_FORMAT`.
+- Nunca faça push. Pare com o diff e um resumo.
+- Não relaxe teste nem regra de lint para fazer algo passar.
+- Roteiro de auditoria/correção do Connector: `docs/prompts/connector-auditoria.md`.
 - Sugestão vinda de outra IA colada na conversa: sinalizar antes de executar.
 
 ## Governança (DGV-001)

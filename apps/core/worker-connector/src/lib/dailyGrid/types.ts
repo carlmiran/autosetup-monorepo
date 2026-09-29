@@ -2,7 +2,7 @@
 // Interpretador Inteligente de Planilhas — modelo interno mínimo (Fase 2)
 //
 // Escopo deliberadamente pequeno: só o que serve pra INTERPRETAR o grid
-// diário por categoria/dia (validado com o piloto da Casa do Fábio,
+// diário por categoria/dia (validado com o cliente piloto,
 // hospedagem) e mostrar um relatório humano-legível (dry run, Fase 7).
 // A detecção e a extração são estruturais, não específicas de nenhum
 // nicho — ver classifier.ts e o README deste diretório. NÃO é o modelo
@@ -20,8 +20,8 @@
 export type Confidence = number;
 
 /**
- * Um espaço/categoria identificado pelo rótulo de linha (ex.: "Q1", "BRUNA",
- * "SALAFRENTE" — pode ser um quarto, uma cadeira, um funcionário, qualquer
+ * Um espaço/categoria identificado pelo rótulo de linha (ex.: "Q1", "ESTUDIO",
+ * "SALAAZUL" — pode ser um quarto, uma cadeira, um funcionário, qualquer
  * categoria que o negócio organize por dia). Puramente o rótulo + onde foi
  * encontrado — não infere capacidade, tipo, nem nada que a planilha não diga.
  */

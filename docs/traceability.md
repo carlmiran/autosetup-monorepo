@@ -524,7 +524,7 @@ Testado: typecheck+lint(0 erros)+build de produção limpos.
 
 ## Bug real de campo encontrado por prospect (02/08/2026)
 
-Fonte: Fábio (Pousada Casa do Fábio, primeiro contato externo real),
+Fonte: o cliente piloto (pousada, primeiro contato externo real),
 relatou por áudio no WhatsApp pra Carlos que não conseguiu colocar o
 link do Instagram no diagnóstico. Nenhum registro dele apareceu no D1,
 consistente com ter travado no formulário antes de conseguir enviar.
@@ -821,7 +821,7 @@ recusando sem os 3 campos mínimos reais.
 
 ## Meus Clientes: editar, apagar, compartilhar (10/08/2026)
 
-Fonte: Carlos viu a página real (print do celular, cliente "Fabio Wey"
+Fonte: Carlos viu a página real (print do celular, com um cliente real
 cadastrado) e pediu edição completa — hoje só dava pra criar.
 
 - `PATCH /api/indicadores/clientes`: edita nome/WhatsApp/notas/follow-up
@@ -1046,7 +1046,7 @@ no D1 de produção que não há bloqueio ativo pro IP relatado no momento
 
 Fonte: Carlos pediu versão curta do diagnóstico, endereçando frustração
 real e recorrente (formulário completo é longo demais pra parte do
-público, confirmado pelo relato do Fábio em campo).
+público, confirmado pelo relato do cliente piloto em campo).
 
 - `/diagnostico/rapido`: 5 perguntas (nome do negócio, cidade, nicho,
   WhatsApp, maior dificuldade), cada uma com opção de gravar/transcrever
@@ -1248,7 +1248,7 @@ Workers pelo painel (passo a passo já passado), depois
 
 Fonte: código do Connector (backend Worker + agente Go + instalador Inno
 Setup) recebido pronto de uma sessão paralela (pasta `_connector/`,
-extraída de `autosetup-connector-v1.zip`), com a Casa do Fábio como
+extraída de `autosetup-connector-v1.zip`), com o cliente piloto como
 primeiro uso real, não piloto de validação manual. Ver
 `docs/plano-connector-implementacao.md` pela especificação
 original (Passos 1-8) e `_connector/README.md` pelo estado em que o
@@ -1285,7 +1285,7 @@ Cloudflare/D1 reais).
 - **Deploy real**: `autosetup-worker-connector` →
   `https://autosetup-worker-connector.teodoromiranda.workers.dev`.
 - **Ponta a ponta validado com dado real**, duas vezes (a segunda depois
-  de Carlos corrigir que a Casa do Fábio tem 2 unidades, não 1): código
+  de Carlos corrigir que o cliente piloto tem 2 unidades, não 1): código
   de pareamento de teste → `/api/connector/parear` → token → upload de
   `reservas.xlsx` real via `/api/connector/sync` com hash SHA-256
   conferido → fila processou → linha estruturada confirmada em
@@ -1294,8 +1294,8 @@ Cloudflare/D1 reais).
   Nenhum dado de teste ficou no banco de produção.
 - **Códigos de pareamento reais inseridos** (D1 `autosetup-leads`,
   tabela `connector_pairing_codes`, `usado = 0`, prontos pra instalação
-  real): `CASA-FABIO-001` → `casa-do-fabio-sede`, `CASA-FABIO-002` →
-  `casa-do-fabio-anexo`.
+  real): código `-001` → property_id `<cliente-piloto>-sede`, código `-002` →
+  `<cliente-piloto>-anexo` (valores reais só no D1, não aqui).
 - **Agente Go recompilado** com a URL real do Worker (era placeholder
   `https://connector.autosetup.digital`) —
   `_connector/agent-go/main.go` ajustado, rebuild
@@ -1319,7 +1319,7 @@ Cloudflare/D1 reais).
   formal. Decisão de organização (mover ou não pra
   `apps/core/connector-agent` etc.) fica em aberto, não decidida
   unilateralmente aqui.
-- Piloto real com o Fábio (Passo 8 do plano): orientar a criar a
+- Piloto real com o cliente piloto (Passo 8 do plano): orientar a criar a
   estrutura de pastas, instalar em cada unidade com o código
   correspondente, acompanhar o SmartScreen (instalador sem assinatura
   de código, aviso esperado), confirmar sincronização real.
@@ -1330,7 +1330,7 @@ Cloudflare/D1 reais).
 ## Self-service de código de pareamento do Connector (19/09/2026)
 
 Antes disso, criar `property_id` + código de pareamento novo (ex.: pro
-piloto do Fábio) exigia `INSERT` manual via `wrangler d1 execute`
+cliente piloto) exigia `INSERT` manual via `wrangler d1 execute`
 (ver seção anterior) — bloqueava qualquer vendedor/cliente remoto sem
 passar por engenharia. Fonte: pedido de Carlos.
 

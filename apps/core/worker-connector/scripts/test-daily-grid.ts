@@ -54,12 +54,12 @@ teste("planilha tabular (reservas) é classificada como TABULAR, não GRID", () 
 });
 
 // ---------------------------------------------------------------------
-// 2) Grid do Fábio (fixture de hospedagem) é classificado corretamente
+// 2) Grid diário sintético (fixture) é classificado corretamente
 //    como DAILY_GRID — a classificação é estrutural, não sabe que é
 //    hospedagem, só reconhece a forma do grid.
 // ---------------------------------------------------------------------
-teste("grid diário (fixture do Fábio) é classificado como DAILY_GRID", () => {
-  const caminho = path.join(__dirname, "fixtures", "exemplo-grid-fabio.xlsx");
+teste("grid diário (fixture sintético) é classificado como DAILY_GRID", () => {
+  const caminho = path.join(__dirname, "fixtures", "exemplo-grid-diario.xlsx");
   assert(fs.existsSync(caminho), `fixture não encontrado em ${caminho} — rode gerar-planilha-exemplo.ts primeiro`);
   const linhas = lerXlsx(caminho);
   const r = classifyDocument(linhas);
@@ -91,15 +91,15 @@ teste("bloco sem linha EXTRAS não quebra, extras fica null", () => {
 
 // ---------------------------------------------------------------------
 // Regressão real: rótulo de espaço cuja substring bate com abreviação de
-// mês (ex.: "MARIAH" contém "mar") não pode ser confundido com contexto
+// mês (ex.: "MARQUISE" contém "mar") não pode ser confundido com contexto
 // de mês/ano — achado testando contra planilha real de terceiro.
 // ---------------------------------------------------------------------
-teste("rótulo de espaço com abreviação de mês embutida (ex.: MARIAH ~ 'mar') não vira falso contexto de mês", () => {
+teste("rótulo de espaço com abreviação de mês embutida (ex.: MARQUISE ~ 'mar') não vira falso contexto de mês", () => {
   const linhas: Linha[] = [
     [null, 1, 2, 3, 4, 5],
-    ["MARIAH", null, null, null, null, null],
-    ["SETUBAL", null, null, null, null, null], // contém "set" (setembro)
-    ["AGOSTINHO", null, null, null, null, null], // contém "ago" (agosto)
+    ["MARQUISE", null, null, null, null, null],
+    ["SETORIAL", null, null, null, null, null], // contém "set" (setembro)
+    ["AGORA", null, null, null, null, null], // contém "ago" (agosto)
   ];
   const contexto = encontrarContextoMesAno(linhas);
   assert(contexto === null, `não deveria detectar mês/ano nenhum rótulo de espaço, veio ${JSON.stringify(contexto)}`);
@@ -156,11 +156,11 @@ teste("meses com 28/29/30/31 dias — dia inexistente no mês não vira dataIso 
 // 6) Nome com "+1" não é descartado
 // ---------------------------------------------------------------------
 teste('nome com "+1" é preservado (rawText e nome intactos)', () => {
-  const linhas = gridMinimo({ nomesDia1: ["Carlos +1"] });
+  const linhas = gridMinimo({ nomesDia1: ["Pessoa A +1"] });
   const r = parseDailyGrid(linhas);
   const obs = r.observacoesContrapartes.find((o) => o.nome.includes("+1"));
   assert(obs !== undefined, "observação com '+1' não foi encontrada");
-  assert(obs.nome === "Carlos +1", `nome deveria ser "Carlos +1", veio "${obs.nome}"`);
+  assert(obs.nome === "Pessoa A +1", `nome deveria ser "Pessoa A +1", veio "${obs.nome}"`);
 });
 
 // ---------------------------------------------------------------------

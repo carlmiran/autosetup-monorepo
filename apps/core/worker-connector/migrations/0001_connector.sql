@@ -10,7 +10,7 @@
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS connectors (
   connector_id       TEXT PRIMARY KEY,               -- UUID gerado na instalação
-  property_id        TEXT NOT NULL,                  -- vincula à empresa (ex.: Casa do Fábio)
+  property_id        TEXT NOT NULL,                  -- vincula à empresa (ex.: empresa-exemplo)
   token_hash         TEXT NOT NULL,                  -- SHA-256 do token; nunca texto plano
   pasta_autorizada   TEXT,                           -- caminho local, informativo
   status             TEXT NOT NULL DEFAULT 'ativo',  -- ativo | pausado | revogado
@@ -23,7 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_connectors_property ON connectors(property_id);
 
 -- ---------------------------------------------------------------------
 -- Códigos de pareamento — gerados manualmente por vocês para cada
--- cliente novo (ex.: CASA-FABIO-001) e consumidos uma única vez pelo
+-- cliente novo (ex.: NEGOCIO-001) e consumidos uma única vez pelo
 -- endpoint /api/connector/parear
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS connector_pairing_codes (
