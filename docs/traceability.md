@@ -1434,12 +1434,12 @@ por Carlos (incluindo os comandos `--remote`).
   `npx wrangler d1 execute autosetup-leads --remote --file=./migrations/0003_pareamento_indicador.sql`
   (1 query, sucesso). `PRAGMA` depois confirma a coluna. Resolve a
   pendência da seção "Self-service de código de pareamento" (19/09/2026).
-- **Pendência real, ação de Carlos**: o envio do instalador novo para o R2
-  (`public/downloads/AutoSetupConnector-Setup-1.0.0.exe`) foi bloqueado
-  pelo controle de permissões do Claude Code nesta sessão. Ainda precisa
-  rodar (a partir de `apps/core/web`):
+- **Instalador novo publicado no R2** (por instrução explícita de Carlos):
   `npx wrangler r2 object put autosetup-connector-uploads/public/downloads/AutoSetupConnector-Setup-1.0.0.exe --file=../../../_connector/installer/Output/AutoSetupConnector-Setup-1.0.0.exe --content-type=application/vnd.microsoft.portable-executable --remote`
-  e conferir se o tamanho no R2 é 6.938.519 bytes.
+  (a partir de `apps/core/web`). O objeto foi baixado de volta do R2 para
+  conferir: 6.938.519 bytes e o mesmo SHA-256 do build local. Substitui o
+  build antigo que estava lá. Falta testar a rota pública
+  `/downloads/AutoSetupConnector-Setup-1.0.0.exe` em produção (Passo 5).
 - **Fixture `apps/core/worker-runner/fixtures/leads-teste.csv`**: os 3 nomes
   pareciam de negócios reais e foram trocados por "Estetica/Barbearia
   Exemplo A/B/C", com a mesma estrutura (`nome,telefone,nicho`), os mesmos
