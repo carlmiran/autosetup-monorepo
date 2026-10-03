@@ -59,7 +59,7 @@ Regras permanentes (copie para o CLAUDE.md se ainda não estiverem lá):
 ```
 Execute a varredura de genericidade:
 1. grep -ri no repo inteiro (código, comentários, testes, fixtures, docs, .iss, scripts,
-   CLAUDE.md) por: fabio, casa-fabio, casa-do-fabio, dorgival, e nomes de quartos/guias
+   CLAUDE.md) por: nomes de clientes reais, inclusive nomes de quartos/guias
    usados nos testes antigos. Liste tudo antes de mudar.
 2. Substitua por exemplos neutros (NEGOCIO-001, empresa-exemplo). Em docs históricos,
    use "cliente piloto". Fixtures com dado real: troque por dado sintético equivalente
@@ -226,3 +226,100 @@ Commit por item, sem push. Relatório com prints ou descrição das telas.
 2. Rode antes as migrations e cadastre os secrets que a fase pediu.
 3. `! git push origin main` e espere o build verde no painel da Cloudflare.
 4. Peça: "Repita a tabela de testes de produção do Connector".
+
+## Fase 6 — Fonte Google Drive (conta de serviço)
+
+Pré-requisitos: Fase 2 concluída (códigos de pareamento seguros) e Fase 5 em andamento (resumo automático), porque a fonte Drive só gera valor quando existe um resumo para o cliente ver.
+
+Decisão: o MVP usa uma conta de serviço (o cliente compartilha a pasta com o e-mail do AutoSetup como leitor). OAuth com seletor de arquivos fica para depois. A permissão ampla `drive.readonly` via OAuth exige auditoria de segurança paga do Google, e não vamos por esse caminho.
+
+---
+
+### Parte A — Carlos (fora do Claude Code)
+
+1. Acesse console.cloud.google.com e crie um projeto novo, por exemplo `autosetup-connector`. Mantenha separado do projeto do Places.
+2. Em "APIs e serviços" → "Biblioteca", ative a **Google Drive API**. Se aparecer algum pedido de cobrança, pare e avise. Até onde sabemos, a Drive API é gratuita.
+3. Em "IAM e administrador" → "Contas de serviço", crie uma conta chamada `leitor-connector`. Não dê nenhum papel no projeto: o acesso vem só das pastas que os clientes compartilharem.
+4. Na conta criada, vá em "Chaves" → "Adicionar chave" → JSON. O arquivo é baixado uma única vez.
+   - Se aparecer o bloqueio "iam.disableServiceAccountKeyCreation", a sua conta tem uma organização com política de segurança padrão. Avise para vermos a alternativa.
+5. Copie o e-mail da conta, algo como `leitor-connector@autosetup-connector.iam.gserviceaccount.com`. Esse e-mail **não é secreto** e vai aparecer na tela para o cliente.
+6. Cadastre no painel da Cloudflare, no Worker que o Claude Code indicar na etapa 1 do prompt:
+   - Secret `GDRIVE_SA_KEY`: o conteúdo inteiro do JSON.
+   - Variável `GDRIVE_SA_EMAIL`: o e-mail da conta.
+7. Guarde o JSON num lugar seguro e apague-o da pasta Downloads. Nunca cole esse arquivo no chat nem no Claude Code.
+8. Rotação: a cada 6 meses, gere uma chave nova, troque o secret e apague a chave antiga no Google Cloud.
+
+---
+
+### Parte B — Prompt para o Claude Code
+
+```
+Execute a Fase 6: fonte Google Drive para o Connector, via conta de serviço.
+Regras do CLAUDE.md valem. Nunca leia, peça ou imprima GDRIVE_SA_KEY.
+
+0. Antes de codar: diga em qual Worker o polling deve rodar (worker-connector ou web)
+   e onde cadastrar GDRIVE_SA_KEY e GDRIVE_SA_EMAIL. Proponha o schema e pare para eu aprovar.
+
+1. Modelo de dados (migration incremental, sem apagar nada):
+   - Abstração de fonte: tipo = 'agente_desktop' | 'google_drive'. O agente atual vira
+     uma fonte do tipo agente_desktop, sem mudar o comportamento dele.
+   - Para google_drive: cliente/conector, pasta_id, dono_email (vindo da API),
+     consentimento_em, termos_versao, ativo, ultimo_poll_em, ultimo_erro.
+   - Estado por arquivo: file_id, modifiedTime, md5/hash, status do processamento.
+
+2. Autenticação no Google a partir do Worker:
+   - JWT RS256 assinado com WebCrypto (importKey pkcs8), escopo
+     https://www.googleapis.com/auth/drive.readonly, troca por access token,
+     cache do token até perto da expiração. Sem bibliotecas Node pesadas.
+
+3. Conexão pelo cliente (tela protegida pelo acesso de cliente que já existe):
+   - Mostra o GDRIVE_SA_EMAIL com botão copiar e 3 passos com texto simples:
+     "abra a pasta no Drive → Compartilhar → cole este e-mail como Leitor".
+   - O cliente cola o link da pasta. O backend extrai o ID e valida:
+     a) a conta de serviço tem acesso (senão, explica como compartilhar);
+     b) o dono da pasta tem o MESMO e-mail do cliente cadastrado (senão, recusa
+        com mensagem genérica). Isso impede ativar a pasta de outra pessoa;
+     c) se a pasta estiver como "qualquer pessoa com o link", avisa o cliente do
+        risco e recomenda restringir (não bloqueia);
+     d) erro de política do Google Workspace (compartilhamento externo bloqueado)
+        vira uma mensagem própria, com orientação para falar com o administrador.
+   - Lista os arquivos encontrados (nome, tipo, data), sem conteúdo.
+   - Checkbox de consentimento NUNCA pré-marcado, com o texto dos termos e a versão.
+     Só depois ativa.
+
+4. Sincronização:
+   - Cron (proponha a frequência, sugestão: de hora em hora) lista a pasta sem
+     recursão por padrão. Profundidade 1 opcional, configurável.
+   - Só processa o que mudou (modifiedTime + hash). Mesmo arquivo sem mudança = nada.
+   - Google Planilhas nativas: exportar para xlsx pela API. xlsx/xls/csv: baixar.
+     Todo o resto é ignorado e registrado.
+   - Mesmos limites da Fase 2 (tamanho, zip bomb, chave do R2 gerada pelo servidor).
+   - Depois de baixar, entra no MESMO pipeline do agente: R2 → fila → parsers →
+     UNKNOWN_FORMAT → dados estruturados → resumo da Fase 5.
+   - Respeitar limites da API com backoff em 429/5xx.
+
+5. Revogação e perda de acesso:
+   - Botão "Desconectar Google Drive" para o cliente e no /admin/connector.
+   - Se a API passar a responder 403/404 (o cliente tirou o compartilhamento),
+     marcar como desconectado, parar o polling e mandar alerta pelo e-mail já existente.
+   - Ao desconectar: apagar os brutos no R2 e aplicar a mesma regra de exclusão da Fase 4.
+
+6. /admin/connector: mostrar a fonte de cada conector, pasta (só o ID), dono_email,
+   último poll, último erro, arquivos processados e UNKNOWN_FORMAT.
+
+7. Testes com a API do Drive mockada, cobrindo: pasta não compartilhada; dono com
+   outro e-mail; pasta pública; bloqueio do Workspace; planilha nativa exportada; csv;
+   arquivo desconhecido; arquivo sem mudança; cliente remove o compartilhamento;
+   desconectar apaga os brutos. Os dados de teste são fictícios, sem nomes reais.
+
+8. Rode todos os testes. Commit por etapa, sem push.
+   Relatório: o que mudou, telas, pendências para o Carlos (secrets, migration).
+```
+
+---
+
+### Depois (Carlos)
+
+1. Rode a migration e confira que os secrets estão no Worker certo.
+2. Faça o push e espere o build verde.
+3. Teste de ponta a ponta com uma pasta sua de teste (dados fictícios): compartilhar, colar o link, consentir, alterar uma planilha, esperar o cron, ver o resumo, remover o compartilhamento e confirmar a desconexão.
