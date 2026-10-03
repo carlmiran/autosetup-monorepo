@@ -1410,3 +1410,33 @@ Fonte: pedido de Carlos — não commitar o `.exe` (6,9 MB), servir do R2.
 `wrangler` desta máquina estava com login expirado. Sem ele a rota
 responde 404. Depois de `npx wrangler login`:
 `npx wrangler r2 object put autosetup-connector-uploads/public/downloads/AutoSetupConnector-Setup-1.0.0.exe --file=_connector/installer/Output/AutoSetupConnector-Setup-1.0.0-sede.exe --content-type=application/octet-stream --remote`
+
+## Fechamento da Fase 0 do Connector (03/10/2026)
+
+Fonte: Passo 4 de `docs/prompts/roteiro-claude-code.md`, itens autorizados
+por Carlos (incluindo os comandos `--remote`).
+
+- **Agente + instalador recompilados**: `GOOS=windows GOARCH=amd64
+  CGO_ENABLED=0 go build -buildvcs=false` (`go version -m` sem nenhuma
+  linha `vcs.*`; o build anterior embutia `vcs.revision`/`vcs.modified`).
+  `go vet` limpo. Busca no binário pelos nomes do cliente piloto = 0.
+  Instalador genérico (`InstanceName=principal`, sem
+  `pareamento-prefill.json`) compilado com ISCC e renomeado para o nome
+  publicado `AutoSetupConnector-Setup-1.0.0.exe`: 6.938.519 bytes, SHA-256
+  `c96289a2222793423ec8d4ff53d1935baf1cf56919f8a19ed5f0c524fe97234b`
+  (agente: 10.208.768 bytes, SHA-256
+  `4d7e042dffd1535f644d425e629588db20960530e302cfca8e7e8eab7559eff5`).
+  Os builds `-sede`/`-anexo` já não existiam.
+- **Migration 0003 aplicada em produção**: `codigo_indicacao` não existia
+  em `connector_pairing_codes` no `--remote` (conferido com `PRAGMA
+  table_info`). Validada antes no D1 local (0001→0002→0003 em sequência,
+  porque o local estava vazio), depois
+  `npx wrangler d1 execute autosetup-leads --remote --file=./migrations/0003_pareamento_indicador.sql`
+  (1 query, sucesso). `PRAGMA` depois confirma a coluna. Resolve a
+  pendência da seção "Self-service de código de pareamento" (19/09/2026).
+- **Pendência real, ação de Carlos**: o envio do instalador novo para o R2
+  (`public/downloads/AutoSetupConnector-Setup-1.0.0.exe`) foi bloqueado
+  pelo controle de permissões do Claude Code nesta sessão. Ainda precisa
+  rodar (a partir de `apps/core/web`):
+  `npx wrangler r2 object put autosetup-connector-uploads/public/downloads/AutoSetupConnector-Setup-1.0.0.exe --file=../../../_connector/installer/Output/AutoSetupConnector-Setup-1.0.0.exe --content-type=application/vnd.microsoft.portable-executable --remote`
+  e conferir se o tamanho no R2 é 6.938.519 bytes.
