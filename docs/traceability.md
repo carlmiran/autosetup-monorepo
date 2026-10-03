@@ -1440,3 +1440,11 @@ por Carlos (incluindo os comandos `--remote`).
   rodar (a partir de `apps/core/web`):
   `npx wrangler r2 object put autosetup-connector-uploads/public/downloads/AutoSetupConnector-Setup-1.0.0.exe --file=../../../_connector/installer/Output/AutoSetupConnector-Setup-1.0.0.exe --content-type=application/vnd.microsoft.portable-executable --remote`
   e conferir se o tamanho no R2 é 6.938.519 bytes.
+- **Fixture `apps/core/worker-runner/fixtures/leads-teste.csv`**: os 3 nomes
+  pareciam de negócios reais e foram trocados por "Estetica/Barbearia
+  Exemplo A/B/C", com a mesma estrutura (`nome,telefone,nicho`), os mesmos
+  nichos e os mesmos telefones, que já eram fictícios. Smoke test do
+  `worker-runner` (`npx tsx src/index.ts`) lê as 3 linhas. A varredura de
+  telefones e e-mails em código, testes e seeds rastreados não achou
+  outro dado real (os números `5535977776666` nos comentários das rotas de
+  indicadores são sintéticos).
