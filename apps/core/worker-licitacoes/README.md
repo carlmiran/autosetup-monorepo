@@ -47,14 +47,19 @@ um pacote compartilhado pra isso no monorepo (só um helper dentro de
 de outro app "core"), então o padrão aqui espelha
 `apps/core/web/src/lib/resend.ts`.
 
-## Schema D1 novo
-Ver `migrations/0001_licitacoes.sql` — ainda **não aplicado** ao banco real.
-Precisa ser rodado manualmente contra o D1 de produção (mesmo processo usado
-pra todas as tabelas anteriores, documentado em `docs/traceability.md`):
+## Schema D1
+`migrations/0001_licitacoes.sql` (`licitacao_perfil` + `licitacao_encontrada`)
+— **já aplicada** no D1 local e no remoto `autosetup-leads` (12–14/08/2026,
+ver `docs/traceability.md`; reconferido via `sqlite_master` em 14/10/2026).
 
-```
-npx wrangler d1 execute autosetup-leads --remote --file=./migrations/0001_licitacoes.sql
-```
+## Estado atual (14/10/2026)
+- **Deployado e dormente**: `https://autosetup-worker-licitacoes.teodoromiranda.workers.dev`,
+  sem `[triggers].crons` e sem secrets (`OPENAI_API_KEY`, `RESEND_API_KEY`,
+  `NOTIFICATION_FROM_EMAIL`).
+- `licitacao_perfil` vazia (cadastro adiado, ver abaixo) — mesmo ligado, o
+  worker não processaria nada.
+- O HTML do e-mail interpola o resumo do LLM sem escapar — risco baixo, mas
+  escapar antes de ligar.
 
 ## wrangler.jsonc — cron trigger
 `[triggers].crons` foi deixado **intencionalmente fora** de
