@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verificarRateLimit } from "@/lib/rateLimit";
+import { comparacaoSeguraIgual } from "@/lib/adminAuth";
 
 interface CorpoRequisicao {
   secret?: string;
@@ -138,20 +139,4 @@ function fatiar(texto: string, maxLen: number): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, maxLen)
     .replace(/-+$/g, "");
-}
-
-/** Comparação de tempo constante (evita timing attack pra descobrir o secret por tentativa e erro). */
-function comparacaoSeguraIgual(a: string, b: string): boolean {
-  const bufA = new TextEncoder().encode(a);
-  const bufB = new TextEncoder().encode(b);
-  if (bufA.length !== bufB.length) {
-    // Ainda percorre bufB inteiro (tamanho real) pra não vazar o
-    // comprimento de `a` por tempo de resposta, mesmo descartando o resultado.
-    let soma = 0;
-    for (let i = 0; i < bufB.length; i++) soma |= bufB[i]!;
-    return soma === -1;
-  }
-  let diff = 0;
-  for (let i = 0; i < bufA.length; i++) diff |= bufA[i]! ^ bufB[i]!;
-  return diff === 0;
 }

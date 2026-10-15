@@ -1448,3 +1448,84 @@ por Carlos (incluindo os comandos `--remote`).
   telefones e e-mails em código, testes e seeds rastreados não achou
   outro dado real (os números `5535977776666` nos comentários das rotas de
   indicadores são sintéticos).
+
+## Auditoria do repositório + Etapa 0 (higiene e segurança) (14/10/2026)
+
+Fonte: Etapa 2 de `docs/runbook-auditoria-implantacao.md` (auditoria somente
+leitura) e Etapa 0 proposta nela, executada a pedido de Carlos (instruções
+coladas na conversa, sinalizadas e confirmadas por ele antes da execução,
+conforme o CLAUDE.md). Branch `auditoria-2026-10-14`, sem push.
+
+**Auditoria** — `docs/auditoria-2026-10-14.md`. Status real de Fase 1, banco
+de argumentos, Fase 2A, Fase 2B, `fila_execucao`, Executor de Anúncio,
+workers, saúde, segredos e migrations. Achados que mudaram a ordem do plano:
+- 4 dos 5 prompts citados no runbook (`autosetup-fase1-claude-code.md`,
+  `autosetup-banco-argumentos.md`, `autosetup-fase2a-sites-premium.md`,
+  `autosetup-fase2b-sage-valentina.md`) não existem no repo.
+- `GET /api/admin/clientes`, `POST /api/admin/comissoes` e `POST /api/avisos`
+  estavam **abertos em produção** (leads e pagamentos expostos sem
+  autenticação). Não existia o "mecanismo de `/admin/comissoes`" que o prompt
+  de personas cita.
+- Fase 1, argumentos, 2A, 2B, `fila_execucao` e Executor de Anúncio: não
+  iniciados. Só o tema Ink existe (fixo).
+
+**Etapa 0 — o que foi feito** (um commit por item):
+- **0.1** `src/middleware.ts` + `src/lib/adminAuth.ts`: Basic Auth com
+  `ADMIN_PASSWORD` em `/admin/*`, `/api/admin/*` e `/api/avisos` (GET/HEAD
+  seguem públicos). Fail-closed: sem o secret, 503. Comparação em tempo
+  constante, reaproveitada por `/api/admin/connector/criar`
+  (`CONNECTOR_ADMIN_SECRET` continua como segunda camada). Decisão técnica:
+  `middleware.ts` (Edge), não `proxy.ts` — o `proxy.ts` do Next 16 roda em
+  Node e o `@opennextjs/cloudflare` 1.20 aborta o build com middleware Node.
+- **0.2** ESLint do web ignora `.open-next/**` (saída gerada). Nenhuma regra
+  relaxada.
+- **0.3** `docs/secrets-registry.md` completo (`MERCADOPAGO_ACCESS_TOKEN`,
+  `MERCADOPAGO_CLIENT_ID`, `MERCADOPAGO_CLIENT_SECRET`, `NOTIFICATION_EMAIL`,
+  `ADMIN_PASSWORD`); READMEs do prospector e do licitações atualizados
+  (migrations já aplicadas, estado dormente, bloqueios antes do cron).
+- **0.4** Runbook: `wrangler d1 migrations apply` trocado por
+  `d1 execute --file` (não há `migrations_dir` nem tabela `d1_migrations`; o
+  apply reaplicaria os ALTER TABLE). Remoto só com confirmação; push é do
+  Carlos.
+- **0.5** `apps/core/web/migrations/0000_baseline.sql`: as 10 tabelas do web
+  que nunca tiveram SQL versionado (`leads`, `pagamentos`, `rate_limits`,
+  `descontos`, `rh_entrevistas`, `radar_visto`, `avisos`, `indicadores`,
+  `indicadores_registro`, `clientes_indicador`), com `CREATE TABLE IF NOT
+  EXISTS`. **Não aplicada no remoto** (não há motivo — o remoto já tem tudo).
+- **0.6** `/admin` virou a "Central AutoSetup": índice das páginas reais de
+  `src/app` em 7 grupos, com selo público/protegido/sem interface, ressalvas
+  e botões abrir/copiar link. Protegida pelo Basic Auth do 0.1.
+
+**O que foi validado de verdade**:
+- 0.1: `scripts/test-admin-auth.ts` (tsx), 46/46 asserções — sem credencial
+  401, senha errada 401, certa 200, secret ausente 503, GET avisos público,
+  senha UTF-8, header malformado. `next dev` local com senha de teste: mesmo
+  resultado via curl. `next build` limpo; o build do OpenNext empacotou o
+  middleware e depois parou em `EPERM symlink` (limitação do Windows sem
+  modo desenvolvedor, não relacionada) — build completo só no Workers Builds.
+- 0.2: lint do web com 0 erros (eram 27, todos em `.open-next/`; `src/` já
+  tinha 0).
+- 0.5: esquema lido do remoto só por `sqlite_master`/`pragma` (consultas
+  autorizadas por Carlos, `rows_written: 0`). Aplicado num D1 local zerado
+  (`--persist-to` em pasta nova, 0 tabelas antes), reaplicado sem erro, e
+  `pragma_table_info` + `pragma_index_list` comparados com o remoto: 88
+  linhas de cada lado, idênticas.
+- 0.6: as 21 `page.tsx` listadas, nenhuma rota inventada (comparação por
+  script); `/admin` 401/401/200 com 25 cards no `next dev`; layout desktop
+  conferido no Chrome. **Layout de celular não conferido visualmente.**
+
+**Pendências reais**:
+- **Ação de Carlos**: cadastrar `ADMIN_PASSWORD` no Worker `autosetup-monorepo`
+  (painel ou `wrangler secret put` digitado por ele). Até lá todo `/admin/*`,
+  inclusive `/admin/connector`, responde 503. Depois: push, PR, merge e teste
+  em produção (`/api/admin/clientes` sem credencial → 401, com → 200;
+  `GET /api/avisos` → 200) e conferir `/admin` no celular.
+- Fornecer os 4 prompts que faltam (Fase 1, argumentos, 2A, 2B).
+- **Bug novo achado no 0.5**: `radar_visto` no remoto usa a coluna
+  `codigo_indicacao`, mas o `worker-prospector` lê/grava `codigo_indicador` —
+  falharia na primeira execução. Somar à Places API legada antes de ligar o
+  cron.
+- `/entrega/gerar-post` continua sem senha (custa por geração) — fora do
+  escopo do 0.1; decidir se entra no Basic Auth.
+- Gateway LLM: `activeEnv` global (risco de concorrência, não reproduzido) e
+  sem `usage`/custo — pré-requisito do ADR-CORE-006 e da 2B.

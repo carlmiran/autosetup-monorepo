@@ -39,18 +39,26 @@ placeholder:
   como tal. **Isso é uma decisão de produto pendente, não um detalhe
   técnico** — ver seção abaixo.
 
-## Schema D1 novo
-Ver `migrations/0001_radar_pendentes.sql` — ainda **não aplicado** ao banco
-real. Precisa ser rodado manualmente contra o D1 de produção (mesmo processo
-usado pra todas as tabelas anteriores, documentado em `docs/traceability.md`):
+## Schema D1
+`migrations/0001_radar_pendentes.sql` (`radar_pendentes` + `indicador_regiao`)
+— **já aplicada** no D1 local e no remoto `autosetup-leads` (12–14/08/2026,
+ver `docs/traceability.md`; reconferido via `sqlite_master` em 14/10/2026).
 
-```
-npx wrangler d1 execute autosetup-leads --remote --file=./migrations/0001_radar_pendentes.sql
-```
+## Estado atual (14/10/2026)
+- **Deployado e dormente**: `https://autosetup-worker-prospector.teodoromiranda.workers.dev`,
+  sem `[triggers].crons` e sem secrets (`OPENAI_API_KEY`,
+  `GOOGLE_PLACES_API_KEY`) — não roda nem gera custo.
+- **Nenhuma tela lê `radar_pendentes`** — mesmo ligado, o resultado não
+  chegaria ao indicador. Falta uma tela (ex.: em `/radar/meus-clientes`).
+- **Bug latente, corrigir antes de ligar o cron**: `buscarNegociosProximos()`
+  usa a Places API *legada* (`maps.googleapis.com/maps/api/place/nearbysearch/json`),
+  enquanto `apps/core/web` usa a Places API (New). Uma chave liberada só pra
+  "Places API (New)" deve falhar aqui.
 
 ## wrangler.jsonc — cron trigger
 `[triggers].crons` foi deixado **intencionalmente fora** de
-`wrangler.jsonc` — depende das decisões de negócio abaixo.
+`wrangler.jsonc` — depende das decisões de negócio abaixo e dos dois itens
+de "Estado atual".
 
 ## Código do Worker
 `src/index.ts` — Cloudflare Worker completo (`export default { scheduled }`),

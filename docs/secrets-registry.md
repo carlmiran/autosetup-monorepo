@@ -24,7 +24,12 @@ Vercel, se for o destino escolhido). Nunca em `.env` commitado.
 | `RESEND_API_KEY` | Envio de e-mail transacional (Resend) — notificação de pagamento, `worker-licitacoes` e `worker-connector` (alerta de erro de parsing) | decisão de 02/08/2026 |
 | `NOTIFICATION_FROM_EMAIL` | Remetente dos e-mails do `worker-licitacoes` (não é secret, mas vive junto) | worker-licitacoes |
 | `ALERT_EMAIL_TO` | E-mail que recebe alerta de erro de parsing do `worker-connector` (não é secret, mas cadastrado como secret no Worker pra evitar valor real commitado em `wrangler.jsonc`) | AutoSetup Connector V1 (17/08/2026) |
-| `CONNECTOR_ADMIN_SECRET` | Senha compartilhada que protege `/admin/connector` e `/api/admin/connector/criar` (self-service de código de pareamento) no `apps/core/web` — não é autenticação de verdade (sem login/sessão no projeto), é proporcional ao padrão já usado no resto do produto | Self-service de pareamento do Connector (19/09/2026) |
+| `MERCADOPAGO_ACCESS_TOKEN` | Checkout Pro / assinaturas (`lib/mercadoPago.ts`) e consulta de status no webhook (`api/pagamento/webhook`) — `apps/core/web` | Checkout real via Mercado Pago (30/07/2026) |
+| `MERCADOPAGO_CLIENT_ID` | OAuth do Mercado Pago pra conectar a conta do indicador (`api/indicadores/conectar` e `callback`) — `apps/core/web` | indicadores/Mercado Pago |
+| `MERCADOPAGO_CLIENT_SECRET` | Par do `MERCADOPAGO_CLIENT_ID` na troca do código OAuth (`api/indicadores/callback`) — `apps/core/web` | indicadores/Mercado Pago |
+| `NOTIFICATION_EMAIL` | E-mail que recebe o aviso de pagamento aprovado (`lib/resend.ts`) — `apps/core/web` (não é secret por natureza, mas vive junto) | Notificação de pagamento (02/08/2026) |
+| `ADMIN_PASSWORD` | Senha do Basic Auth de `/admin/*`, `/api/admin/*` e `POST /api/avisos` (`src/middleware.ts`) — `apps/core/web`. Sem ela, essas rotas respondem 503 (fail-closed). Paliativo até o login da Fase 1 | Etapa 0.1 da auditoria (14/10/2026) |
+| `CONNECTOR_ADMIN_SECRET` | Senha compartilhada que protege `/admin/connector` e `/api/admin/connector/criar` (self-service de código de pareamento) no `apps/core/web` — desde 14/10/2026 é a segunda camada, depois do Basic Auth do `ADMIN_PASSWORD` — não é autenticação de verdade (sem login/sessão no projeto), é proporcional ao padrão já usado no resto do produto | Self-service de pareamento do Connector (19/09/2026) |
 | `ANTHROPIC_API_KEY` | LLM Gateway — provider Anthropic | IMP-LLM-001 |
 | `GEMINI_API_KEY` | LLM Gateway — provider Gemini | IMP-LLM-001 |
 | `GROQ_API_KEY` | LLM Gateway — provider Groq | IMP-LLM-001 |
