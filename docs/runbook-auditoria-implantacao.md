@@ -57,7 +57,9 @@ npx wrangler secret put MERCADOPAGO_ACCESS_TOKEN --name autosetup-monorepo
 npx wrangler secret put RESEND_API_KEY --name autosetup-monorepo
 npx wrangler secret put NOTIFICATION_EMAIL --name autosetup-monorepo
 npx wrangler secret put GOOGLE_PLACES_API_KEY --name autosetup-monorepo
+npx wrangler secret put ADMIN_PASSWORD --name autosetup-monorepo   # Etapa 0.1: sem ele, /admin/* responde 503
 ```
+(Esses comandos são para o Carlos rodar no terminal dele. O valor é digitado no prompt do wrangler, nunca no chat nem pelo Claude Code.)
 (Se o nome do Worker for outro, ele aparece no painel Cloudflare → Workers & Pages.)
 
 ### 1.4 Ajustes de painel (navegador)
@@ -105,16 +107,25 @@ Para cada etapa, no Claude Code:
 
 E depois de cada uma:
 ```bash
-pnpm turbo lint typecheck test
-npx wrangler d1 migrations apply autosetup-leads --local
-# teste local; se ok:
-npx wrangler d1 migrations apply autosetup-leads --remote
-git add -A && git commit -m "etapa N: <descrição>"
+pnpm -r lint && pnpm -r typecheck && pnpm -r test   # turbo crasha no Windows (0xC0000409)
+
+# Migrations D1: NÃO use "wrangler d1 migrations apply" — nenhum wrangler.jsonc
+# define migrations_dir e o remoto não tem a tabela d1_migrations; o comando
+# tentaria reaplicar tudo (os ALTER TABLE já aplicados falhariam).
+# Cada arquivo novo é aplicado à mão, de dentro da pasta do app/worker dono dele:
+npx wrangler d1 execute autosetup-leads --local  --file=./migrations/NNNN_nome.sql
+# teste local; se ok, o Claude Code MOSTRA o comando abaixo e só roda com
+# confirmação explícita do Carlos:
+npx wrangler d1 execute autosetup-leads --remote --file=./migrations/NNNN_nome.sql
+# depois, registrar em docs/traceability.md
+```
+O Claude Code faz os commits e para com o diff e um resumo — **nunca faz push**. O push é sempre do Carlos:
+```bash
 git push origin auditoria-2026-10-14
 ```
 Abra o PR, espere o CI verde e faça o merge na `main`. O deploy no Cloudflare acontece pela integração com o Git. Teste em produção antes da próxima etapa.
 
-(O nome/diretório do banco nas migrations: o Claude Code confirma na auditoria. `autosetup-leads` é o D1 de produção conhecido.)
+(Banco confirmado na auditoria: `autosetup-leads`, id `6020ad64-35e8-4e90-a0b1-46020eb4b53b`, compartilhado por todos os Workers. O D1 `--local` é separado por pasta, porque cada app/worker tem seu próprio `.wrangler/`.)
 
 | Etapa | Prompt | Por que nesta ordem |
 |---|---|---|
