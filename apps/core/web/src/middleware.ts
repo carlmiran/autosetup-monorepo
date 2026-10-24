@@ -7,6 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { verificarBasicAuth } from "@/lib/adminAuth";
+import { registrarEventoSeguranca } from "@/lib/eventoSeguranca";
 
 const METODOS_LEITURA = new Set(["GET", "HEAD"]);
 
@@ -24,7 +25,14 @@ export function middleware(request: NextRequest) {
   if (resultado === "ok") return NextResponse.next();
 
   if (resultado === "nao_configurado") {
+    registrarEventoSeguranca("admin_auth_nao_configurado", { rota: pathname });
     return new NextResponse("Área interna indisponível: ADMIN_PASSWORD não configurado.", { status: 503 });
+  }
+
+  // "sem_credencial" é o primeiro pedido normal de todo navegador (antes do
+  // prompt de senha) — só a senha errada vira evento de segurança.
+  if (resultado === "invalida") {
+    registrarEventoSeguranca("admin_auth_falha", { rota: pathname, motivo: "senha_invalida" });
   }
 
   return new NextResponse("Autenticação necessária.", {

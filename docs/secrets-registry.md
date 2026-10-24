@@ -64,3 +64,54 @@ puro em conversas com Claude para autorizar pushes emergenciais. Isso
 está registrado aqui como o exemplo do que **não** repetir — não porque
 tenha causado dano confirmado, mas porque o risco existiu e pelo menos
 três desses tokens não foram revogados até o momento deste registro.
+
+## Estado real no painel da Cloudflare — conferido em 24/10/2026 (Pacote 1)
+
+Só nomes, lidos da API (`versions view` / `secrets`). Valores nunca são
+retornados pela API e não passaram por aqui.
+
+| Worker | Secrets cadastrados | Usados pelo código e **ausentes** |
+|---|---|---|
+| `autosetup-monorepo` (web) | `ADMIN_PASSWORD`, `ALERT_EMAIL_TO`, `OPENAI_API_KEY`, `OPENAI_API_KEY2`, `RESEND_API_KEY` | `GOOGLE_PLACES_API_KEY`, `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_CLIENT_ID`, `MERCADOPAGO_CLIENT_SECRET`, `NOTIFICATION_EMAIL`, `CONNECTOR_ADMIN_SECRET` |
+| `autosetup-worker-connector` | `ALERT_EMAIL_TO`, `RESEND_API_KEY` | — (`LENS_REFRESH_URL` é opcional) |
+| `autosetup-worker-licitacoes` | nenhum | `OPENAI_API_KEY`, `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL` (dormente de propósito) |
+| `autosetup-worker-prospector` | nenhum | `OPENAI_API_KEY`, `GOOGLE_PLACES_API_KEY` (dormente de propósito) |
+
+- `OPENAI_API_KEY2` não é lido por nenhum código — confirmar se é sobra e apagar.
+- `ALERT_EMAIL_TO` no web também não é lido pelo código do web.
+- Sem `MERCADOPAGO_*` no web, checkout, webhook e OAuth de indicador respondem
+  503 em produção; sem `GOOGLE_PLACES_API_KEY`, o `/radar` e a comparação de
+  concorrentes do diagnóstico não funcionam. Pendência do Pacote 3.
+
+### Incidente — secret com valor no lugar do nome (24/10/2026)
+
+Às 14:14 (UTC) de 24/10/2026 uma versão do `autosetup-monorepo` foi criada
+pelo painel com um secret cujo **nome** era uma string de 40 caracteres com
+formato de credencial (provável valor colado no campo "nome"). O nome de um
+secret não é protegido: aparece no painel, na API e na mensagem da versão
+("Updated secret: …", truncada em 31 caracteres) — que **continua no
+histórico de versões** e não pode ser apagada.
+
+- Apagado do Worker em 24/10/2026 16:32 UTC (autorizado por Carlos), via API,
+  sem o nome passar pelo chat. Produção conferida depois (200/401 iguais).
+- **Ação do Carlos:** identificar de qual provedor é essa credencial e
+  **revogá-la/rotacioná-la lá**. Não está registrado aqui de qual provedor é
+  porque não foi possível confirmar. Em 24/10/2026 o Carlos informou que a
+  revogou manualmente.
+
+### Credenciais expostas em conversa — situação em 24/10/2026
+
+Não verificável por código; dependem de confirmação do Carlos no painel de
+cada provedor. Em 24/10/2026 o Carlos informou que revogou todas manualmente
+nos provedores. A informação é dele; não há como confirmar por código.
+
+| Credencial | Onde vazou | Revogada? |
+|---|---|---|
+| Tokens do GitHub (4, 26–27/07/2026) | texto de conversa com IA | **revogada manualmente pelo Carlos** (informado em 24/10/2026; não verificável daqui) |
+| Cakto client_id / client_secret | print em conversa | **revogada manualmente pelo Carlos** (informado em 24/10/2026; não verificável daqui) |
+| Secret de nome inválido (acima) | nome de secret no Cloudflare | **revogada manualmente pelo Carlos** (informado em 24/10/2026; não verificável daqui) |
+
+Busca por "cakto" (sem diferenciar maiúsculas) em 24/10/2026: só 4 linhas de
+documentação (pendência de revogação, sem valor); zero em código, `_connector/`
+(inclusive binários), CI, mensagens de commit e secrets do Cloudflare. A
+Cakto não é integrada ao código.

@@ -5,10 +5,17 @@
 // login de verdade (sem senha forte, sem recuperação) — é só o
 // suficiente pra impedir que duas pessoas usem "joao" por coincidência
 // sem perceber. Fonte: gargalo identificado por Carlos (11/08/2026).
+//
+// 24/10/2026 (Pacote 1): PIN de código já reivindicado é conferido pelo
+// mesmo verificarPinIndicador() das rotas de dados — tempo constante e
+// bloqueio por IP/código depois de várias falhas. Sem isso esta rota era o
+// atalho pra adivinhar o PIN de outra pessoa.
 
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verificarRateLimit } from "@/lib/rateLimit";
+import { ipDaRequisicao, verificarPinIndicador } from "@/lib/indicadorAuth";
+import { registrarEventoSeguranca } from "@/lib/eventoSeguranca";
 
 export async function POST(request: Request) {
   const limite = await verificarRateLimit(request, { rota: "indicador-registro", maximo: 30, janelaMinutos: 60 });
@@ -43,7 +50,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, novo: true });
     }
 
-    if (existente.pin !== pin) {
+    const resultado = await verificarPinIndicador(db, codigo, pin, ipDaRequisicao(request));
+    if (resultado === "bloqueado") {
+      registrarEventoSeguranca("indicador_bloqueado", { rota: "/api/indicadores/registro", codigo });
+      return NextResponse.json(
+        { error: "Muitas tentativas com PIN errado. Espere uma hora e tente de novo." },
+        { status: 429 },
+      );
+    }
+    if (resultado !== "ok") {
+      registrarEventoSeguranca("indicador_pin_falha", { rota: "/api/indicadores/registro", codigo, motivo: "pin_incorreto" });
       return NextResponse.json(
         { error: "Esse código já está em uso por outra pessoa, com um PIN diferente. Escolha outro código." },
         { status: 409 },

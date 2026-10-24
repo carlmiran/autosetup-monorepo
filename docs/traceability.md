@@ -1529,3 +1529,44 @@ workers, saúde, segredos e migrations. Achados que mudaram a ordem do plano:
   escopo do 0.1; decidir se entra no Basic Auth.
 - Gateway LLM: `activeEnv` global (risco de concorrência, não reproduzido) e
   sem `usage`/custo — pré-requisito do ADR-CORE-006 e da 2B.
+
+## Pacote 1 — Segurança, credenciais e proteção dos dados (24/10/2026)
+
+Fonte: Pacote 1 de `docs/plano/autosetup-pacotes-conclusao-claude-code.md`
+(plano originado em outra IA, sinalizado; executado a pedido explícito de
+Carlos) + pedido de Carlos: comparar painel Cloudflare × wrangler e grep
+"cakto". Relatório completo: `docs/status/pacote-01.md`. Sem push, sem deploy
+de código.
+
+**Decisões / ações remotas (autorizadas por Carlos na sessão):**
+- Preview URLs do Worker web desligadas — 5 versões antigas (anteriores ao
+  Basic Auth) serviam `/api/admin/clientes` sem senha (200). Depois: 404 em
+  todas; produção inalterada.
+- Secret com valor colado no campo de nome apagado do Worker web (via API, nome
+  nunca exibido). Revogação no provedor feita manualmente pelo Carlos
+  (informada em 24/10/2026).
+- `wrangler d1 export --remote` para teste de restauração; arquivo apagado.
+
+**Código:** PIN do indicador conferido no servidor em todas as rotas
+`/api/indicadores/*` (antes só no navegador → IDOR na carteira de clientes),
+com bloqueio por IP/código; `state` OAuth do Mercado Pago assinado (HMAC com o
+`MERCADOPAGO_CLIENT_SECRET` já existente); log `[seguranca]` sem dados
+sensíveis; `wrangler.jsonc` dos 4 Workers com `workers_dev`/`preview_urls`
+explícitos e Workers Logs ligado; `.dev.vars` no `.gitignore`. Sem migration,
+sem secret novo.
+
+**Validado de verdade:** `test-indicador-auth.ts` 46/46 (handlers reais + D1
+local real), `test-admin-auth.ts` 46/46, `test-daily-grid.ts` 19/19, `pnpm
+typecheck`/`lint`/`test` ok, `next build` ok. Restauração do D1: 21 tabelas,
+217 linhas, esquema e contagens idênticos ao remoto. Painel × wrangler:
+bindings/vars/compat/crons/rotas/Queue batiam nos 4 Workers; diferenças
+restantes são intencionais (observability, preview_urls) ou não
+representáveis (`tags: []`, secrets). Grep "cakto": só 4 linhas de docs, zero
+em código/`_connector/`/CI/secrets.
+
+**Pendências reais:** deploy do web (o IDOR segue em produção até lá);
+(tokens GitHub, credenciais Cakto e a credencial do secret apagado: revogados
+manualmente pelo Carlos, informado em 24/10/2026); cadastrar `MERCADOPAGO_*`, `GOOGLE_PLACES_API_KEY`,
+`NOTIFICATION_EMAIL`, `CONNECTOR_ADMIN_SECRET` no web; aprovar prazos de
+`docs/politica-retencao-dados.md`; decidir cron de limpeza de `rate_limits` e
+cópia periódica do D1; papéis/isolamento por empresa dependem da Fase 1.

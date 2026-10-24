@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 import { EntradaComPin } from "@/components/EntradaComPin";
+import { cabecalhosIndicador } from "@/lib/indicadorCliente";
 
 interface Desempenho {
   diagnosticosGerados: number;
@@ -36,6 +37,7 @@ export default function MeuDesempenhoPage() {
     typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
   );
   const [codigoConfirmado, setCodigoConfirmado] = useState("");
+  const [pin, setPin] = useState("");
   const [dados, setDados] = useState<Desempenho | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -46,7 +48,9 @@ export default function MeuDesempenhoPage() {
       setLoading(true);
       setErro(null);
       try {
-        const res = await fetch(`/api/indicadores/desempenho?codigo=${encodeURIComponent(codigoConfirmado)}`);
+        const res = await fetch(`/api/indicadores/desempenho?codigo=${encodeURIComponent(codigoConfirmado)}`, {
+          headers: cabecalhosIndicador(pin),
+        });
         const data = (await res.json()) as Desempenho & { error?: string };
         if (!res.ok) {
           setErro((data as { error?: string }).error ?? "Erro ao carregar.");
@@ -59,7 +63,7 @@ export default function MeuDesempenhoPage() {
         setLoading(false);
       }
     })();
-  }, [codigoConfirmado]);
+  }, [codigoConfirmado, pin]);
 
   if (!codigoConfirmado) {
     return (
@@ -67,7 +71,10 @@ export default function MeuDesempenhoPage() {
         titulo="Meu Desempenho"
         descricao="Digite seu código de indicador e o PIN pra ver o que suas indicações já geraram."
         codigoInicial={codigoInicial}
-        onEntrar={(c) => setCodigoConfirmado(c)}
+        onEntrar={(c, p) => {
+          setPin(p);
+          setCodigoConfirmado(c);
+        }}
       />
     );
   }

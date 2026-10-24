@@ -8,6 +8,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { llmAdapter } from "@autosetup/adapter-llm";
 import { gerarParecer, type ItemParecer } from "@/lib/gerarParecer";
 import { verificarRateLimit } from "@/lib/rateLimit";
+import { negarSemPinIndicador } from "@/lib/indicadorAuth";
 
 /** Normaliza pra comparação — pega só os últimos 11 dígitos (DDD +
  * número), ignorando se tem "55" (DDI) na frente ou não. Bug real
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, body.codigo);
+    if (negado) return negado;
 
     const cliente = await db
       .prepare(
@@ -139,6 +143,9 @@ export async function PATCH(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, body.codigo);
+    if (negado) return negado;
 
     const cliente = await db
       .prepare("SELECT pareceres_json, parecer_indice FROM clientes_indicador WHERE id = ? AND codigo_indicacao = ?")

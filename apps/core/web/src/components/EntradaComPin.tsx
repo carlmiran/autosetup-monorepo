@@ -6,6 +6,9 @@
 // código é digitado, reivindica com um PIN de 4 dígitos; da próxima
 // vez, precisa do mesmo PIN. Evita colisão de código entre pessoas
 // diferentes usando o mesmo texto por coincidência.
+//
+// 24/10/2026: devolve também o PIN pra página, que manda ele no header
+// x-indicador-pin em cada chamada — o servidor confere (src/lib/indicadorAuth.ts).
 
 import { useState } from "react";
 
@@ -17,7 +20,7 @@ export function EntradaComPin({
 }: {
   titulo: string;
   descricao: string;
-  onEntrar: (codigo: string) => void;
+  onEntrar: (codigo: string, pin: string) => void;
   codigoInicial?: string;
 }) {
   const [codigo, setCodigo] = useState(codigoInicial ?? "");
@@ -42,7 +45,7 @@ export function EntradaComPin({
       if (!res.ok || !data.ok) {
         setErro(data.error ?? "Não foi possível validar.");
       } else {
-        onEntrar(codigo.trim());
+        onEntrar(codigo.trim(), pin);
       }
     } catch {
       setErro("Não foi possível conectar ao servidor.");

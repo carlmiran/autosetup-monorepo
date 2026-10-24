@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { geocodificarTexto } from "@/lib/googlePlaces";
 import { verificarRateLimit } from "@/lib/rateLimit";
+import { negarSemPinIndicador } from "@/lib/indicadorAuth";
 
 const RAIO_KM_MIN = 1;
 const RAIO_KM_MAX = 50;
@@ -35,6 +36,9 @@ export async function GET(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, codigo);
+    if (negado) return negado;
 
     const regiao = await db
       .prepare(
@@ -72,6 +76,12 @@ export async function POST(request: Request) {
   if (!codigo || !body.origem) {
     return NextResponse.json({ error: "Informe o código e a origem da localização." }, { status: 400 });
   }
+
+  // PIN antes de qualquer custo (geocodificação no Google) — ver src/lib/indicadorAuth.ts.
+  const dbAuth = (getCloudflareContext().env as { DB?: D1Database }).DB;
+  if (!dbAuth) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+  const negado = await negarSemPinIndicador(request, dbAuth, codigo);
+  if (negado) return negado;
   if (typeof raioKm !== "number" || raioKm < RAIO_KM_MIN || raioKm > RAIO_KM_MAX) {
     return NextResponse.json(
       { error: `O raio precisa ser um número entre ${RAIO_KM_MIN} e ${RAIO_KM_MAX} km.` },

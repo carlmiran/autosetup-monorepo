@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { PLANOS } from "@/lib/mercadoPago";
+import { negarSemPinIndicador } from "@/lib/indicadorAuth";
 
 const PERCENTUAL_COMISSAO = 0.2;
 
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, codigo);
+    if (negado) return negado;
 
     const diagnosticos = await db
       .prepare("SELECT COUNT(*) AS total FROM leads WHERE codigo_indicacao = ?")

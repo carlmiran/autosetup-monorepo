@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 import { EntradaComPin } from "@/components/EntradaComPin";
+import { cabecalhosIndicador } from "@/lib/indicadorCliente";
 
 interface RegiaoIndicador {
   origem: "geolocalizacao" | "manual";
@@ -28,6 +29,7 @@ export default function MinhaRegiaoPage() {
     typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
   );
   const [codigoConfirmado, setCodigoConfirmado] = useState("");
+  const [pin, setPin] = useState("");
   const [regiaoAtual, setRegiaoAtual] = useState<RegiaoIndicador | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -43,7 +45,9 @@ export default function MinhaRegiaoPage() {
       setCarregando(true);
       setErro(null);
       try {
-        const res = await fetch(`/api/indicadores/regiao?codigo=${encodeURIComponent(codigoConfirmado)}`);
+        const res = await fetch(`/api/indicadores/regiao?codigo=${encodeURIComponent(codigoConfirmado)}`, {
+          headers: cabecalhosIndicador(pin),
+        });
         const data = (await res.json()) as { regiao?: RegiaoIndicador | null; error?: string };
         if (!res.ok) {
           setErro(data.error ?? "Erro ao carregar.");
@@ -57,7 +61,7 @@ export default function MinhaRegiaoPage() {
         setCarregando(false);
       }
     })();
-  }, [codigoConfirmado]);
+  }, [codigoConfirmado, pin]);
 
   async function salvar(body: Record<string, unknown>, origem: "geolocalizacao" | "manual") {
     setSalvando(origem);
@@ -66,7 +70,7 @@ export default function MinhaRegiaoPage() {
     try {
       const res = await fetch("/api/indicadores/regiao", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({ codigo: codigoConfirmado, raioKm, ...body }),
       });
       const data = (await res.json()) as { ok?: boolean; regiao?: RegiaoIndicador; error?: string };
@@ -118,7 +122,10 @@ export default function MinhaRegiaoPage() {
         titulo="Minha Área de Atuação"
         descricao="Digite seu código de indicador e o PIN pra configurar onde o Prospector Autônomo deve procurar oportunidades por você."
         codigoInicial={codigoInicial}
-        onEntrar={(c) => setCodigoConfirmado(c)}
+        onEntrar={(c, p) => {
+          setPin(p);
+          setCodigoConfirmado(c);
+        }}
       />
     );
   }

@@ -1,7 +1,8 @@
 // AUTOSETUP — apps/core/web/src/app/api/indicadores/clientes/route.ts
-// Lista de clientes do próprio vendedor/indicador — identificado só
-// pelo código de indicação (sem login, mesmo padrão informal já usado
-// no resto do programa). Fonte: pedido de Carlos (06/08/2026).
+// Lista de clientes do próprio vendedor/indicador — identificado pelo
+// código de indicação + PIN conferido no servidor (header x-indicador-pin,
+// ver src/lib/indicadorAuth.ts; até 24/10/2026 bastava o código).
+// Fonte: pedido de Carlos (06/08/2026).
 //
 // 11/08/2026: enriquecido com funil real — cruza cada cliente com
 // `leads` pelo WhatsApp normalizado (único campo em comum confiável
@@ -12,6 +13,7 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { verificarRateLimit } from "@/lib/rateLimit";
+import { negarSemPinIndicador } from "@/lib/indicadorAuth";
 
 /** Normaliza pra comparação — pega só os últimos 11 dígitos (DDD +
  * número), ignorando se tem "55" (DDI) na frente ou não. Bug real
@@ -33,6 +35,9 @@ export async function GET(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, codigo);
+    if (negado) return negado;
 
     const resultado = await db
       .prepare(
@@ -101,6 +106,9 @@ export async function POST(request: Request) {
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
 
+    const negado = await negarSemPinIndicador(request, db, body.codigo);
+    if (negado) return negado;
+
     await db
       .prepare(
         "INSERT INTO clientes_indicador (codigo_indicacao, nome_cliente, whatsapp_cliente, notas, data_followup) " +
@@ -140,6 +148,9 @@ export async function PATCH(request: Request) {
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
 
+    const negado = await negarSemPinIndicador(request, db, body.codigo);
+    if (negado) return negado;
+
     // Sempre filtra por codigo_indicacao também — um indicador só edita
     // o próprio registro, mesmo sabendo o id de outra pessoa.
     const resultado = await db
@@ -174,6 +185,9 @@ export async function DELETE(request: Request) {
     const { env } = getCloudflareContext();
     const db = (env as { DB?: D1Database }).DB;
     if (!db) return NextResponse.json({ error: "Banco indisponível." }, { status: 503 });
+
+    const negado = await negarSemPinIndicador(request, db, codigo);
+    if (negado) return negado;
 
     const resultado = await db
       .prepare("DELETE FROM clientes_indicador WHERE id = ? AND codigo_indicacao = ?")

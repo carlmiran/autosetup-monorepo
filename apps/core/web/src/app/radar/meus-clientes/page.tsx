@@ -11,6 +11,7 @@ import Papa from "papaparse";
 import { Logo } from "@/components/Logo";
 import { AvisoIndicadores } from "@/components/AvisoIndicadores";
 import { EntradaComPin } from "@/components/EntradaComPin";
+import { cabecalhosIndicador } from "@/lib/indicadorCliente";
 
 interface ItemParecer {
   prioridade: string;
@@ -363,6 +364,7 @@ export default function MeusClientesPage() {
     typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("codigo") ?? "",
   );
   const [codigoConfirmado, setCodigoConfirmado] = useState("");
+  const [pin, setPin] = useState("");
   const [clientes, setClientes] = useState<ClienteIndicador[]>([]);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -395,7 +397,9 @@ export default function MeusClientesPage() {
     setLoading(true);
     setErro(null);
     try {
-      const res = await fetch(`/api/indicadores/clientes?codigo=${encodeURIComponent(codigoBusca)}`);
+      const res = await fetch(`/api/indicadores/clientes?codigo=${encodeURIComponent(codigoBusca)}`, {
+        headers: cabecalhosIndicador(pin),
+      });
       const data = (await res.json()) as { clientes?: ClienteIndicador[]; error?: string };
       if (!res.ok) {
         setErro(data.error ?? "Erro ao carregar.");
@@ -417,7 +421,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch("/api/indicadores/clientes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           codigo: codigoConfirmado,
           nomeCliente: form.nomeCliente,
@@ -462,7 +466,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch("/api/indicadores/clientes", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           id,
           codigo: codigoConfirmado,
@@ -492,7 +496,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch(
         `/api/indicadores/clientes?id=${id}&codigo=${encodeURIComponent(codigoConfirmado)}`,
-        { method: "DELETE" },
+        { method: "DELETE", headers: cabecalhosIndicador(pin) },
       );
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -546,7 +550,7 @@ export default function MeusClientesPage() {
       try {
         const res = await fetch("/api/indicadores/clientes", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
           body: JSON.stringify({
             codigo: codigoConfirmado,
             nomeCliente: nome,
@@ -587,7 +591,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch("/api/indicadores/parecer", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
       });
       const data = (await res.json()) as EstadoParecer & { error?: string };
@@ -609,7 +613,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch("/api/indicadores/parecer", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
       });
       const data = (await res.json()) as EstadoParecer & { error?: string };
@@ -631,7 +635,7 @@ export default function MeusClientesPage() {
     try {
       const res = await fetch("/api/indicadores/proxima-mensagem", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: cabecalhosIndicador(pin, { "Content-Type": "application/json" }),
         body: JSON.stringify({ codigo: codigoConfirmado, clienteId }),
       });
       const data = (await res.json()) as { contexto?: string; mensagemSugerida?: string; error?: string };
@@ -656,7 +660,9 @@ export default function MeusClientesPage() {
       setLoading(true);
       setErro(null);
       try {
-        const res = await fetch(`/api/indicadores/clientes?codigo=${encodeURIComponent(codigoConfirmado)}`);
+        const res = await fetch(`/api/indicadores/clientes?codigo=${encodeURIComponent(codigoConfirmado)}`, {
+          headers: cabecalhosIndicador(pin),
+        });
         const data = (await res.json()) as { clientes?: ClienteIndicador[]; error?: string };
         if (!res.ok) {
           setErro(data.error ?? "Erro ao carregar.");
@@ -669,7 +675,7 @@ export default function MeusClientesPage() {
         setLoading(false);
       }
     })();
-  }, [codigoConfirmado]);
+  }, [codigoConfirmado, pin]);
 
   if (!codigoConfirmado) {
     return (
@@ -677,7 +683,10 @@ export default function MeusClientesPage() {
         titulo="Meus Clientes"
         descricao="Digite seu código de indicador e um PIN de 4 números pra ver (ou começar) sua lista."
         codigoInicial={codigoInicial}
-        onEntrar={(c) => setCodigoConfirmado(c)}
+        onEntrar={(c, p) => {
+          setPin(p);
+          setCodigoConfirmado(c);
+        }}
       />
     );
   }

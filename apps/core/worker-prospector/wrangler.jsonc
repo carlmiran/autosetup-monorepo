@@ -4,6 +4,20 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
+  // Explícitos pra bater com o painel e o `wrangler deploy` não avisar
+  // diferença. preview_urls = false: cada versão antiga ganha uma URL própria
+  // (<versão>-<worker>.<conta>.workers.dev) que continua servindo o código
+  // ANTIGO — no web isso expunha /api/admin/clientes sem senha (versões de
+  // antes do Basic Auth). Desligado no painel do web em 24/10/2026 com
+  // autorização do Carlos.
+  // Neste Worker ainda está ligado no painel — vale no próximo deploy. Só
+  // tem handler scheduled(); o workers.dev não serve nada.
+  "workers_dev": true,
+  "preview_urls": false,
+  // Workers Logs: guarda os logs do Worker (inclusive as linhas "[seguranca]"
+  // de src/lib/eventoSeguranca.ts no web) — sem isso eles só aparecem ao vivo
+  // no `wrangler tail`. Pacote 1 (24/10/2026). No painel estava desligado.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "d1_databases": [
     {
       "binding": "DB",

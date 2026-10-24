@@ -7,6 +7,18 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
+  // Explícitos pra bater com o painel e o `wrangler deploy` não avisar
+  // diferença. preview_urls = false: cada versão antiga ganha uma URL própria
+  // (<versão>-<worker>.<conta>.workers.dev) que continua servindo o código
+  // ANTIGO — no web isso expunha /api/admin/clientes sem senha (versões de
+  // antes do Basic Auth). Desligado no painel do web em 24/10/2026 com
+  // autorização do Carlos.
+  "workers_dev": true,
+  "preview_urls": false,
+  // Workers Logs: guarda os logs do Worker (inclusive as linhas "[seguranca]"
+  // de src/lib/eventoSeguranca.ts no web) — sem isso eles só aparecem ao vivo
+  // no `wrangler tail`. Pacote 1 (24/10/2026). No painel estava desligado.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -27,10 +39,15 @@
       "bucket_name": "autosetup-connector-uploads"
     }
   ]
-  // Segredos (OPENAI_API_KEY, etc.) NÃO vão aqui — são cadastrados
-  // direto no painel da Cloudflare (Workers & Pages > este projeto >
-  // Settings > Variables and Secrets), nunca neste arquivo commitado.
-  // Ver docs/secrets-registry.md.
+  // Segredos NÃO vão aqui — são cadastrados direto no painel da Cloudflare
+  // (Workers & Pages > este projeto > Settings > Variables and Secrets),
+  // nunca neste arquivo commitado. Ver docs/secrets-registry.md.
+  // No painel em 24/10/2026 (só nomes): ADMIN_PASSWORD, ALERT_EMAIL_TO,
+  // OPENAI_API_KEY, OPENAI_API_KEY2, RESEND_API_KEY + 1 com nome inválido
+  // (incidente, ver docs/status/pacote-01.md). Usados pelo código e AUSENTES
+  // no painel: GOOGLE_PLACES_API_KEY, MERCADOPAGO_ACCESS_TOKEN,
+  // MERCADOPAGO_CLIENT_ID, MERCADOPAGO_CLIENT_SECRET, NOTIFICATION_EMAIL,
+  // CONNECTOR_ADMIN_SECRET (OPENAI_SEARCH_MODEL é opcional).
   //
   // D1 (banco "autosetup-leads") já foi criado e a tabela `leads` já
   // existe de verdade na conta — ver docs/traceability.md. O database_id
