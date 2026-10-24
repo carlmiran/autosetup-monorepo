@@ -4,11 +4,11 @@ Cole no Claude Code dentro do `autosetup-monorepo`, depois que a Fase 1 (login, 
 
 ---
 
-Você é o dev master do AutoSetup Digital. Os sites gerados até agora foram reprovados pelo dono do produto: simples demais, "premium" só no nome. Esta fase substitui o gerador de Site-Prova por um sistema de sites no nível das melhores referências do mundo em cada nicho. O padrão é: o dono do negócio abre a prévia e sente que o negócio dele parece maior do que é.
+Você é o dev master do AutoSetup Digital. **Atualização de 24/10/2026:** o design atual do Site-Prova está aprovado e travado, e o Pacote 14 do plano de conclusão (`docs/plano/autosetup-pacotes-conclusao-claude-code.md`) prevalece sobre este arquivo em caso de conflito. Este documento NÃO substitui o gerador atual. Ele descreve os novos designs que entram na biblioteca por nicho, ao lado do design aprovado, como opções adicionais para o prospect.
 
 ## Regra zero
 
-Antes de construir, audite e me reporte: onde está o gerador atual de Site-Prova, como ele recebe os dados, onde a prévia é hospedada, como a medalha e as avaliações do Google são obtidas hoje. Reaproveite a integração com Google Places e a tabela `empresas` da Fase 1. Não quebre nenhuma prévia já enviada a prospects.
+Antes de construir, audite e me reporte: onde está o gerador atual de Site-Prova, como ele recebe os dados, onde a prévia é hospedada, como a medalha e as avaliações do Google são obtidas hoje. Reaproveite a integração com Google Places e a tabela `empresas` da Fase 1. Não altere o design aprovado nem quebre nenhuma prévia já enviada a prospects.
 
 ## Referências de nível (estudar, nunca copiar layout ou código)
 
@@ -19,7 +19,7 @@ Antes de construir, audite e me reporte: onde está o gerador atual de Site-Prov
 
 ## As 3 direções de design
 
-Todo nicho recebe as três. O prospect vê as três prévias e escolhe.
+Todo nicho recebe as três, somadas ao design atual aprovado. O prospect vê as opções e escolhe.
 
 **A. Editorial Noturno** (inspiração: Barber & Co, Camden Dental)
 Fundo escuro, fotografia em tela cheia como protagonista, títulos grandes em serifa de alto contraste, muito espaço, quase nenhum ornamento. Sensação: marca de moda ou serviço de luxo.
